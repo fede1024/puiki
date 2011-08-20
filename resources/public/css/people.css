@@ -1,0 +1,49 @@
+table.people {
+    width: 100%;
+}
+
+/*
+h2.peopleTableTitle {
+    width: 100%;
+    border-bottom-style: solid;
+    border-bottom-width: 1px;
+    border-bottom-color: grey;
+    font-size: 14pt;
+}*/
+
+tr.person:before {
+    
+}
+
+td.personName:before {
+    vertical-align: middle;
+    padding-right: 3px;
+    content: url(/images/dot.png);
+}
+
+td.personName{
+    padding-left: 10px;
+    font-weight: bold;
+    font-style: normal;
+    color: #0033ff;
+    
+    /*margin-right: 10px;
+    vertical-align: baseline;*/
+}
+
+td.personDate{
+    padding-right: 10px;
+    color: teal;
+    font-style: normal;
+    font-size: X-small;
+    text-align: right;
+    /*vertical-align: middle;*/
+}
+
+td.personId{
+    padding-left: 20px;
+    padding-bottom: 10px;
+    font-size: small;
+    /*text-indent: 10px;*/
+    text-align: justify;
+}

@@ -1,0 +1,52 @@
+table.channels {
+    width: 100%;
+    margin-bottom: 10px;
+    border: 1px solid #a1efa3;
+}
+
+tr.channelTitle {
+    background-color: #a1efa3;
+}
+
+tr.channelInfo {
+    background-color: #dcf9c8;
+}
+
+tr.channelDescription {
+    background-color: #dcf9c8;
+}
+
+/*
+tr.channelEnd {
+    height: 10px;
+}*/
+
+td.channelName {
+    font-size: 12pt;
+    color: #36c;
+    text-decoration: none;
+    vertical-align: middle;
+}
+
+td.channelName:before {
+    vertical-align: middle;
+    padding-right: 3px;
+    content: url(/images/asterisk-blue-small.png);
+} 
+
+td.channelDate{
+    color: teal;
+    font-style: normal;
+    font-size: X-small;
+    text-align: right;
+}
+
+td.channelInfo{
+    font-style: normal;
+    font-size: X-small;
+}
+
+td.channelDescription{
+    /*padding-bottom: 20px;*/
+}
+

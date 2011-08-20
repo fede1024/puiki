@@ -1,0 +1,95 @@
+body {
+    /*background-color: #ffcccc;*/
+    font-family: monospace;
+}
+
+.content {
+    width: 90%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+h1.title {
+    width: 100%;
+    font-size: 20pt;
+    text-align: center;
+    border: 1px solid black;
+    margin-top: 20px;
+    margin-bottom: 30px;
+    background-color: #f2f1f1;
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
+h2.error {
+    font-size: 14pt;
+    font-weight: normal;
+    margin-top: 25px;
+    border-bottom: 1px solid black;
+}
+
+h2.stackTraceTitle {
+    font-size: 12pt;
+    font-weight: normal;
+    border-bottom: 1px dotted black;
+    margin-bottom: 12px;
+    margin-top: 25px;
+}
+
+table.exception {
+    margin-top: 5px;
+}
+
+td.excHead {
+    width: 4cm;
+    padding-right: 10px;
+    padding-top: 4px;
+    font-weight: bold;
+}
+
+p.description {
+    font-size: large;
+    text-align: justify;
+    text-decoration: underline;
+}
+
+p.request {
+    margin-top: 3px;
+    margin-bottom: 30px;
+}
+
+table.stackTrace {
+    margin-bottom: 20px;
+    width: 100%;
+}
+
+tr.stackElem {
+   border-bottom: 1px dotted #e7e6e6; 
+}
+
+td.stackHead {
+    padding-bottom: 4px;
+    font-weight: bold;
+}
+
+td.stackElemClass {
+   padding-top: 4px;
+   padding-right: 10px;
+   font-size: small;
+}
+
+td.stackElemMethod {
+    padding-right: 10px;
+    font-size: small;
+}
+
+td.stackElemFile {
+    padding-right: 10px;
+    font-size: small;
+}
+
+td.stackElemLine {
+    padding-right: 10px;
+    font-size: small;
+    text-align: right;
+}

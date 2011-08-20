@@ -1,0 +1,22 @@
+(ns connect.pages.home
+  (:use connect.pages.layout
+        connect.pages.utils
+        noir.core   
+        hiccup.core
+        hiccup.page-helpers
+        hiccup.form-helpers
+        somnium.congomongo)
+ (:require [noir.server :as server]
+           [noir.validation :as vali]
+           [noir.session :as session]
+           [noir.response :as resp]
+   [noir.util.test :as test]))
+
+(defpage "/" []
+  (layout "PoliWeb"
+    [:div
+     [:h2 "Home"]
+     [:p "Qui credo ci scriverò qualcosa"]
+     [:p (link-to "/user/" "Pagina utenti")]
+     [:p (link-to "/admin/" "Pagina amministratore")]
+     [:p (link-to "/channel/list" "Elenco canali")]]))

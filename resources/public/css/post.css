@@ -1,0 +1,168 @@
+table.post {
+    width: 100%;
+    /*margin-top: 10px;*/
+    margin-bottom: 10px;
+    background-color: #f0f9fd;
+    border: 1px solid #d3effd;
+    /*border-radius: 10px;*/
+}
+
+span.vote {
+    margin-left: 10px;
+    white-space:nowrap;
+    height: 100%;
+    vertical-align: middle;
+}
+
+span.voteValue{
+    font-size: 16pt;
+    margin-left: 5px;
+    margin-right: 5px;
+    font-weight: bold;
+}
+
+tr.postTitle {
+    background-color: #d3effd;
+    /*border-top-radius: 10px;*/
+}
+
+tr.postBottom{
+    border-top: 1px solid #d3effd;
+}
+
+tr.postComment {
+    border-top: 1px solid #d3effd;
+}
+
+td.postTitle {
+    /*border-top-left-radius: 10px;*/
+    font-size: 12pt;
+    color: #36c;
+    text-decoration: none;
+    vertical-align: middle;
+}
+
+td.postTitleLeft {
+    /*border-top-right-radius: 10px;*/
+    font-size: 10pt;
+    color: #36c;
+    text-decoration: none;
+    vertical-align: middle;
+    text-align: right;
+}
+
+td.postAuthor {
+    padding-left: 5px;
+    font-size: 8pt;
+    text-decoration: none;
+    vertical-align: bottom;
+}
+
+td.postDate{
+    white-space:nowrap;
+    padding-right: 8px;
+    color: teal;
+    font-style: normal;
+    font-size: X-small;
+    text-align: right;
+}
+
+td.postContent{
+    width: 100%;
+    padding-top: 0px;
+    padding-bottom: 5px;
+    padding-left: 5px;
+    padding-right: 5px;
+    text-align: justify;
+    vertical-align: middle;
+}
+
+td.postComment{
+    width: 100%;
+    padding: 5px;
+    vertical-align: middle;
+    text-align: justify;
+}
+
+div.postContent{
+    padding: 5px;
+    background-color: white;
+    border: 1px solid #d3effd;
+}
+
+td.postActions {
+    white-space: nowrap;
+    text-align: right;
+    vertical-align: middle;
+}
+
+td.postSettings {
+    white-space: nowrap;
+    padding-left: 5px;
+    padding-right: 5px;
+    text-align: left;
+    vertical-align: middle;
+}
+
+textarea.postContent{
+    width: 98%;
+    padding: 5px;
+    background-color: white;
+    border: 1px solid #d3effd;
+}
+
+input.postTitle {
+    margin: 3px;
+    font-size: 12pt;
+    width: 98%;
+}
+
+input.postReply, input.postComment, input.postSubmit {
+    margin: 3px;
+    background-color: #d3effd;
+    border: 1px solid #ccc;
+    text-decoration: none;
+}
+
+input.postReply:hover, input.postComment:hover, input.postSubmit:hover  {
+    border: 1px solid #aaa;
+}
+
+/*
+ * Errore
+ * 
+*/
+
+table.error {
+    width: 100%;
+    margin-bottom: 10px;
+    border: 1px solid #fdd9d9;
+}
+
+tr.errorTitle {
+    background-color: #fdd9d9;
+}
+
+tr.errorBody {
+    border-top: 1px solid #fdd9d9;
+}
+
+td.errorTitle {
+    font-size: 12pt;
+    text-decoration: none;
+    vertical-align: middle;
+}
+
+td.errorTitle:before {
+    vertical-align: middle;
+    padding-right: 3px;
+    content: url(/images/error.png);
+} 
+
+td.errorBody {
+    width: 100%;
+    padding-left: 5px;
+    text-decoration: none;
+    padding: 5px;
+    text-align: justify;
+}

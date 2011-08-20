@@ -1,0 +1,112 @@
+
+/*
+ * ROSSO
+ * 
+*/
+
+table.red {
+    width: 100%;
+    margin-bottom: 10px;
+    border: 1px solid #fdd9d9;
+}
+
+tr.redHead {
+    background-color: #fdd9d9;
+}
+/*
+tr.redBody {
+    background-color: white;
+}
+
+tr.redBottom {
+    background-color: white;
+}*/
+
+td.redHead {
+    font-size: 12pt;
+    /*color: #36c;*/
+    text-decoration: none;
+    vertical-align: middle;
+}
+
+td.redHead:before {
+    vertical-align: middle;
+    padding-right: 3px;
+    content: url(/images/error.png);
+} 
+
+td.redBody {
+    width: 100%;
+    padding-left: 5px;
+    /*color: #36c;*/
+    text-decoration: none;
+    padding: 5px;
+    text-align: justify;
+}
+
+/*
+td.postContent{
+    width: 100%;
+    padding-top: 0px;
+    padding-bottom: 5px;
+    padding-left: 5px;
+    padding-right: 5px;
+    padding-bottom: 10px;
+    vertical-align: middle;
+    text-align: justify;
+}
+
+td.bottom {
+    padding: 5px;
+    text-align: justify;
+}
+*/
+
+/*
+ * BLU
+ * 
+*/
+
+/* border-left: 1px solid #d3effd;*/
+
+
+table.blue {
+    width: 100%;
+    margin-bottom: 10px;
+    border: 1px solid #d3effd;
+    background-color: #f0f9fd;
+}
+
+tr.blueHead {
+    background-color: #d3effd;
+}
+/*
+tr.redBody {
+    background-color: white;
+}
+
+tr.redBottom {
+    background-color: white;
+}*/
+
+td.blueHead {
+    font-size: 12pt;
+    /*color: #36c;*/
+    text-decoration: none;
+    vertical-align: middle;
+}
+/*
+td.blueHead:before {
+    vertical-align: middle;
+    padding-right: 3px;
+    content: url(/images/asterisk-blue-small.png);
+}*/
+
+td.blueBody {
+    width: 100%;
+    padding-left: 5px;
+    /*color: #36c;*/
+    text-decoration: none;
+    padding: 5px;
+    text-align: justify;
+}

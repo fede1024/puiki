@@ -6,11 +6,13 @@
        hiccup.form-helpers
        somnium.congomongo)
  (:require
+       connect.errors
        [noir.server :as server]
        [noir.validation :as vali]
        [noir.session :as session]
        [noir.response :as resp]
-   [noir.util.test :as test]))
+   [noir.util.test :as test])
+ (:gen-class))
 
 (test/with-noir
    (session/put! :_id "chris")
@@ -34,5 +36,6 @@
 (defn -main [& m]
   (let [mode (or (first m) :dev)
         port (Integer. (get (System/getenv) "PORT" "8080"))]
+    (server/add-middleware connect.errors/wrap-error-check)
     (mongo! :db "connect")
     (server/start port {:mode (keyword mode) :ns 'connect})))

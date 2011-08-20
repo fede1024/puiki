@@ -6,7 +6,8 @@
         hiccup.page-helpers
         hiccup.form-helpers
         somnium.congomongo)
- (:require [clojure.contrib.string :as str]
+ (:require connect.errors
+           [clojure.contrib.string :as str]
            [noir.server :as server]
            [noir.validation :as vali]
            [noir.session :as session]
@@ -68,3 +69,26 @@
 (defpage [:post "/admin/rem-field"] {:as field}
   (destroy! :fields {:name (:name field)})
   (resp/redirect "/admin/fields"))
+
+(pre-route "/logs*" p
+  (if (current-id)
+    (if (not (admin? (current-id)))
+      (render "/permission-denied"))
+    (render "/login" {:redirect (:uri p)})))
+
+(defpage "/logs/errors/" []
+  (layout "Log Errori"
+    (let [files (sort-by #(.getName %)
+                  (.listFiles (java.io.File. connect.errors/*errors-dir*)))]
+      [:span 
+       [:h2 "Log errori:"]
+       [:p "Numero massimo: " connect.errors/*max-error-files*]
+       [:p "Directory: " connect.errors/*errors-dir*]
+       (for [f (reverse files)]
+         [:p (link-to (str "./" (.getName f)) (.getName f))])
+       (form-to [:get "/logs/errors/delete"]
+         (submit-button "Cancella tutti"))])))
+
+(defpage "/logs/errors/delete" []
+  (do (connect.errors/remove-all-errors)
+    (resp/redirect "/logs/errors/")))

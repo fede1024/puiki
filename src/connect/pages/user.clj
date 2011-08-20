@@ -1,6 +1,7 @@
 (ns connect.pages.user
   (:use connect.pages.layout
         connect.pages.utils
+        connect.pages.channel
         connect.db
         noir.core   
         hiccup.core
@@ -122,7 +123,8 @@
                    :description (field-channel-description field year)
                    :type :field
                    :type_ref (db-ref :fields (:_id field))
-                   :followers #{}})]
+                   :followers #{}
+                   :created-at (java.util.Date.)})]
         (update! :fields {:_id (:_id field)}
           {:$set {:channels (merge (:channels field) ;; TODO: fix?
                               {(keyword year) (db-ref :channels (:_id new))})}})
@@ -156,3 +158,9 @@
       (session/flash-put! :done)
       (resp/redirect (user-info-path id)))))
 
+(defpage "/user/following" []
+  (layout "Canali seguiti"
+    [:h2 "Stai seguendo i canali:"]
+    (map channel-table
+      (map unref
+        (:follows (fetch-one :people :where {:_id (current-id)}))))))

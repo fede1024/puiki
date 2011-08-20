@@ -105,7 +105,7 @@
      [:h3 "Non hai permessi sufficienti per vedere questa pagina."]
      [:p (link-to "/" "Home")]]))
 
-(defn not-found-page []
+(defpage "/not-found" []
   (layout "Pagina inesistente"
     [:h2 "Indirizzo non valido"]
     [:img.notFound {:src "/images/dead-end.png"}]

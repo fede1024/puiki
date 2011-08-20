@@ -62,7 +62,7 @@
 (defpage [:post "/admin/add-field"] {:as field}
   (if (valid? field)
     (do
-      (insert! :fields field)
+      (insert! :fields (merge field {:created-at (java.util.Date.)}))
       (resp/redirect "/admin/fields"))
     (render "/admin/fields" field)))
 

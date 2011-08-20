@@ -6,7 +6,6 @@
     connect.pages.registration
     connect.pages.user
     connect.pages.admin
-    ;connect.pages.channel
+    connect.pages.channel
+    connect.pages.post
     connect.pages.utils))
-
-

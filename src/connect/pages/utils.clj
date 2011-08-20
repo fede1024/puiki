@@ -29,6 +29,9 @@
 (defn post-path [post]
   (str "/post/" (:id post)))
 
+(defn post-vote-path [post up-down]
+  (str "/user/vote/" (:id post) "/" up-down))
+
 (defn user? [id] ;; TODO: Migliorare qui
   (when id
     (some #{"user"}

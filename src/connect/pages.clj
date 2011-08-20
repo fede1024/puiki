@@ -5,7 +5,7 @@
     connect.pages.login
     connect.pages.registration
     connect.pages.user
-    ;connect.pages.admin
+    connect.pages.admin
     ;connect.pages.channel
     connect.pages.utils))
 

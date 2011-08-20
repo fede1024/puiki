@@ -99,7 +99,7 @@
   [:td.errImg (when-let [err (first (vali/get-errors field))]
                 [:span [:img {:src "/images/error.png"}] " " err])])
 
-(defn permission-denied-page []
+(defpage "/permission-denied" []
   (layout "Accesso negato"
     [:div
      [:h3 "Non hai permessi sufficienti per vedere questa pagina."]

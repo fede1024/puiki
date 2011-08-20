@@ -13,9 +13,11 @@
            [noir.session :as session]
            [noir.response :as resp]))
 
-(pre-route "/user*" {}
-  (when-not (user? (current-id))
-    (resp/redirect "/login")))
+(pre-route "/user*" p
+  (if (current-id)
+    (if (not (user? (current-id)))
+      (render "/permission-denied"))
+    (render "/login" {:redirect (:uri p)})))
 
 (defpage "/user/" []
   (layout "Pagina utente"
@@ -121,7 +123,6 @@
                    :type :field
                    :type_ref (db-ref :fields (:_id field))
                    :followers #{}})]
-        (println (:channels field) new)
         (update! :fields {:_id (:_id field)}
           {:$set {:channels (merge (:channels field) ;; TODO: fix?
                               {(keyword year) (db-ref :channels (:_id new))})}})

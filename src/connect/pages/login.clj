@@ -11,19 +11,21 @@
            [noir.session :as session]
            [noir.response :as resp]))
 
-(defpartial user-fields [{:keys [username] :as usr}]
+(defpartial user-fields [{:keys [username] :as data}]
   (vali/on-error :username error-text)
   (text-field {:placeholder "Username"} :username username)
   (password-field {:placeholder "Password"} :password))
 
-(defpage "/login" {:as user}
+(defpage "/login" {:keys [redirect] :as data}
   (if (current-id)
     (resp/redirect "/")
     (layout "login"
       (form-to [:post "/login"]
+        (when redirect
+          [:input {:type :hidden :name :redirect :value redirect}])
         [:ul.actions
          [:li (link-to "/" "Login")]]
-        (user-fields user)
+        (user-fields data)
         (submit-button "submit")))))
 
 (defn login! [{:keys [username password] :as user}]
@@ -34,10 +36,10 @@
         (session/put! :username username))
       (vali/set-error :username "Invalid username or password"))))
 
-(defpage [:post "/login"] {:as user}
-  (if (login! user)
-    (resp/redirect "/")
-    (render "/login" user)))
+(defpage [:post "/login"] {:keys [redirect] :as data}
+  (if (login! data)
+    (resp/redirect (or redirect "/"))
+    (render "/login" data)))
 
 (defpage "/logout" {}
   (session/clear!)

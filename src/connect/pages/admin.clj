@@ -12,9 +12,11 @@
            [noir.session :as session]
            [noir.response :as resp]))
 
-(pre-route "/admin*" {}
-  (when-not (admin? (current-id))
-    (resp/redirect "/login")))
+(pre-route "/admin*" p
+  (if (current-id)
+    (if (not (admin? (current-id)))
+      (render "/permission-denied"))
+    (render "/login" {:redirect (:uri p)})))
 
 (defpage "/admin/" {}
   (layout "PoliWeb"
@@ -57,7 +59,6 @@
   (not (vali/errors? :name)))
 
 (defpage [:post "/admin/add-field"] {:as field}
-  (println (pr-str field))
   (if (valid? field)
     (do
       (insert! :fields field)

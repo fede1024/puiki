@@ -25,7 +25,7 @@
   (str "Tipo canale:" (channel-types (:type ch))
     (when (= (:type ch) :group)
       (str " (" (privacy-options (:privacy ch)) ")"))
-    " - Post:" (:posts ch) " Followers:" (count (:followers ch))))
+    " - Post:" (or (:posts ch) 0) " Followers:" (count (:followers ch)))) ;; TODO: resterà solo un numero
 
 (defpartial channel-table [ch]
   [:table.channels
@@ -42,10 +42,6 @@
     [:h2 "Elenco canali di PoliWeb:"]
     (map channel-table (fetch :channels))))
 
-(= "4e4fb33744ae9f38cf8c0dfc" (str (:channel (fetch-one :posts))))
-
-(fetch :posts :where {:channel (object-id "4e4fb33744ae9f38cf8c0dfc")})
-
 (defpage "/channel/:id/" {:keys [id]}
   (let [id (obj-id id)
         channel (fetch-one :channels :where {:_id id})]
@@ -56,4 +52,4 @@
         (channel-table channel)
         [:h2 "Post:"]
         (map post-table
-          (fetch :posts :where {:channel id})))))) ;;TODO: fix
+          (fetch :posts :where {:channel id} :sort {:created-at -1}))))))

@@ -27,10 +27,10 @@
   (str "/user/comment/" (:_id post)))
 
 (defn post-path [post]
-  (str "/post/" (:id post)))
+  (str "/post/" (:_id post)))
 
-(defn post-vote-path [post up-down]
-  (str "/user/vote/" (:id post) "/" up-down))
+(defn post-vote-path [post]
+  (str "/user/vote/" (:_id post)))
 
 (defn user? [id] ;; TODO: Migliorare qui
   (when id

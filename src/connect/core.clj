@@ -26,10 +26,10 @@
 (defpartial channel [[data]]
   [:p data])
 
-(defpage "/test" {:as user}
-  (valid? {:firstname "pipp" :lastname ""})
-  (html [:div (vali/on-error :firstname channel)
-        (vali/on-error :lastname channel)]))
+;(defpage "/test" {:as user}
+;  (valid? {:firstname "pipp" :lastname ""})
+;  (html [:div (vali/on-error :firstname channel)
+;        (vali/on-error :lastname channel)]))
 
 (def servers (atom {}))
 

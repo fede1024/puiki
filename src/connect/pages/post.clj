@@ -56,9 +56,8 @@
 
 (defn user-description [p]
   (cond (= (:job p) "student")
-    (let [field (unref (:field p))]
-      (when field
-        (str " - " (:name field) " " (- 2012 (Integer/parseInt (:year p))) "° anno")));;TODO:fix
+    (when (:field p)
+      (str " - " (:field p) " " (- 2012 (:year p)) "° anno")) ;;TODO:fix
     (= (:job p) "professor") " - Docente"
     :else nil))
 
@@ -90,7 +89,7 @@
                 "Domanda") " "))
       (link-to (post-path post)
         (when (= (:type post) "question")
-          (str "Risposte: " (:answers post) " "))
+          (str "Risposte: " (or (:answers post) "nessuna") " "))
         ;(str "Commenti: " (:comments-num post)))
         )]
      [:td.postActions
@@ -121,7 +120,8 @@
   (layout "Nuovo post"
     (let [person (fetch-one :people :where {:_id (current-id)})
           channels (concat '("--- Seguiti ---")
-                     (map #(:name (unref %)) (:follows person))
+                     (map #(:name (fetch-one :channels :where {:_id %}))
+                       (:follows person))
                      '("--- Tutti ---")
                      (map :name (fetch :channels)))]
       (form-to {:accept-charset "utf-8" } [:post "/edit/new-post"]
@@ -234,6 +234,5 @@
          :type       "answer"})
       (update! :channels {:_id (:channel question)} {:$inc {:posts 1}})
       (update! :posts {:_id qid} {:$inc {:answers 1}})
-      (println (pr-str (db-last-error)))
       (resp/redirect (post-path question)))
     (render "/edit/reply/:id" reply)))

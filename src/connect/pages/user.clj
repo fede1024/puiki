@@ -32,18 +32,14 @@
     [:p (link-to "/user/list" "Elenco utenti")]))
 
 (defpartial student-info [person]
-  (let [c-id (when (:field person)
-               (get-in (unref (:field person))
-                 [:channels (keyword (:year person))]))]
+  (let [channel (fetch-one :channels :where {:field (:field person) :year (:year person)})]
     [:table
      [:tr [:td.head "Indirizzo:"]
-      [:td (:name (unref (:field person)))]]
+      [:td (:field person)]]
      [:tr [:td.head "Anno immatr.:"] [:td (:year person)]]
      [:tr [:td.head "Canale associato: "] ;; TODO: Non mettere qui
-      [:td (if c-id
-             (if-let [channel (unref c-id)]
-               (link-to (channel-path channel) (:name channel))
-               "Nessuno.")
+      [:td (if (and (:field person) channel)
+             (link-to (channel-path channel) (:name channel))
              "Nessuno.")]]]))
 
 (defpage "/user/:id/info" {:keys [id]}
@@ -76,12 +72,12 @@
         (catch Exception e 0)))
     0))
 
-(defpartial student-edit-form [person & [data]] ;;FIX: data?
+(defpartial student-edit-form [person & [data]] ;; TODO: fix data
   (form-to {:accept-charset "utf-8"} [:post (user-edit-path (:_id person))]
     [:table
      [:tr [:td.head "Indirizzo: "]
       [:td (drop-down :field (map :name (fetch :fields))
-             (if data (:field data) (:name (unref (:field person)))))]
+             (if data (:field data) (:field person)))]
       (error-cell :field)]
      [:tr [:td.head "Anno immatr.: "]
       [:td (drop-down :year (range 2003 2022)
@@ -107,34 +103,29 @@
         "Utente non esistente."))))
 
 (defn get-course-year [year]
-  (- 2012 (Integer/parseInt year)))
+  (- 2012 year))
 
-(defn field-channel-name [field year]
-  (str (:name field) " " (get-course-year year) "° anno"))
+(defn field-channel-name [field-name year]
+  (str field-name " " (get-course-year year) "° anno"))
 
-(defn field-channel-description [field year]
-  (str "Canale di " (:name field) " " (get-course-year year) "° anno."))
+(defn field-channel-description [field-name year]
+  (str "Canale di " field-name " " (get-course-year year) "° anno."))
 
-(defn create-field-channel [field year]
-  (let [channel (unref (get (:channels field) (keyword year)))]
+(defn create-field-channel [field-name year]
+  (let [channel (fetch-one :channels :where {:field field-name :year year})]
     (or channel
-      (let [new (insert! :channels
-                  {:name (field-channel-name field year) :privacy :public
-                   :description (field-channel-description field year)
-                   :type :field
-                   :type_ref (db-ref :fields (:_id field))
-                   :followers #{}
-                   :created-at (java.util.Date.)})]
-        (update! :fields {:_id (:_id field)}
-          {:$set {:channels (merge (:channels field) ;; TODO: fix?
-                              {(keyword year) (db-ref :channels (:_id new))})}})
-        new))))
+      (insert! :channels
+        {:name (field-channel-name field-name year) :privacy :public
+         :description (field-channel-description field-name year)
+         :type :field   :field field-name
+         :year year     :followers 0
+         :created-at (java.util.Date.)}))))
 
 (defn follow-channel [channel-id person-id]
   (update! :people {:_id person-id}
-    {:$addToSet {:follows (db-ref :channels channel-id)}})
+    {:$addToSet {:follows channel-id}})
   (update! :channels {:_id channel-id}
-    {:$addToSet {:followers (db-ref :people person-id)}}))
+    {:$inc {:followers 1}}))
 
 (defn valid? [{:keys [id field year]}]
   (vali/rule (vali/has-value? field)
@@ -142,19 +133,19 @@
   (vali/rule (fetch-one :fields :where {:name field})
      [:name "Indirizzo non esistente."])
   (vali/rule (fetch-one :people :where {:_id id})
-     [:id "Matricola non valida."])
+     [:id "Matricola non valida."]) ;; Non visualizzato
   (vali/rule (let [y (Integer/parseInt year)]
                (and (> y 2003) (< y 2011)))
      [:year "Anno di immatricolazione non valido."])
-  (not (vali/errors? :field :year)))
+  (not (vali/errors? :field :year :id)))
 
 (defpage [:post "/user/:id/edit"] {:keys [id year field] :as person}
   (if (not (valid? person))
-    (resp/redirect (user-edit-path id))
-    (let [field (fetch-one :fields :where {:name field})]
+    (render (user-edit-path id))
+    (let [y (Integer/parseInt year)]
       (update! :people {:_id id}
-        {:$set {:year year :field (db-ref :fields (:_id field))}})
-      (follow-channel (:_id (create-field-channel field year)) id)
+        {:$set {:year y :field field}})
+      (follow-channel (:_id (create-field-channel field y)) id)
       (session/flash-put! :done)
       (resp/redirect (user-info-path id)))))
 
@@ -162,5 +153,5 @@
   (layout "Canali seguiti"
     [:h2 "Stai seguendo i canali:"]
     (map channel-table
-      (map unref
+      (map #(fetch-one :channels :where {:_id %})
         (:follows (fetch-one :people :where {:_id (current-id)}))))))

@@ -15,17 +15,17 @@
            [noir.response :as resp]))
 
 (def channel-types
-  {:normal "Normale" :group "Gruppo"
-   :field "Indirizzo di studio" :course "Corso"})
+  {"normal" "Normale", "group" "Gruppo",
+   "field" "Indirizzo di studio", "course" "Corso"})
 
 (def privacy-options
   {:public "Pubblico" :private "Privato"})
 
 (defn channel-info [ch]
-  (str "Tipo canale:" (channel-types (:type ch))
-    (when (= (:type ch) :group)
+  (str "Tipo canale: " (channel-types (:type ch))
+    (when (= (:type ch) "group")
       (str " (" (privacy-options (:privacy ch)) ")"))
-    " - Post:" (or (:posts ch) 0) " Followers:" (count (:followers ch)))) ;; TODO: resterà solo un numero
+    " - Post: " (or (:posts ch) 0) " Followers: " (or (:followers ch) "0")))
 
 (defpartial channel-table [ch]
   [:div.channel

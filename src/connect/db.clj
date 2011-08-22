@@ -1,29 +1,44 @@
 (ns connect.db
   (:use somnium.congomongo))
 
-(mongo! :db "connect") 
+(mongo! :db "connect")
 
-(insert! :people
-  {:_id "s123"
-   :pwd "ciao"
-   :name "robbo"
-   :surname "boh"
-   :roles ["user"]
-   :job "student"
-   :created-at (java.util.Date.)})
+(defn reset-db []
+  (destroy! :people {})
+  (destroy! :fields {})
+  (destroy! :channels {})
+  (destroy! :posts {}))
 
-(insert! :people
-  {:_id "s124"
-   :pwd "ciao"
-   :name "Ajeje"
-   :surname "boh"
-   :roles ["admin" "user"]
-   :job "student"
-   :created-at (java.util.Date.)})
+(defn init-db []
+  (when (not (fetch-one :channels :where {:name "Poli Connect"}))
+    (insert! :channels
+      {:name "Poli Connect" :description "Canale dedicato a Poli Connect"
+       :type :normal :posts 1
+       :created-at (java.util.Date.)})
+    (insert! :posts
+      {:title "Benvenuto" :content "Questo è un post di prova."
+       :type :normal
+       :channel (:_id (fetch-one :channels :where {:name "Poli Connect"}))
+       :created-at (java.util.Date.)}))  
+  (insert! :people
+    {:_id "s123"  :pwd "ciao"
+     :name "robbo"  :surname "boh"
+     :roles ["user"]
+     :job "student"
+     :follows [(:_id (fetch-one :channels :where {:name "Poli Connect"}))]
+     :created-at (java.util.Date.)})
+  (insert! :people
+    {:_id "s124"   :pwd "ciao"
+     :name "Ajeje" :surname "Brazof"
+     :roles ["admin" "user"]
+     :job "student"
+     :follows [(:_id (fetch-one :channels :where {:name "Poli Connect"}))]
+     :created-at (java.util.Date.)}))
 
 ;(insert! :channels
 ;  {:name "Poli Connect"
 ;   :description "Canale dedicato a Poli Connect"
+;   :type :normal
 ;   :posts 1
 ;   :created-at (java.util.Date.)})
 ;

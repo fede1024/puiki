@@ -1,10 +1,17 @@
-table.post {
+div.post {
     width: 100%;
     /*margin-top: 10px;*/
-    margin-bottom: 10px;
+    margin-bottom: 15px;
     background-color: #f0f9fd;
-    border: 1px solid #d3effd;
+    border: 2px solid #d3effd;
+    border-radius: 8px;
+    margin-left: auto;
+    margin-right: auto;
     /*border-radius: 10px;*/
+}
+
+table.post {
+    width: 100%;
 }
 
 span.vote {
@@ -21,9 +28,16 @@ span.voteValue{
     font-weight: bold;
 }
 
+button.vote {
+   display: inline;
+   padding: 0px; 
+   margin: 0px;
+   border-width: 0px;
+   background: transparent;
+}
+
 tr.postTitle {
-    background-color: #d3effd;
-    /*border-top-radius: 10px;*/
+    border-bottom: 2px solid #d3effd;
 }
 
 tr.postBottom{
@@ -35,11 +49,16 @@ tr.postComment {
 }
 
 td.postTitle {
-    /*border-top-left-radius: 10px;*/
+    margin: 8px;
     font-size: 12pt;
     color: #36c;
     text-decoration: none;
     vertical-align: middle;
+    font-weight: bold;
+}
+
+a.postTitle {
+    text-decoration: none;
 }
 
 td.postTitleLeft {
@@ -63,7 +82,7 @@ td.postDate{
     padding-right: 8px;
     color: teal;
     font-style: normal;
-    font-size: X-small;
+    font-size: 7pt;
     text-align: right;
 }
 
@@ -115,13 +134,6 @@ input.postTitle {
     margin: 3px;
     font-size: 12pt;
     width: 98%;
-}
-
-button.vote {
-   padding: 0px; 
-   margin: 0px;
-   border: none;
-   background: transparent;
 }
 
 input.postReply, input.postComment, input.postSubmit {

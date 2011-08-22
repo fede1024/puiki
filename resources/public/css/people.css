@@ -35,7 +35,7 @@ td.personDate{
     padding-right: 10px;
     color: teal;
     font-style: normal;
-    font-size: X-small;
+    font-size: 7pt;
     text-align: right;
     /*vertical-align: middle;*/
 }
@@ -43,7 +43,7 @@ td.personDate{
 td.personId{
     padding-left: 20px;
     padding-bottom: 10px;
-    font-size: small;
+    font-size: 9pt;
     /*text-indent: 10px;*/
     text-align: justify;
 }

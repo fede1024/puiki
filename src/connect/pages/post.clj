@@ -13,11 +13,6 @@
            [noir.session :as session]
            [noir.response :as resp]))
 
-(def post-images
-  {:normal   [:img {:src "/images/asterisk-blue-small.png"}]
-   :question [:img {:src "/images/question.png"}]
-   :answer   [:img {:src "/images/exclamation.png"}]})
-
 (defn update-vote [current dir]
   (or (get {[-1 "up"] 0  [0 "up"] 1  [1 "up"] 1
             [-1 "down"] -1  [0 "down"] -1 [1 "down"] 0}
@@ -62,34 +57,40 @@
     (= (:job p) "professor") " - Docente"
     :else nil))
 
+(def post-images
+  {"normal"   [:img {:src "/images/asterisk-blue-small.png"}]
+   "question" [:img {:src "/images/question.png"}]
+   "answer"   [:img {:src "/images/exclamation.png"}]})
+
 (defpartial post-table [post]
-  [:table.post
-   [:tr.postTitle
-    [:td.postTitle (post-images (:type post)) " "
-     (link-to (post-path post) (:title post))]
-    [:td.postTitleLeft
-     (when (= (:type post) :answer)
-       (link-to (str "/post/" (:answer-to post)) "Domanda"))
-     (vote-section post)]]
-   [:tr.postInfo 
-    (let [p (fetch-one :people :where {:_id (:author post)})]
-      [:td.postAuthor "Postato da: " (:name p) " " (:surname p) (user-description p)])
-    [:td.postDate (format-timestamp (:created-at post))]]
-   [:tr.postContent
-    [:td.postContent {:colspan 2} [:div.postContent [:pre (:content post)]]]]
-   [:tr.postBottom
-    [:td.postContent
-     (link-to (post-path post)
-       (when (= (:type post) :question)
-         (str "Risposte: " (count (:answers post)) " "))
-       ;(str "Commenti: " (count (db/get-comments (:id post))))
-       )]
-    [:td.postActions
-     (when (= (:type post) :question)
-       (form-to [:get (user-reply-path post)]
-         (submit-button {:class "postReply"} "Rispondi")))
-     (form-to [:get (user-comment-path post)]
-       (submit-button {:class "postComment"} "Commenta"))]]])
+  [:div.post
+   [:table.post
+    [:tr.postTitle
+     [:td.postTitle (post-images (:type post)) " "
+      (link-to {:class :postTitle} (post-path post) (:title post))]
+     [:td.postTitleLeft
+      (when (= (:type post) :answer)
+        (link-to (str "/post/" (:answer-to post)) "Domanda"))
+      (vote-section post)]]
+    [:tr.postInfo 
+     (let [p (fetch-one :people :where {:_id (:author post)})]
+       [:td.postAuthor "Postato da: " (:name p) " " (:surname p) (user-description p)])
+     [:td.postDate (format-timestamp (:created-at post))]]
+    [:tr.postContent
+     [:td.postContent {:colspan 2} [:div.postContent [:pre (:content post)]]]]
+    [:tr.postBottom
+     [:td.postContent
+      (link-to (post-path post)
+        (when (= (:type post) :question)
+          (str "Risposte: " (count (:answers post)) " "))
+        ;(str "Commenti: " (count (db/get-comments (:id post))))
+        )]
+     [:td.postActions
+      (when (= (:type post) "question")
+        (form-to [:get (user-reply-path post)]
+          (submit-button {:class "postReply"} "Rispondi")))
+      (form-to [:get (user-comment-path post)]
+        (submit-button {:class "postComment"} "Commenta"))]]]])
 
 ;(defn error-table [description vd]
 ;  (when vd
@@ -150,7 +151,7 @@
           [:h2 "Post:"])
         (post-table post)
         (when (= "question" (:type post))
-          (let [answers (sort-by #(apply + (vals (:votes %))) >
+          (let [answers (sort-by #(apply + (vals (:votes %))) > ;;TODO: fix
                           (map #(fetch-one :posts :where {:_id %}) (:answers post)))]
             [:span
              [:h2 "Risposte: " (count answers)]
@@ -166,7 +167,7 @@
                      '("--- Tutti ---")
                      (map :name (fetch :channels)))]
       (form-to {:accept-charset "utf-8" } [:post "/user/new-post"]
-        ;(error-table new-post-errors vd)
+        ;(error-table new-post-errors vd) ;;TODO: fix
         [:table.post
          [:tr.postTitle
           [:tr.postTitle
@@ -184,9 +185,9 @@
                (:content data))]]
          [:tr.postBottom
           [:td.postSettings {:colspan 2} "Tipo post: "
-           [:input {:type :radio :name "type" :value ":question" :checked "true"} 
+           [:input {:type :radio :name "type" :value "normal" :checked "true"} 
                "Normale"]
-           [:input {:type :radio :name "type" :value ":question"} 
+           [:input {:type :radio :name "type" :value "question"} 
                "Domanda"]]]
          [:tr.postBottom
           [:td.postSettings

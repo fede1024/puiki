@@ -28,14 +28,15 @@
     " - Post:" (or (:posts ch) 0) " Followers:" (count (:followers ch)))) ;; TODO: resterà solo un numero
 
 (defpartial channel-table [ch]
-  [:table.channels
-   [:tr.channelTitle
-    [:td.channelName {:colspan 2} (link-to (channel-path ch) (:name ch))]]
-   [:tr.channelInfo
-    [:td.channelInfo (channel-info ch)]
-    [:td.channelDate (format-timestamp (:created-at ch))]]
-   [:tr.channelDescription
-      [:td.channelDescription {:colspan 2} (:description ch)]]])
+  [:div.channel
+   [:table.channel
+    [:tr.channelTitle
+     [:td.channelName {:colspan 2} (link-to (channel-path ch) (:name ch))]]
+    [:tr.channelInfo
+     [:td.channelInfo (channel-info ch)]
+     [:td.channelDate (format-timestamp (:created-at ch))]]
+    [:tr.channelDescription
+     [:td.channelDescription {:colspan 2} (:description ch)]]]])
 
 (defpage "/channel/list" []
   (layout "Tutti i canali"

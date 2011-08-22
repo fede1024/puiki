@@ -1,7 +1,13 @@
-table.channels {
+div.channel {
     width: 100%;
     margin-bottom: 10px;
-    border: 1px solid #a1efa3;
+    border: 2px solid #a1efa3;
+    border-radius: 8px;
+    background-color: #dcf9c8;
+}
+
+table.channel {
+    width:100%;
 }
 
 tr.channelTitle {
@@ -9,11 +15,9 @@ tr.channelTitle {
 }
 
 tr.channelInfo {
-    background-color: #dcf9c8;
 }
 
 tr.channelDescription {
-    background-color: #dcf9c8;
 }
 
 /*
@@ -37,13 +41,13 @@ td.channelName:before {
 td.channelDate{
     color: teal;
     font-style: normal;
-    font-size: X-small;
+    font-size: 7pt;
     text-align: right;
 }
 
 td.channelInfo{
     font-style: normal;
-    font-size: X-small;
+    font-size: 8pt;
 }
 
 td.channelDescription{

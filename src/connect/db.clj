@@ -47,3 +47,6 @@
 (defn ensure-exists [collection query]
   (or (fetch-one collection :where query)
     (throw (Exception. (str "Can't find object in " collection " where " query)))))
+
+(defn db-last-error []
+  (fetch-one :$cmd :where {:getlasterror 1}))

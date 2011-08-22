@@ -13,20 +13,25 @@
            [noir.session :as session]
            [noir.response :as resp]))
 
+(pre-route "/edit*" p
+  (if (current-id)
+    (if (not (user? (current-id)))
+      (render "/permission-denied"))
+    (render "/login" {:redirect (:uri p)})))
+
 (defn update-vote [current dir]
   (or (get {[-1 "up"] 0  [0 "up"] 1  [1 "up"] 1
             [-1 "down"] -1  [0 "down"] -1 [1 "down"] 0}
         [current dir]) current))
 
 ;; TODO: controllo url malformati??
-(defpage [:post "/user/vote/:id"] {:keys [id dir url]}
+(defpage [:post "/edit/vote/:id"] {:keys [id dir url]}
   (let [id (obj-id id)
         post (fetch-one :posts :where {:_id id})]
     (if (and post (or (= dir "up") (= dir "down")))
       (let [my-vote (or (get (:votes post) (keyword (current-id))) 0)
             votes (merge (:votes post)
                     {(keyword (current-id)) (update-vote my-vote dir)})]
-        (println my-vote votes)
         (update! :posts {:_id id}
           {:$set {:votes votes :vtotal (apply + (vals votes))}})
         (resp/redirect url))
@@ -92,58 +97,9 @@
       (form-to [:get (user-comment-path post)]
         (submit-button {:class "postComment"} "Commenta"))]]]])
 
-;(defn error-table [description vd]
-;  (when vd
-;    [:table.error
-;     [:tr.errorTitle [:td.errorTitle "Errore invio post"]]
-;     (for [[k v] vd :when v] 
-;       [:tr.errorBody
-;        [:td.errorBody (description k)]])]))
-;
-;(def new-reply-errors 
-;  {:content "Contenuto non valido"})
-
-;(defn post-reply-table [post & [data vd]]
-;  (form-to {:accept-charset "utf-8" } [:post (user-reply-path post)]
-;    (error-table new-reply-errors vd)
-;    [:table.post
-;     [:tr.postTitle
-;      [:td.postTitle {:colspan 2}
-;       (text-field {:class :postTitle} :title
-;         (if data (:title data)
-;           (str "Risposta a: " (:title post))))]]
-;     [:tr.postInfo 
-;      (let [p (db/get-row :people :id (current-id))]
-;        [:td.postAuthor "Postato da: " (:name p) " " (:surname p) (user-description p)])
-;      [:td.postDate (format-timestamp (java.util.Date.))]]
-;     [:tr.postContent
-;      [:td.postContent {:colspan 2}
-;       (text-area {:class :postContent :rows 15} :content
-;         (:content data))]]
-;     [:tr.postBottom
-;      [:td.postActions {:colspan 2}
-;       (submit-button {:class "postReply"} "Invia")]]]))
-;
-;(defn post-reply-page [post-id & [data vd]]
-;  (layout "Rispondi"
-;    (let [post (db/get-row :posts :id post-id :default nil)]
-;      (if post
-;        [:span
-;         [:h2 "Post a cui stai rispondendo:"]
-;         (post-table post)
-;         [:h2 "Tuo intervento:"]
-;         (post-reply-table post data vd)
-;         (let [answers (sort-by #(apply + (vals (:votes %)))
-;                         (map #(db/get-row :posts :id %) (:answers post)))]
-;           [:span
-;            [:h2 "Risposte precedenti: " (count answers)]
-;            (for [answ answers]
-;              (post-table answ))])]
-;        [:p "Post non trovato"]))))
-
-
-(defn post-page [id]
-  (let [post (fetch-one :posts :where {:_id id})]
+(defpage "/post/:id" {:keys [id]}
+  (let [id (obj-id id)
+        post (fetch-one :posts :where {:_id id})]
     (if post
       (layout "Post"
         (if (= :question (:type post))
@@ -151,51 +107,52 @@
           [:h2 "Post:"])
         (post-table post)
         (when (= "question" (:type post))
-          (let [answers (sort-by #(apply + (vals (:votes %))) > ;;TODO: fix
-                          (map #(fetch-one :posts :where {:_id %}) (:answers post)))]
+          (let [answers (fetch :posts :where {:answers-to id} :sort {:vtotal -1})]
             [:span
              [:h2 "Risposte: " (count answers)]
              (for [answ answers]
                (post-table answ))])))
       (render "/not-found"))))
 
-(defpage "/user/new-post" [& [data]]
+(defpage "/edit/new-post" {:keys [title content channel type]}
   (layout "Nuovo post"
     (let [person (fetch-one :people :where {:_id (current-id)})
           channels (concat '("--- Seguiti ---")
                      (map #(:name (unref %)) (:follows person))
                      '("--- Tutti ---")
                      (map :name (fetch :channels)))]
-      (form-to {:accept-charset "utf-8" } [:post "/user/new-post"]
-        ;(error-table new-post-errors vd) ;;TODO: fix
-        [:table.post
-         [:tr.postTitle
+      (form-to {:accept-charset "utf-8" } [:post "/edit/new-post"]
+        (error-table "Errore invio post")
+        [:div.post
+         [:table.post
           [:tr.postTitle
-           [:td.postTitle {:colspan 2}
-            (text-field {:class :postTitle} :title
-              (if data (:title data) "Titolo post"))]]]
-         [:tr.postInfo 
-          (let [p (fetch-one :people :where {:_id (current-id)})]
-            [:td.postAuthor "Postato da: " (:name p) " " (:surname p)
-             (user-description p)])
-          [:td.postDate (format-timestamp (java.util.Date.))]]
-         [:tr.postContent
-            [:td.postContent {:colspan 2}
-             (text-area {:class :postContent :rows 15} :content
-               (:content data))]]
-         [:tr.postBottom
-          [:td.postSettings {:colspan 2} "Tipo post: "
-           [:input {:type :radio :name "type" :value "normal" :checked "true"} 
-               "Normale"]
-           [:input {:type :radio :name "type" :value "question"} 
-               "Domanda"]]]
-         [:tr.postBottom
-          [:td.postSettings
-           "Canale: " (drop-down :channel channels)]
-          [:td.postActions
-           (submit-button {:class "postSubmit"} "Invia")]]]))))
+           [:tr.postTitle
+            [:td.postTitle {:colspan 2}
+             (text-field {:class :postTitle} :title
+               (or title "Titolo post"))]]]
+          [:tr.postInfo 
+           [:td.postAuthor "Postato da: " (:name person) " " (:surname person)
+            (user-description person)]
+           [:td.postDate (format-timestamp (java.util.Date.))]]
+          [:tr.postContent
+           [:td.postContent {:colspan 2}
+            (text-area {:class :postContent :rows 15} :content
+              (or content "Contenuto del post"))]]
+          [:tr.postBottom
+           [:td.postSettings {:colspan 2} "Tipo post: "
+            [:input {:type :radio :name "type" :value "normal"
+                     :checked (when (or (not type) (= type "normal")) "true")} 
+             "Normale"]
+            [:input {:type :radio :name "type" :value "question"
+                     :checked (when (= type "question") "true")}
+             "Domanda"]]]
+          [:tr.postBottom
+           [:td.postSettings
+            "Canale: " (drop-down :channel channels)]
+           [:td.postActions
+            (submit-button {:class "postSubmit"} "Invia")]]]]))))
 
-(defn valid? [{:keys [title content channel type]}]
+(defn valid-post? [{:keys [title content channel type]}]
   (vali/rule (not (str/blank? title))
     [:title "Titolo non valido"])
   (vali/rule (not (str/blank? content))
@@ -204,8 +161,8 @@
     [:channel "Canale non valido"]) ;;TODO: controllo sul tipo
   (not (vali/errors? :title :content :channel)))
 
-(defpage [:post "/user/new-post"] {:keys [] :as post}
-  (if (valid? post)
+(defpage [:post "/edit/new-post"] {:as post}
+  (if (valid-post? post)
     (let [channel (fetch-one :channels :where {:name (:channel post)})]
       (insert! :posts
         (merge post {:author (current-id) :channel (:_id channel)
@@ -213,5 +170,64 @@
       (update! :channels {:_id (:_id channel)}
         {:$inc {:posts 1}})
       (resp/redirect (channel-path channel)))
-    (render "/user/new-post" post)))
+    (render "/edit/new-post" post)))
 
+(defpartial post-reply-table [question & [reply]]
+  (form-to {:accept-charset "utf-8" } [:post (user-reply-path question)]
+    (error-table "Errore invio post")
+    [:div.post
+     [:table.post
+      [:tr.postTitle
+       [:td.postTitle {:colspan 2}
+        (post-images "answer") " "
+        (text-field {:class :postTitle} :title
+          (or (:title reply) (str "Risposta a: " (:title question))))]]
+      [:tr.postInfo 
+       (let [p (fetch-one :people :where {:_id (current-id)})]
+         [:td.postAuthor "Postato da: " (:name p) " " (:surname p) (user-description p)])
+       [:td.postDate (format-timestamp (java.util.Date.))]]
+      [:tr.postContent
+       [:td.postContent {:colspan 2}
+        (text-area {:class :postContent :rows 15} :content
+          (or (:content reply) "Contenuto del post"))]]
+      [:tr.postBottom
+       [:td.postActions {:colspan 2}
+        (submit-button {:class "postReply"} "Invia")]]]]))
+
+(defpage "/edit/reply/:qid" {:keys [qid reply]}
+  (layout "Rispondi"
+    (let [qid (obj-id qid)
+          question (fetch-one :posts :where {:_id qid})]
+      (if question
+        [:span
+         [:h2 "Post a cui stai rispondendo:"]
+         (post-table question)
+         [:h2 "Tuo intervento:"]
+         (post-reply-table question reply)
+         (let [answers (fetch :posts :where {:answers-to qid} :sort {:vtotal -1})]
+           [:span
+            [:h2 "Risposte precedenti: " (count answers)]
+            (for [answ answers]
+              (post-table answ))])]
+        [:p "Post non trovato"]))))
+
+(defn valid-reply? [{:keys [qid title content]}]
+  (vali/rule (not (str/blank? title))
+    [:title "Titolo non valido"])
+  (vali/rule (not (str/blank? content))
+    [:content "Contenuto non valido"])
+  (vali/rule (fetch-one :posts :where {:_id (obj-id qid)})
+    [:post "Non esiste un post di domanda"])
+  (not (vali/errors? :title :content)))
+
+(defpage [:post "/edit/reply/:qid"] {:keys [qid] :as reply}
+  (if (valid-reply? reply)
+    (let [question (fetch-one :posts :where {:_id (obj-id qid)})]
+      (insert! :posts
+        {:title      (:title reply)    :content    (:content reply)
+         :author     (current-id)      :channel    (:channel question)
+         :created-at (java.util.Date.) :answers-to (obj-id qid)
+         :type       "answer"})
+      (update! :channels {:_id (:channel question)} {:$inc {:posts 1}})
+      (resp/redirect (post-path question)))
+    (render "/edit/reply/:id" reply)))

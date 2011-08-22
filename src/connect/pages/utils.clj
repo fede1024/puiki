@@ -21,16 +21,16 @@
   (str "/channel/" (:_id channel) "/"))
 
 (defn user-reply-path [post]
-  (str "/user/reply/" (:_id post)))
+  (str "/edit/reply/" (:_id post)))
 
 (defn user-comment-path [post]
-  (str "/user/comment/" (:_id post)))
+  (str "/edit/comment/" (:_id post)))
 
 (defn post-path [post]
   (str "/post/" (:_id post)))
 
 (defn post-vote-path [post]
-  (str "/user/vote/" (:_id post)))
+  (str "/edit/vote/" (:_id post)))
 
 (defn user? [id] ;; TODO: Migliorare qui
   (when id

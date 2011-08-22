@@ -219,3 +219,46 @@ td.head {
 td.errImg {
     vertical-align: middle;
 }
+/*
+ * Errore
+ * 
+*/
+
+div.error{
+    width: 100%;
+    margin-bottom: 10px;
+    border: 1px solid #fdd9d9;
+    border-radius: 4px;
+}
+
+table.error {
+    width: 100%;
+}
+
+tr.errorTitle {
+    background-color: #fdd9d9;
+}
+
+tr.errorBody {
+    border-top: 1px solid #fdd9d9;
+}
+
+td.errorTitle {
+    font-size: 12pt;
+    text-decoration: none;
+    vertical-align: middle;
+}
+
+td.errorTitle:before {
+    vertical-align: middle;
+    padding-right: 3px;
+    content: url(/images/error.png);
+} 
+
+td.errorBody {
+    width: 100%;
+    padding-left: 5px;
+    text-decoration: none;
+    padding: 5px;
+    text-align: justify;
+}

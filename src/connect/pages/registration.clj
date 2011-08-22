@@ -63,7 +63,6 @@
   (not (vali/errors? :id :pwd :email :firstname :lastname)))
 
 (defpage [:post "/register"] {:as data}
-  (println (pr-str data))
   (if (valid? data)
     (resp/redirect "/")
     (render "/register" data)))

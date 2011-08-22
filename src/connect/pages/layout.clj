@@ -12,18 +12,18 @@
    [noir.util.test :as test]))
 
 (defpartial status-section []
-   (if (current-id)
-     (let [id (current-id)
-           person (fetch-one :people :where {:_id id})]
-       [:table.status
-        [:tr.statusWelcome
-         [:td.statusWelcome (str "Benvenuto " (:name person) "! ")]
-         [:td.statusLogout {:rowspan 2} (link-to "/logout" "Logout")]]
-        [:tr.statusInfo
-         [:td.statusInfo "Loggato come " id " ("
-          (translate-job (:job person)) ") "]]])
-     [:div.register "Effettua il " [:a {:href "/login"} "login"]
-      " oppure " [:a {:href "/register"} "registrati"] "."]))
+  (if (current-id)
+    (let [id (current-id)
+          person (fetch-one :people :where {:_id id})]
+      [:table.status
+       [:tr.statusWelcome
+        [:td.statusWelcome (str "Benvenuto " (:name person) "! ")]
+        [:td.statusLogout {:rowspan 2} (link-to "/logout" "Logout")]]
+       [:tr.statusInfo
+        [:td.statusInfo "Loggato come " id " ("
+         (translate-job (:job person)) ") "]]])
+    [:div.register "Effettua il " [:a {:href "/login"} "login"]
+     " oppure " [:a {:href "/register"} "registrati"] "."]))
 
 (defpartial people-table [people]
   [:table.people
@@ -39,7 +39,7 @@
 (defpartial user-sidebar []
   [:div.userSidebar
    [:h2.userSidebarTitle "Ultimi post"]
-   (form-to [:get "/user/new-post"]
+   (form-to [:get "/edit/new-post"]
      (submit-button {:class "postNew"} "Crea nuovo post"))])
 
 (defpartial admin-sidebar []
@@ -98,6 +98,16 @@
 (defn error-cell [field]
   [:td.errImg (when-let [err (first (vali/get-errors field))]
                 [:span [:img {:src "/images/error.png"}] " " err])])
+
+(defn error-table [title]
+  (when (not (empty? @vali/*errors*))
+    [:div.error
+     [:table.error
+      [:tr.errorTitle [:td.errorTitle title]]
+      (for [[field errors] @vali/*errors*]
+        (for [error errors]
+          [:tr.errorBody
+           [:td.errorBody error]]))]]))
 
 (defpage "/permission-denied" []
   (layout "Accesso negato"

@@ -24,9 +24,9 @@
         (when redirect
           [:input {:type :hidden :name :redirect :value redirect}])
         [:ul.actions
-         [:li (link-to "/" "Login")]]
+         [:li (link-to "/" "Home")]]
         (user-fields data)
-        (submit-button "submit")))))
+        (submit-button "Login")))))
 
 (defn login! [{:keys [username password] :as user}]
   (let [stored-pass (:pwd (fetch-one :people :where {:_id username}))]

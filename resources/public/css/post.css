@@ -4,7 +4,7 @@ div.post {
     margin-bottom: 15px;
     background-color: #f0f9fd;
     border: 2px solid #d3effd;
-    border-radius: 8px;
+    border-radius: 6px;
     margin-left: auto;
     margin-right: auto;
     /*border-radius: 10px;*/
@@ -38,6 +38,7 @@ button.vote {
 
 tr.postTitle {
     border-bottom: 2px solid #d3effd;
+    background-color: #d3effd;
 }
 
 tr.postBottom{
@@ -131,9 +132,10 @@ textarea.postContent{
 }
 
 input.postTitle {
+    display: inline;
     margin: 3px;
     font-size: 12pt;
-    width: 98%;
+    width: 95%;
 }
 
 input.postReply, input.postComment, input.postSubmit {
@@ -147,41 +149,3 @@ input.postReply:hover, input.postComment:hover, input.postSubmit:hover  {
     border: 1px solid #aaa;
 }
 
-/*
- * Errore
- * 
-*/
-
-table.error {
-    width: 100%;
-    margin-bottom: 10px;
-    border: 1px solid #fdd9d9;
-}
-
-tr.errorTitle {
-    background-color: #fdd9d9;
-}
-
-tr.errorBody {
-    border-top: 1px solid #fdd9d9;
-}
-
-td.errorTitle {
-    font-size: 12pt;
-    text-decoration: none;
-    vertical-align: middle;
-}
-
-td.errorTitle:before {
-    vertical-align: middle;
-    padding-right: 3px;
-    content: url(/images/error.png);
-} 
-
-td.errorBody {
-    width: 100%;
-    padding-left: 5px;
-    text-decoration: none;
-    padding: 5px;
-    text-align: justify;
-}

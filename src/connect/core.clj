@@ -44,13 +44,13 @@
 (defn -main [& args]
   (with-command-line args
     "PoliConnect software."
-    [[port "Specify the http port" 8080]
+    [[port "Specify the http port" "8080"]
      remaining]
     (let [p (Integer/parseInt port)]
       (server/add-middleware connect.errors/wrap-error-check)
       (mongo! :db "connect")
       (swap! servers assoc p
-        (server/start port {:mode :dev :ns 'connect})))))
+        (server/start p {:mode :dev :ns 'connect})))))
 
 (defn stop-server [port]
   (when (@servers port)

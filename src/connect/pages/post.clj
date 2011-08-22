@@ -85,10 +85,13 @@
      [:td.postContent {:colspan 2} [:div.postContent [:pre (:content post)]]]]
     [:tr.postBottom
      [:td.postContent
+      (when (= (:type post) "answer")
+        (html (link-to (post-path (fetch-one :posts :where {:_id (:answers-to post)}))
+                "Domanda") " "))
       (link-to (post-path post)
-        (when (= (:type post) :question)
-          (str "Risposte: " (count (:answers post)) " "))
-        ;(str "Commenti: " (count (db/get-comments (:id post))))
+        (when (= (:type post) "question")
+          (str "Risposte: " (:answers post) " "))
+        ;(str "Commenti: " (:comments-num post)))
         )]
      [:td.postActions
       (when (= (:type post) "question")
@@ -222,12 +225,15 @@
 
 (defpage [:post "/edit/reply/:qid"] {:keys [qid] :as reply}
   (if (valid-reply? reply)
-    (let [question (fetch-one :posts :where {:_id (obj-id qid)})]
+    (let [qid (obj-id qid)
+          question (fetch-one :posts :where {:_id qid})]
       (insert! :posts
         {:title      (:title reply)    :content    (:content reply)
          :author     (current-id)      :channel    (:channel question)
-         :created-at (java.util.Date.) :answers-to (obj-id qid)
+         :created-at (java.util.Date.) :answers-to qid
          :type       "answer"})
       (update! :channels {:_id (:channel question)} {:$inc {:posts 1}})
+      (update! :posts {:_id qid} {:$inc {:answers 1}})
+      (println (pr-str (db-last-error)))
       (resp/redirect (post-path question)))
     (render "/edit/reply/:id" reply)))

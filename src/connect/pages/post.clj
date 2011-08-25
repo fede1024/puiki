@@ -126,16 +126,20 @@
                  (post-table answ))]))))
       (render "/not-found"))))
 
-(defpage "/edit/new-post" {:keys [title content channel type]}
+;; TODO: fix selezione canale (farlo scegliere davvero qui??)
+(defpage "/edit/new-post" {:keys [title content channel channel-id type]}
   (layout "Nuovo post"
     (let [person (fetch-one :people :where {:_id (current-id)})
-          channels (concat '("--- Seguiti ---")
+          channels (concat (when channel-id
+                             (list (:name (fetch-one :channels :where {:_id (obj-id channel-id)}))))
+                     '("--- Seguiti ---")
                      (map #(:name (fetch-one :channels :where {:_id %}))
                        (:follows person))
                      '("--- Tutti ---")
                      (map :name (fetch :channels)))]
       (form-to {:accept-charset "utf-8" } [:post "/edit/new-post"]
         (error-table "Errore invio post")
+        ;[:p "canale: " channel " id" channel-id]
         [:div.post
          [:table.post
           [:tr.postTitle

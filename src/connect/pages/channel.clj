@@ -43,9 +43,9 @@
     [:h2 "Elenco canali di PoliWeb:"]
     (map channel-table (fetch :channels))))
 
-(defpartial followers [ch-id]
+(defpartial followers [channel]
   (let [limit 10
-        flw (shuffle (fetch :people :where {:follows ch-id}))
+        flw (shuffle (fetch :people :where {:follows (:_id channel)}))
         count (count flw)]
     (html [:h2.peopleTableTitle "Followers: ("
            (min limit count) (when (> count limit) (str " di " count)) ")"]
@@ -54,12 +54,19 @@
       (when (> count limit)
         [:p "..."]))))
 
+(defpartial add-post [channel]
+  [:h2.userSidebarTitle "Modifica: "]
+  (form-to [:get "/edit/new-post"]
+    [:input {:type :hidden :name "channel-id" :value (:_id channel)}]
+    (submit-button {:class "postNew"} "Crea nuovo post")))
+
 (defpage "/channel/:id/" {:keys [id]}
   (let [id (obj-id id)
         channel (fetch-one :channels :where {:_id id})]
     (if (not channel)
       (render "/not-found")
-      (binding [*sidebar* (followers id)]
+      (binding [*sidebar* (html (add-post channel)
+                            (followers channel))]
         (layout (:name channel)
           [:h2 "Canale:"]
           (channel-table channel)

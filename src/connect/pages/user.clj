@@ -62,7 +62,7 @@
 (defpage "/user/list" []
   (layout "Elenco utenti"
     [:h2.register "Elenco utenti"]
-    (people-table (fetch :people)
+    (people-table (fetch :people :sort {:lastname 1 :firstname 1})
       :lastname true :info true)))
 
 (defn to-integer [value]

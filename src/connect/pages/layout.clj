@@ -42,8 +42,10 @@
 (defpartial user-sidebar []
   [:div.userSidebar
    [:h2.userSidebarTitle "Ultimi post"]
+   "TODO"
+   [:h2 "Nuovo post"]
    (form-to [:get "/edit/new-post"]
-     (submit-button {:class "postNew"} "Crea nuovo post"))])
+     (submit-button {:class "postNew"} "Nuovo post (TODO: fix)"))])
 
 (defpartial admin-sidebar []
   [:div.adminSidebar

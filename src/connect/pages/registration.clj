@@ -1,6 +1,7 @@
 (ns connect.pages.registration
   (:use connect.pages.layout
         connect.pages.utils
+        connect.db
         noir.core   
         hiccup.core
         hiccup.page-helpers
@@ -52,6 +53,8 @@
 (defn valid? [data]
   (vali/rule (vali/min-length? (:id data) 3)
     [:id "Deve avere più di 3 lettere."])
+  (vali/rule (not (fetch-one :people :where {:_id (:id data)}))
+    [:id "Matricola già registrata"])
   (vali/rule (vali/min-length? (:pwd data) 4)
     [:pwd "Deve avere almeno 4 lettere."])
   (vali/rule (not (str/blank? (:email data)))
@@ -64,5 +67,13 @@
 
 (defpage [:post "/register"] {:as data}
   (if (valid? data)
-    (resp/redirect "/")
+    (do
+      (insert! :people 
+        (merge (dissoc data :id)
+          {:_id (:id data) :roles [:user]
+           :created-at (java.util.Date.)}))
+      (follow-channel (:_id (fetch-one :channels :where {:name "Poli Connect"}))
+        (:id data))
+      (connect.pages.login/login! {:username (:id data) :password (:pwd data)})
+      (resp/redirect (user-edit-path (:id data))))
     (render "/register" data)))

@@ -32,7 +32,7 @@
   (let [stored-pass (:pwd (fetch-one :people :where {:_id username}))]
     (if (and stored-pass (= password stored-pass))
       (do
-        (session/put! :admin true)
+        ;;(session/put! :admin true)
         (session/put! :username username))
       (vali/set-error :username "Invalid username or password"))))
 

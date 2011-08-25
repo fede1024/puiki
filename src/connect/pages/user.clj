@@ -121,11 +121,11 @@
          :year year     :followers 0
          :created-at (java.util.Date.)}))))
 
-(defn follow-channel [channel-id person-id]
-  (update! :people {:_id person-id}
-    {:$addToSet {:follows channel-id}})
-  (update! :channels {:_id channel-id}
-    {:$inc {:followers 1}}))
+;(defn follow-channel [channel-id person-id]
+;  (update! :people {:_id person-id}
+;    {:$addToSet {:follows channel-id}})
+;  (update! :channels {:_id channel-id}
+;    {:$inc {:followers 1}}))
 
 (defn valid? [{:keys [id field year]}]
   (vali/rule (vali/has-value? field)

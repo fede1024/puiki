@@ -17,7 +17,7 @@
           person (fetch-one :people :where {:_id id})]
       [:table.status
        [:tr.statusWelcome
-        [:td.statusWelcome (str "Benvenuto " (:name person) "! ")]
+        [:td.statusWelcome (str "Benvenuto " (:firstname person) "! ")]
         [:td.statusLogout {:rowspan 2} (link-to "/logout" "Logout")]]
        [:tr.statusInfo
         [:td.statusInfo "Loggato come " id " ("
@@ -27,7 +27,7 @@
 
 (defpartial people-table [people]
   [:table.people
-   (for [{id :_id name :name job :job date :created-at} people]
+   (for [{id :_id name :firstname job :job date :created-at} people]
      [:span
       [:tr.person
        [:td.personName name
@@ -52,7 +52,7 @@
   (let [id (current-id)]
     (if (not id)
       [:span [:h2.peopleTableTitle "Ultimi utenti registrati:"]
-       (people-table (fetch :people))]
+       (people-table (fetch :people :limit 5 :sort {:created-at -1}))]
       [:span
        (when (user? id)  (user-sidebar))
        (when (admin? id) (admin-sidebar))])))

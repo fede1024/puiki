@@ -17,19 +17,20 @@
        :created-at (java.util.Date.)})
     (insert! :posts
       {:title "Benvenuto" :content "Questo è un post di prova."
+       :author "admin"
        :type :normal
        :channel (:_id (fetch-one :channels :where {:name "Poli Connect"}))
        :created-at (java.util.Date.)}))  
+;  (insert! :people
+;    {:_id "s123"  :pwd "ciao"
+;     :firstname "robbo"  :lastname "boh"
+;     :roles ["user"]
+;     :job "student"
+;     :follows [(:_id (fetch-one :channels :where {:name "Poli Connect"}))]
+;     :created-at (java.util.Date.)})
   (insert! :people
-    {:_id "s123"  :pwd "ciao"
-     :name "robbo"  :surname "boh"
-     :roles ["user"]
-     :job "student"
-     :follows [(:_id (fetch-one :channels :where {:name "Poli Connect"}))]
-     :created-at (java.util.Date.)})
-  (insert! :people
-    {:_id "s124"   :pwd "ciao"
-     :name "Ajeje" :surname "Brazof"
+    {:_id "admin"   :pwd "admin"
+     :firstname "Admin" :lastname "Poli Connect"
      :roles ["admin" "user"]
      :job "student"
      :follows [(:_id (fetch-one :channels :where {:name "Poli Connect"}))]
@@ -65,3 +66,9 @@
 
 (defn db-last-error []
   (fetch-one :$cmd :where {:getlasterror 1}))
+
+(defn follow-channel [channel-id person-id] ;;TODO: qui è il posto giusto?
+  (update! :people {:_id person-id}
+    {:$addToSet {:follows channel-id}})
+  (update! :channels {:_id channel-id}
+    {:$inc {:followers 1}}))

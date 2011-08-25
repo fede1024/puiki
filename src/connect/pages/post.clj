@@ -28,7 +28,7 @@
 (defpage [:post "/edit/vote/:id"] {:keys [id dir url]}
   (let [id (obj-id id)
         post (fetch-one :posts :where {:_id id})]
-    (if (and post (or (= dir "up") (= dir "down")))
+    (if (and post (or (= dir "up") (= dir "down")) (current-id))
       (let [my-vote (or (get (:votes post) (keyword (current-id))) 0)
             votes (merge (:votes post)
                     {(keyword (current-id)) (update-vote my-vote dir)})]

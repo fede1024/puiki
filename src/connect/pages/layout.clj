@@ -25,7 +25,8 @@
     [:div.register "Effettua il " [:a {:href "/login"} "login"]
      " oppure " [:a {:href "/register"} "registrati"] "."]))
 
-(defpartial people-table [people & {:keys [img info date lastname]}]
+(defpartial people-table [people & {:keys [img info date lastname]
+                                    :or {img true}}]
   [:table.people
    (for [{id :_id name :firstname lname :lastname
           job :job d :created-at} people]

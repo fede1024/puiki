@@ -62,7 +62,8 @@
 (defpage "/user/list" []
   (layout "Elenco utenti"
     [:h2.register "Elenco utenti"]
-    (people-table (fetch :people))))
+    (people-table (fetch :people)
+      :lastname true :info true)))
 
 (defn to-integer [value]
   (if value 

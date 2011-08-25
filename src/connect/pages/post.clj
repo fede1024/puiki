@@ -150,16 +150,17 @@
           [:tr.postTitle
            [:tr.postTitle
             [:td.postTitle {:colspan 2}
-             (text-field {:class :postTitle} :title
-               (or title "Titolo post"))]]]
+             (text-field {:class :postTitle :placeholder "Titolo post"} :title
+               title)]]]
           [:tr.postInfo 
            [:td.postAuthor "Postato da: " (:firstname person) " " (:lastname person)
             (user-description person)]
            [:td.postDate (format-timestamp (java.util.Date.))]]
           [:tr.postContent
            [:td.postContent {:colspan 2}
-            (text-area {:class :postContent :rows 15} :content
-              (or content "Contenuto del post"))]]
+            (text-area {:class :postContent :rows 15
+                        :placeholder  "Contenuto del post"}
+              :content content)]]
           [:tr.postBottom
            [:td.postSettings {:colspan 2} "Tipo post: "
             [:input {:type :radio :name "type" :value "normal"
@@ -210,13 +211,13 @@
        [:td.postDate (format-timestamp (java.util.Date.))]]
       [:tr.postContent
        [:td.postContent {:colspan 2}
-        (text-area {:class :postContent :rows 15} :content
-          (or (:content reply) "Contenuto del post"))]]
+        (text-area {:class :postContent :rows 15 :placeholder "Contenuto del post"}
+          :content (:content reply))]]
       [:tr.postBottom
        [:td.postActions {:colspan 2}
         (submit-button {:class "postReply"} "Invia")]]]]))
 
-(defpage "/edit/reply/:qid" {:keys [qid reply]}
+(defpage "/edit/reply/:qid" {:keys [qid] :as reply}
   (layout "Rispondi"
     (let [qid (obj-id qid)
           question (fetch-one :posts :where {:_id qid})]
@@ -254,4 +255,4 @@
       (update! :channels {:_id (:channel question)} {:$inc {:posts 1}})
       (update! :posts {:_id qid} {:$inc {:answers 1}})
       (resp/redirect (post-path question)))
-    (render "/edit/reply/:id" reply)))
+    (render "/edit/reply/:qid" reply)))

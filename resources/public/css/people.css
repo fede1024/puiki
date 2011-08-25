@@ -15,11 +15,12 @@ tr.person:before {
     
 }
 
+/*
 td.personName:before {
     vertical-align: middle;
     padding-right: 3px;
     content: url(/images/dot.png);
-}
+}*/
 
 td.personName{
     padding-left: 10px;

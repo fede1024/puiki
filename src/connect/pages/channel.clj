@@ -43,14 +43,26 @@
     [:h2 "Elenco canali di PoliWeb:"]
     (map channel-table (fetch :channels))))
 
+(defpartial followers [ch-id]
+  (let [limit 10
+        flw (shuffle (fetch :people :where {:follows ch-id}))
+        count (count flw)]
+    (html [:h2.peopleTableTitle "Followers: ("
+           (min limit count) (when (> count limit) (str " di " count)) ")"]
+      (people-table (sort-by :lastname (take limit flw)) :img true
+        :lastname (current-id))
+      (when (> count limit)
+        [:p "..."]))))
+
 (defpage "/channel/:id/" {:keys [id]}
   (let [id (obj-id id)
         channel (fetch-one :channels :where {:_id id})]
     (if (not channel)
       (render "/not-found")
-      (layout (:name channel)
-        [:h2 "Canale:"]
-        (channel-table channel)
-        [:h2 "Post:"]
-        (map post-table
-          (fetch :posts :where {:channel id} :sort {:created-at -1}))))))
+      (binding [*sidebar* (followers id)]
+        (layout (:name channel)
+          [:h2 "Canale:"]
+          (channel-table channel)
+          [:h2 "Post:"]
+          (map post-table
+            (fetch :posts :where {:channel id} :sort {:created-at -1})))))))

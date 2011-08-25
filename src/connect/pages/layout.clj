@@ -25,16 +25,18 @@
     [:div.register "Effettua il " [:a {:href "/login"} "login"]
      " oppure " [:a {:href "/register"} "registrati"] "."]))
 
-(defpartial people-table [people]
+(defpartial people-table [people & {:keys [img info date lastname]}]
   [:table.people
-   (for [{id :_id name :firstname job :job date :created-at} people]
+   (for [{id :_id name :firstname lname :lastname
+          job :job d :created-at} people]
      [:span
       [:tr.person
-       [:td.personName name
+       [:td.personName (when img [:img {:src "/images/user-small.png" :height 13}]) " "
+        name (when lastname (str " " lname))
         (when (or (admin? (current-id)) (= id (current-id)))
           [:span " - " (link-to (user-edit-path id) "Modifica")])]
-       [:td.personDate (format-timestamp date)]]
-      [:tr [:td.personId {:colspan "2"} (translate-job job) " " id]]])])
+      (when date [:td.personDate (format-timestamp d)])]
+      (when info [:tr [:td.personId {:colspan "2"} (translate-job job) " " id]])])])
 
 (defpartial user-sidebar []
   [:div.userSidebar
@@ -48,14 +50,17 @@
    [:p (link-to "/admin/" "Pagina amministratore")]
    [:p (link-to "/logs/errors/" "Log degli errori.")]])
 
-(defpartial sidebar []
+(defpartial default-sidebar []
   (let [id (current-id)]
     (if (not id)
       [:span [:h2.peopleTableTitle "Ultimi utenti registrati:"]
-       (people-table (fetch :people :limit 5 :sort {:created-at -1}))]
+       (people-table (fetch :people :limit 5 :sort {:created-at -1})
+         :img true :date true :info true)]
       [:span
        (when (user? id)  (user-sidebar))
        (when (admin? id) (admin-sidebar))])))
+
+(def *sidebar* default-sidebar)
 
 (defpartial layout [title & content]
   (html
@@ -86,12 +91,14 @@
        [:td.status (status-section)]]
       [:tr.right
        [:td.content {:colspan 2} content]
-       [:td.sideBar (sidebar)]]
+       [:td.sideBar (if (fn? *sidebar*)
+                      (*sidebar*)
+                      (str *sidebar*))]]
       [:tr.footer
        [:td.footer {:colspan 3}
         "Powered by: "
         (link-to "http://www.clojure.org" [:img.footer {:height 25 :src "/images/Clojure.png"}])]]]]))
-
+    
 (defpartial error-text [errors]
   (map #(html [:p [:img {:src "/images/error.png"}] " " %]) errors))
 

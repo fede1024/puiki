@@ -73,12 +73,12 @@
      [:td.postTitle (post-images (:type post)) " "
       (link-to {:class :postTitle} (post-path post) (:title post))]
      [:td.postTitleLeft
-      (when (= (:type post) :answer)
-        (link-to (str "/post/" (:answer-to post)) "Domanda"))
+;      (when (= (:type post) "answer")
+;        (link-to (str "/post/" (:answer-to post)) "Domanda"))
       (vote-section post)]]
     [:tr.postInfo 
      (let [p (fetch-one :people :where {:_id (:author post)})]
-       [:td.postAuthor "Postato da: " (:name p) " " (:surname p) (user-description p)])
+       [:td.postAuthor "Postato da: " (:firstname p) " " (:lastname p) (user-description p)])
      [:td.postDate (format-timestamp (:created-at post))]]
     [:tr.postContent
      [:td.postContent {:colspan 2} [:div.postContent [:pre (:content post)]]]]
@@ -99,21 +99,31 @@
       (form-to [:get (user-comment-path post)]
         (submit-button {:class "postComment"} "Commenta"))]]]])
 
+(defpartial post-summary [post]
+  [:h2 "Informazioni post:"]
+  [:p "Commenti: " (count (:comments post))] ;; TODO: fix?
+  (when (= "question" (:type post))
+    [:p "Risposte: " (fetch-count :posts :where {:answers-to (:_id post)})])
+  (when (= (:type post) "answer")
+    [:p (link-to (post-path (fetch-one :posts :where {:_id (:answers-to post)}))
+          "Domanda")]))
+
 (defpage "/post/:id" {:keys [id]}
   (let [id (obj-id id)
         post (fetch-one :posts :where {:_id id})]
     (if post
-      (layout "Post"
-        (if (= :question (:type post))
-          [:h2 "Domanda:"]
-          [:h2 "Post:"])
-        (post-table post)
-        (when (= "question" (:type post))
-          (let [answers (fetch :posts :where {:answers-to id} :sort {:vtotal -1})]
-            [:span
-             [:h2 "Risposte: " (count answers)]
-             (for [answ answers]
-               (post-table answ))])))
+      (binding [*sidebar* (post-summary post)]
+        (layout "Post"
+          (if (= "question" (:type post))
+            [:h2 "Domanda:"]
+            [:h2 "Post:"])
+          (post-table post)
+          (when (= "question" (:type post))
+            (let [answers (fetch :posts :where {:answers-to id} :sort {:vtotal -1})]
+              [:span
+               [:h2 "Risposte: " (count answers)]
+               (for [answ answers]
+                 (post-table answ))]))))
       (render "/not-found"))))
 
 (defpage "/edit/new-post" {:keys [title content channel type]}
@@ -134,7 +144,7 @@
              (text-field {:class :postTitle} :title
                (or title "Titolo post"))]]]
           [:tr.postInfo 
-           [:td.postAuthor "Postato da: " (:name person) " " (:surname person)
+           [:td.postAuthor "Postato da: " (:firstname person) " " (:lastname person)
             (user-description person)]
            [:td.postDate (format-timestamp (java.util.Date.))]]
           [:tr.postContent

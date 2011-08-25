@@ -108,11 +108,16 @@
     [:p (link-to (post-path (fetch-one :posts :where {:_id (:answers-to post)}))
           "Domanda")]))
 
+(defpartial channel-link [post]
+  (let [ch (fetch-one :channels :where {:_id (:channel post)})]
+    [:p "Canale: " (link-to (channel-path ch) (:name ch))]))
+
 (defpage "/post/:id" {:keys [id]}
   (let [id (obj-id id)
         post (fetch-one :posts :where {:_id id})]
     (if post
-      (binding [*sidebar* (post-summary post)]
+      (binding [*sidebar* (html (post-summary post)
+                            (channel-link post))]
         (layout "Post"
           (if (= "question" (:type post))
             [:h2 "Domanda:"]
@@ -196,7 +201,7 @@
      [:table.post
       [:tr.postTitle
        [:td.postTitle {:colspan 2}
-        (post-images "answer") " "
+        ;(post-images "answer") " "
         (text-field {:class :postTitle} :title
           (or (:title reply) (str "Risposta a: " (:title question))))]]
       [:tr.postInfo 
@@ -217,10 +222,10 @@
           question (fetch-one :posts :where {:_id qid})]
       (if question
         [:span
-         [:h2 "Post a cui stai rispondendo:"]
-         (post-table question)
          [:h2 "Tuo intervento:"]
          (post-reply-table question reply)
+         [:h2 "Post a cui stai rispondendo:"]
+         (post-table question)
          (let [answers (fetch :posts :where {:answers-to qid} :sort {:vtotal -1})]
            [:span
             [:h2 "Risposte precedenti: " (count answers)]

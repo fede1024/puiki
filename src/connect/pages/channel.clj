@@ -72,4 +72,5 @@
           (channel-table channel)
           [:h2 "Post:"]
           (map post-table
-            (fetch :posts :where {:channel id} :sort {:created-at -1})))))))
+            (fetch :posts :where {:channel id :type {:$ne "answer"}}
+              :sort {:created-at -1})))))))

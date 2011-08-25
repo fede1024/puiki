@@ -100,7 +100,9 @@
       [:tr.footer
        [:td.footer {:colspan 3}
         "Powered by: "
-        (link-to "http://www.clojure.org" [:img.footer {:height 25 :src "/images/Clojure.png"}])]]]]))
+        (link-to "http://www.clojure.org" [:img.footer {:height 25 :src "/images/Clojure.png"}])
+        (link-to "http://www.mongodb.org" [:img.footer {:height 25 :src "/images/mongodb.png"}])
+        (link-to "http://www.rackspace.com" [:img.footer {:height 25 :src "/images/Rackspace.png"}])]]]]))
     
 (defpartial error-text [errors]
   (map #(html [:p [:img {:src "/images/error.png"}] " " %]) errors))

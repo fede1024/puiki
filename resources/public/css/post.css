@@ -141,11 +141,11 @@ input.postTitle {
 input.postReply, input.postComment, input.postSubmit {
     margin: 3px;
     background-color: #d3effd;
-    border: 1px solid #ccc;
+    border: 1px solid #86d5fd;
     text-decoration: none;
 }
 
 input.postReply:hover, input.postComment:hover, input.postSubmit:hover  {
-    border: 1px solid #aaa;
+    border: 1px solid #59c6fd;
 }
 

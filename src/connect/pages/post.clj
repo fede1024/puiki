@@ -66,38 +66,52 @@
    "question" [:img {:src "/images/question.png"}]
    "answer"   [:img {:src "/images/exclamation.png"}]})
 
-(defpartial post-table [post]
+(defpartial post-table [post & {:keys [show-remove]
+                                :or {show-remove true}}]
   [:div.post
-   [:table.post
-    [:tr.postTitle
-     [:td.postTitle (post-images (:type post)) " "
-      (link-to {:class :postTitle} (post-path post) (:title post))]
-     [:td.postTitleLeft
-;      (when (= (:type post) "answer")
-;        (link-to (str "/post/" (:answer-to post)) "Domanda"))
-      (vote-section post)]]
-    [:tr.postInfo 
-     (let [p (fetch-one :people :where {:_id (:author post)})]
-       [:td.postAuthor "Postato da: " (:firstname p) " " (:lastname p) (user-description p)])
-     [:td.postDate (format-timestamp (:created-at post))]]
-    [:tr.postContent
-     [:td.postContent {:colspan 2} [:div.postContent [:pre (:content post)]]]]
-    [:tr.postBottom
-     [:td.postContent
-      (when (= (:type post) "answer")
-        (html (link-to (post-path (fetch-one :posts :where {:_id (:answers-to post)}))
-                "Domanda") " "))
-      (link-to (post-path post)
+   (if (:removed post)
+     (if (:removed-by post)
+       (if (= (:removed-by post) (:author post))
+         [:div.remMsg "Post rimosso dall'autore."]
+         (let [p (fetch-one :people :where {:_id (:removed-by post)})]
+           [:div.remMsg "Post rimosso da: " (:firstname p) " " (:lastname p) (user-description p)]))
+       [:div.remMsg "Post rimosso."])
+     [:table.post
+      [:tr.postTitle
+       [:td.postTitle (post-images (:type post)) " "
+        (link-to {:class :postTitle} (post-path post) (:title post))]
+       [:td.postTitleLeft
+        ;      (when (= (:type post) "answer")
+        ;        (link-to (str "/post/" (:answer-to post)) "Domanda"))
+        (vote-section post)
+        (when (and show-remove (current-id) 
+                (or (admin? (current-id)) (= (current-id) (:author post))))
+          (form-to [:post (post-remove-path post)]
+            [:script {:type "text/javascript"}
+             "document.write(\"<input type='hidden' name='url' value='\" + document.URL + \"'>\");"]
+            (submit-button {:class "postRemove"} "Cancella")))]]
+      [:tr.postInfo 
+       (let [p (fetch-one :people :where {:_id (:author post)})]
+         [:td.postAuthor "Postato da: " (:firstname p) " " (:lastname p) (user-description p)])
+       [:td.postDate (format-timestamp (:created-at post))]]
+      [:tr.postContent
+       [:td.postContent {:colspan 2} [:div.postContent [:pre (:content post)]]]]
+      [:tr.postBottom
+       [:td.postContent
+        (when (= (:type post) "answer")
+          (html (link-to (post-path (fetch-one :posts :where {:_id (:answers-to post)}))
+                  "Domanda") " "))
+        (link-to (post-path post)
+          (when (= (:type post) "question")
+            (str "Risposte: " (or (:answers post) "nessuna") " "))
+          ;(str "Commenti: " (:comments-num post)))
+          )]
+       [:td.postActions
         (when (= (:type post) "question")
-          (str "Risposte: " (or (:answers post) "nessuna") " "))
-        ;(str "Commenti: " (:comments-num post)))
-        )]
-     [:td.postActions
-      (when (= (:type post) "question")
-        (form-to [:get (user-reply-path post)]
-          (submit-button {:class "postReply"} "Rispondi")))
-      (form-to [:get (user-comment-path post)]
-        (submit-button {:class "postComment"} "Commenta"))]]]])
+          (form-to [:get (user-reply-path post)]
+            (submit-button {:class "postReply"} "Rispondi")))
+        (form-to [:get (user-comment-path post)]
+          (submit-button {:class "postComment"} "Commenta"))]]])])
 
 (defpartial post-summary [post]
   [:h2 "Informazioni post:"]
@@ -144,7 +158,6 @@
                      (map :name (fetch :channels)))]
       (form-to {:accept-charset "utf-8" } [:post "/edit/new-post"]
         (error-table "Errore invio post")
-        ;[:p "canale: " channel " id" channel-id]
         [:div.post
          [:table.post
           [:tr.postTitle
@@ -195,6 +208,29 @@
       (resp/redirect (channel-path channel)))
     (render "/edit/new-post" post)))
 
+(defpage [:post "/edit/remove/:pid"] {:keys [pid confirmed url]}
+  (println (pr-str pid confirmed url))
+  (let [id (obj-id pid)
+        post (fetch-one :posts :where {:_id id})]
+    (if (and post (current-id) 
+          (or (admin? (current-id)) (= (current-id) (:author post))))
+      (if confirmed
+        (do (update! :posts {:_id id}
+              {:$set {:removed true :removed-by (current-id)}})
+          (resp/redirect url))
+        (layout "Conferma"
+          [:h2 "Conferma cancellazione post"]
+          [:p "Sei sicuro di voler cancellare il post?"]
+          (form-to [:post (post-remove-path post)]
+            [:input {:type :hidden :name :url :value url}]
+            [:input {:type :hidden :name :confirmed :value :true}]
+            (submit-button {:class "confirm"} "Conferma"))
+          (form-to [:get url]
+            (submit-button {:class "abort"} "Annulla"))
+          [:h2 "Post da rimuovere:"]
+          (post-table post :show-remove false)))
+      (render "/not-found"))))
+
 (defpartial post-reply-table [question & [reply]]
   (form-to {:accept-charset "utf-8" } [:post (user-reply-path question)]
     (error-table "Errore invio post")
@@ -221,7 +257,7 @@
   (layout "Rispondi"
     (let [qid (obj-id qid)
           question (fetch-one :posts :where {:_id qid})]
-      (if question
+      (if (and question (not (:removed question)))
         [:span
          [:h2 "Tuo intervento:"]
          (post-reply-table question reply)

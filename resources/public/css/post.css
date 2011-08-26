@@ -18,6 +18,14 @@ span.vote {
     margin-left: 10px;
     white-space:nowrap;
     height: 100%;
+    padding: 3px;
+    /*border: 2px solid #86d5fd;
+    background-color: #86d5fd;
+    border-radius: 3px;
+    vertical-align: middle;*/
+}
+
+img.vote{
     vertical-align: middle;
 }
 
@@ -26,6 +34,7 @@ span.voteValue{
     margin-left: 5px;
     margin-right: 5px;
     font-weight: bold;
+    vertical-align: middle;
 }
 
 button.vote {
@@ -69,6 +78,7 @@ td.postTitleLeft {
     text-decoration: none;
     vertical-align: middle;
     text-align: right;
+    white-space:nowrap;
 }
 
 td.postAuthor {
@@ -149,3 +159,14 @@ input.postReply:hover, input.postComment:hover, input.postSubmit:hover  {
     border: 1px solid #59c6fd;
 }
 
+input.postRemove {
+    margin: 0px;
+    background-color: #86d5fd;
+    text-decoration: none;
+    display: inline;
+}
+
+div.remMsg {
+    padding: 3px;
+    text-align: center;
+}

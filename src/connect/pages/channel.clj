@@ -49,7 +49,7 @@
         count (count flw)]
     (html [:h2.peopleTableTitle "Followers: ("
            (min limit count) (when (> count limit) (str " di " count)) ")"]
-      (people-table (sort-by :lastname (take limit flw))
+      (people-table (sort-by :lastname (sort-by :firstname (take limit flw)))
         :lastname (current-id))
       (when (> count limit)
         [:p "..."]))))

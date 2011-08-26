@@ -32,6 +32,9 @@
 (defn post-vote-path [post]
   (str "/edit/vote/" (:_id post)))
 
+(defn post-remove-path [post]
+  (str "/edit/remove/" (:_id post)))
+
 (defn user? [id] ;; TODO: Migliorare qui
   (when id
     (some #{"user"}

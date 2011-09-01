@@ -166,7 +166,8 @@
             [:h2 "Post:"])
           (post-table post)
           (when (= "question" (:type post))
-            (let [answers (fetch :posts :where {:answers-to id} :sort {:vtotal -1})]
+            (let [answers (sort-by #(or (:vtotal %) 0) >
+                            (fetch :posts :where {:answers-to id}))]
               [:span
                [:h2 "Risposte: " (count answers)]
                (for [answ answers]
@@ -262,7 +263,7 @@
     (if (or undo comment)
       (session/remove! :edit-post-comment)
       (session/put! :edit-post-comment pid))
-    (when comment
+    (when (and comment (not undo))
       (update! :posts {:_id (obj-id pid)}
         {:$push {:comments {:body comment :author (current-id)
                             :created-at (java.util.Date.)}}

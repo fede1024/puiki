@@ -25,19 +25,20 @@
     [:div.register "Effettua il " [:a {:href "/login"} "login"]
      " oppure " [:a {:href "/register"} "registrati"] "."]))
 
-(defpartial people-table [people & {:keys [img info date lastname]
+(defpartial people-table [people & {:keys [img id info date lastname]
                                     :or {img true}}]
   [:table.people
-   (for [{id :_id name :firstname lname :lastname
+   (for [{matr :_id name :firstname lname :lastname
           job :job d :created-at} people]
      [:span
       [:tr.person
        [:td.personName (when img [:img {:src "/images/user-small.png" :height 13}]) " "
         name (when lastname (str " " lname))
-        (when (or (admin? (current-id)) (= id (current-id)))
-          [:span " - " (link-to (user-edit-path id) "Modifica")])]
+        (when (or (admin? (current-id)) (= matr (current-id)))
+          [:span " - " (link-to (user-edit-path matr) "Modifica")])]
       (when date [:td.personDate (format-timestamp d)])]
-      (when info [:tr [:td.personId {:colspan "2"} (translate-job job) " " id]])])])
+      (when info [:tr [:td.personId {:colspan "2"} (translate-job job) " "
+                       (when id matr)]])])])
 
 (defpartial user-sidebar []
   [:div.userSidebar

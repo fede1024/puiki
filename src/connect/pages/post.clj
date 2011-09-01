@@ -44,8 +44,7 @@
         tot (or (:vtotal post) 0)]
     [:span.vote
      (form-to [:post (post-vote-path post)]
-       [:script {:type "text/javascript"}
-        "document.write(\"<input type='hidden' name='url' value='\" + document.URL + \"'>\");"]
+       (current-url-hidden)
        (when (and (current-id) (< my-vote 1))
          [:button.vote {:name :dir :value "up"}
           [:img.vote {:height 16 :src "/images/up.png"}]])
@@ -56,9 +55,9 @@
 
 (defn user-description [p]
   (cond (= (:job p) "student")
-    (when (:field p)
-      (str " - " (:field p) " " (- 2012 (:year p)) "° anno")) ;;TODO:fix
-    (= (:job p) "professor") " - Docente"
+    (str (:firstname p) " " (:lastname p)
+      (when (:field p) (str " (" (:field p) " " (- 2012 (:year p)) "° anno)"))) ;;TODO:fix
+    (= (:job p) "professor") " (Docente)"
     :else nil))
 
 (def post-images
@@ -66,52 +65,81 @@
    "question" [:img {:src "/images/question.png"}]
    "answer"   [:img {:src "/images/exclamation.png"}]})
 
-(defpartial post-table [post & {:keys [show-remove]
-                                :or {show-remove true}}]
+(defpartial post-bottom [post]
+  (if (= (session/get :edit-post-comment) (str (:_id post)))
+    (form-to {:accept-charset "utf-8" } [:get (user-comment-path post)] ;; Invio commento
+      (current-url-hidden)
+      [:tr.postBottom
+       [:td.postContent {:colspan 2}
+        (text-area {:class :postComment :rows 1 :maxlength 300 :placeholder "Commento"} :comment)]]
+      [:tr.postBottom  
+       [:td.postContent
+        "Massimo 300 caratteri."]
+       [:td.postActions
+        (submit-button {:class "postComment" :name :undo} "Annulla")
+        (submit-button {:class "postComment"} "Commenta")]])
+    [:tr.postBottom     ;; Rispondi/Commenta
+     [:td.postContent
+      (when (= (:type post) "answer")
+        (html (link-to (post-path (fetch-one :posts :where {:_id (:answers-to post)}))
+                "Domanda") " "))
+      (link-to (post-path post)
+        (when (= (:type post) "question")
+          (str "Risposte: " (or (:answers post) 0))))
+      (str " Commenti: " (or (:comments-num post) 0))]
+     [:td.postActions
+      (when (= (:type post) "question")
+        (form-to [:get (user-reply-path post)]
+          (submit-button {:class "postReply"} "Rispondi")))
+      (form-to [:get (user-comment-path post)]
+        (current-url-hidden)
+        (submit-button {:class "postComment"} "Commenta"))]]))
+
+(defn post-comments [post] ;;; TODO: fix qui
+  (for [{body :body author :autor date :created-at} (:comments post)]
+    (html
+      [:tr.commentInfo
+       (let [p (fetch-one :people :where {:_id author})]
+         [:td.commentAuthor (user-description p) " scrive:"])
+       [:td.commentDate (format-timestamp date)]]
+      [:tr.commentBody
+       [:td.commentBody {:colspan 2} [:div.commentBody body]]])))
+
+(defn post-comments [post]
+  (for [{body :body author :author date :created-at} (:comments post)]
+    [:tr.comment
+     [:td.comment {:colspan 2} body
+      (let [p (fetch-one :people :where {:_id author})]
+        [:span.commentInfo (user-description p) " " (format-timestamp date)])]]))
+
+(defpartial post-table [post & {:keys [show-remove] :or {show-remove true}}]
   [:div.post
    (if (:removed post)
      (if (:removed-by post)
        (if (= (:removed-by post) (:author post))
          [:div.remMsg "Post rimosso dall'autore."]
          (let [p (fetch-one :people :where {:_id (:removed-by post)})]
-           [:div.remMsg "Post rimosso da: " (:firstname p) " " (:lastname p) (user-description p)]))
+           [:div.remMsg "Post rimosso da: " (user-description p)]))
        [:div.remMsg "Post rimosso."])
      [:table.post
       [:tr.postTitle
        [:td.postTitle (post-images (:type post)) " "
         (link-to {:class :postTitle} (post-path post) (:title post))]
        [:td.postTitleLeft
-        ;      (when (= (:type post) "answer")
-        ;        (link-to (str "/post/" (:answer-to post)) "Domanda"))
         (vote-section post)
         (when (and show-remove (current-id) 
                 (or (admin? (current-id)) (= (current-id) (:author post))))
           (form-to [:post (post-remove-path post)]
-            [:script {:type "text/javascript"}
-             "document.write(\"<input type='hidden' name='url' value='\" + document.URL + \"'>\");"]
+            (current-url-hidden)
             (submit-button {:class "postRemove"} "Cancella")))]]
       [:tr.postInfo 
        (let [p (fetch-one :people :where {:_id (:author post)})]
-         [:td.postAuthor "Postato da: " (:firstname p) " " (:lastname p) (user-description p)])
+         [:td.postAuthor "Postato da: " (user-description p)])
        [:td.postDate (format-timestamp (:created-at post))]]
       [:tr.postContent
        [:td.postContent {:colspan 2} [:div.postContent [:pre (:content post)]]]]
-      [:tr.postBottom
-       [:td.postContent
-        (when (= (:type post) "answer")
-          (html (link-to (post-path (fetch-one :posts :where {:_id (:answers-to post)}))
-                  "Domanda") " "))
-        (link-to (post-path post)
-          (when (= (:type post) "question")
-            (str "Risposte: " (or (:answers post) "nessuna") " "))
-          ;(str "Commenti: " (:comments-num post)))
-          )]
-       [:td.postActions
-        (when (= (:type post) "question")
-          (form-to [:get (user-reply-path post)]
-            (submit-button {:class "postReply"} "Rispondi")))
-        (form-to [:get (user-comment-path post)]
-          (submit-button {:class "postComment"} "Commenta"))]]])])
+      (post-comments post)
+      (post-bottom post)])])
 
 (defpartial post-summary [post]
   [:h2 "Informazioni post:"]
@@ -166,13 +194,12 @@
              (text-field {:class :postTitle :placeholder "Titolo post"} :title
                title)]]]
           [:tr.postInfo 
-           [:td.postAuthor "Postato da: " (:firstname person) " " (:lastname person)
-            (user-description person)]
+           [:td.postAuthor "Postato da: " (user-description person)]
            [:td.postDate (format-timestamp (java.util.Date.))]]
           [:tr.postContent
            [:td.postContent {:colspan 2}
             (text-area {:class :postContent :rows 15
-                        :placeholder  "Contenuto del post"}
+                        :placeholder "Contenuto del post"}
               :content content)]]
           [:tr.postBottom
            [:td.postSettings {:colspan 2} "Tipo post: "
@@ -209,7 +236,6 @@
     (render "/edit/new-post" post)))
 
 (defpage [:post "/edit/remove/:pid"] {:keys [pid confirmed url]}
-  (println (pr-str pid confirmed url))
   (let [id (obj-id pid)
         post (fetch-one :posts :where {:_id id})]
     (if (and post (current-id) 
@@ -231,6 +257,18 @@
           (post-table post :show-remove false)))
       (render "/not-found"))))
 
+(defpage [:get "/edit/comment/:pid"] {:keys [pid comment undo url]}
+  (when (current-id)
+    (if (or undo comment)
+      (session/remove! :edit-post-comment)
+      (session/put! :edit-post-comment pid))
+    (when comment
+      (update! :posts {:_id (obj-id pid)}
+        {:$push {:comments {:body comment :author (current-id)
+                            :created-at (java.util.Date.)}}
+         :$inc {:comments-num 1}})))
+  (resp/redirect url))
+
 (defpartial post-reply-table [question & [reply]]
   (form-to {:accept-charset "utf-8" } [:post (user-reply-path question)]
     (error-table "Errore invio post")
@@ -243,7 +281,7 @@
           (or (:title reply) (str "Risposta a: " (:title question))))]]
       [:tr.postInfo 
        (let [p (fetch-one :people :where {:_id (current-id)})]
-         [:td.postAuthor "Postato da: " (:name p) " " (:surname p) (user-description p)])
+         [:td.postAuthor "Postato da: " (user-description p)])
        [:td.postDate (format-timestamp (java.util.Date.))]]
       [:tr.postContent
        [:td.postContent {:colspan 2}

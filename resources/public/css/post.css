@@ -46,16 +46,20 @@ button.vote {
 }
 
 tr.postTitle {
-    border-bottom: 2px solid #d3effd;
+    border-bottom: 1px solid #d3effd;
     background-color: #d3effd;
+}
+
+tr.postContent{
+    border-bottom: 1px solid #d3effd;
 }
 
 tr.postBottom{
     border-top: 1px solid #d3effd;
 }
 
-tr.postComment {
-    border-top: 1px solid #d3effd;
+tr.comment {
+    border-top: 1px dotted #d3effd;
 }
 
 td.postTitle {
@@ -81,8 +85,9 @@ td.postTitleLeft {
     white-space:nowrap;
 }
 
-td.postAuthor {
+td.postAuthor{
     padding-left: 5px;
+    padding-bottom: 0px;
     font-size: 8pt;
     text-decoration: none;
     vertical-align: bottom;
@@ -91,26 +96,41 @@ td.postAuthor {
 td.postDate{
     white-space:nowrap;
     padding-right: 8px;
+    padding-bottom: 0px;
     color: teal;
     font-style: normal;
     font-size: 7pt;
     text-align: right;
 }
 
-td.postContent{
-    width: 100%;
-    padding-top: 0px;
-    padding-bottom: 5px;
+td.comment {
+    padding-left: 20px;
+    padding-right: 20px;
+    text-align: justify;
+}
+
+span.commentInfo {
     padding-left: 5px;
     padding-right: 5px;
+    font-size: 8pt;
+    color: teal;
+}
+
+td.postContent{
+    width: 100%;
+    padding: 5px;
     text-align: justify;
     vertical-align: middle;
 }
 
-td.postComment{
+td.commentBody{
     width: 100%;
-    padding: 5px;
-    vertical-align: middle;
+    margin: 5px;
+}
+
+div.commentBody{
+    padding: 3px;
+    background-color: white;
     text-align: justify;
 }
 
@@ -134,7 +154,7 @@ td.postSettings {
     vertical-align: middle;
 }
 
-textarea.postContent{
+textarea.postContent, textarea.postComment{
     width: 98%;
     padding: 5px;
     background-color: white;
@@ -161,6 +181,7 @@ input.postReply:hover, input.postComment:hover, input.postSubmit:hover  {
 
 input.postRemove {
     margin: 0px;
+    padding: 0px;
     background-color: #86d5fd;
     text-decoration: none;
     display: inline;

@@ -49,3 +49,7 @@
   (if ts
     (.format (java.text.SimpleDateFormat. "d-M-yy HH:mm") ts)
     "???"))
+
+(defn current-url-hidden []
+  [:script {:type "text/javascript"}
+             "document.write(\"<input type='hidden' name='url' value='\" + document.URL + \"'>\");"])

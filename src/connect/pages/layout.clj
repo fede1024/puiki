@@ -43,10 +43,10 @@
 (defpartial user-sidebar []
   [:div.userSidebar
    [:h2.userSidebarTitle "Ultimi post"]
-   "TODO"
-   [:h2 "Nuovo post"]
-   (form-to [:get "/edit/new-post"]
-     (submit-button {:class "postNew"} "Nuovo post (TODO: fix)"))])
+   [:table.lastPosts
+    (for [post (fetch :posts :sort {:created-at -1} :limit 5)]
+      [:tr.lastPost [:td.lastPostTitle (:title post)]
+       [:td.lastPostDate (format-timestamp (:created-at post))]])]])
 
 (defpartial admin-sidebar []
   [:div.adminSidebar

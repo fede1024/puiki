@@ -10,7 +10,7 @@ div.post {
     /*border-radius: 10px;*/
 }
 
-table.post {
+table.post, table.lastPosts {
     width: 100%;
 }
 
@@ -93,7 +93,7 @@ td.postAuthor{
     vertical-align: bottom;
 }
 
-td.postDate{
+td.postDate, td.lastPostDate{
     white-space:nowrap;
     padding-right: 8px;
     padding-bottom: 0px;

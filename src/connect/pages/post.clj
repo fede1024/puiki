@@ -174,17 +174,9 @@
                  (post-table answ))]))))
       (render "/not-found"))))
 
-;; TODO: fix selezione canale (farlo scegliere davvero qui??)
-(defpage "/edit/new-post" {:keys [title content channel channel-id type]}
+(defpage "/edit/new-post" {:keys [title content channel-id type]}
   (layout "Nuovo post"
-    (let [person (fetch-one :people :where {:_id (current-id)})
-          channels (concat (when channel-id
-                             (list (:name (fetch-one :channels :where {:_id (obj-id channel-id)}))))
-                     '("--- Seguiti ---")
-                     (map #(:name (fetch-one :channels :where {:_id %}))
-                       (:follows person))
-                     '("--- Tutti ---")
-                     (map :name (fetch :channels)))]
+    (let [person (fetch-one :people :where {:_id (current-id)})]
       (form-to {:accept-charset "utf-8" } [:post "/edit/new-post"]
         (error-table "Errore invio post")
         [:div.post
@@ -211,29 +203,34 @@
                      :checked (when (= type "question") "true")}
              "Domanda"]]]
           [:tr.postBottom
-           [:td.postSettings
-            "Canale: " (drop-down :channel channels)]
+           [:td.postSettings "Canale: "
+            (when channel-id
+              (let [channel (fetch-one :channels :where {:_id (obj-id channel-id)})]
+                (html [:input {:type :hidden :name :channel-id :value channel-id}]
+                (link-to (channel-path channel) (:name channel)))))]
            [:td.postActions
             (submit-button {:class "postSubmit"} "Invia")]]]]))))
 
-(defn valid-post? [{:keys [title content channel type]}]
+(defn valid-post? [{:keys [title content channel-id type]}]
   (vali/rule (not (str/blank? title))
     [:title "Titolo non valido"])
   (vali/rule (not (str/blank? content))
     [:content "Contenuto non valido"])
-  (vali/rule (fetch-one :channels :where {:name channel})
-    [:channel "Canale non valido"]) ;;TODO: controllo sul tipo
-  (not (vali/errors? :title :content :channel)))
+  (vali/rule (fetch-one :channels :where {:_id (obj-id channel-id)})
+    [:channel-id "Canale non valido"]) ;;TODO: controllo sul tipo
+  (not (vali/errors? :title :content :channel-id)))
 
 (defpage [:post "/edit/new-post"] {:as post}
+  (println (pr-str post))
   (if (valid-post? post)
-    (let [channel (fetch-one :channels :where {:name (:channel post)})]
+    (let [c-id (obj-id (:channel-id post))
+          ch (fetch-one :channels :where {:_id c-id})]
       (insert! :posts
-        (merge post {:author (current-id) :channel (:_id channel)
+        (merge post {:author (current-id) :channel c-id
                      :created-at (java.util.Date.)}))
-      (update! :channels {:_id (:_id channel)}
+      (update! :channels {:_id c-id}
         {:$inc {:posts 1}})
-      (resp/redirect (channel-path channel)))
+      (resp/redirect (channel-path ch)))
     (render "/edit/new-post" post)))
 
 (defpage [:post "/edit/remove/:pid"] {:keys [pid confirmed url]}

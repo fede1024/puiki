@@ -107,10 +107,10 @@
   (- 2012 year))
 
 (defn field-channel-name [field-name year]
-  (str field-name " " (get-course-year year) "° anno"))
+  (str field-name " " (get-course-year year) "°anno"))
 
 (defn field-channel-description [field-name year]
-  (str "Canale di " field-name " " (get-course-year year) "° anno."))
+  (str "Canale di " field-name " " (get-course-year year) "°anno."))
 
 (defn create-field-channel [field-name year]
   (let [channel (fetch-one :channels :where {:field field-name :year year})]
@@ -152,7 +152,20 @@
 
 (defpage "/user/following" []
   (layout "Canali seguiti"
-    [:h2 "Stai seguendo i canali:"]
-    (map channel-table
-      (map #(fetch-one :channels :where {:_id %})
-        (:follows (fetch-one :people :where {:_id (current-id)}))))))
+;    (map channel-table
+;      (map #(fetch-one :channels :where {:_id %})
+;        (:follows (fetch-one :people :where {:_id (current-id)}))))
+    (let [channels (map #(fetch-one :channels :where {:_id %})
+                     (:follows (fetch-one :people :where {:_id (current-id)})))]
+      (html
+        [:h2 "Indirizzi di studio:"]
+        (for [c (filter #(= (:type %) "field") channels)]
+          [:p [:img {:src "/images/dot.png" :height 10}] " "
+           (link-to (channel-path c) (:name c))
+           [:span.channelInfo (channel-info c)]])
+        [:h2 "Gruppi:"]
+        (for [c (filter #(= (:type %) "group") channels)]
+          [:p [:img {:src "/images/dot.png" :height 10}] " "
+           (link-to (channel-path c) (:name c))
+           [:span.channelInfo (channel-info c)] [:br]
+           [:span.channelDescription (:description c)]])))))

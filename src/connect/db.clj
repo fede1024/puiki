@@ -13,7 +13,7 @@
   (when (not (fetch-one :channels :where {:name "Poli Connect"}))
     (insert! :channels
       {:name "Poli Connect" :description "Canale dedicato a Poli Connect"
-       :type :normal :posts 1
+       :type :group :posts 1
        :created-at (java.util.Date.)})
     (insert! :posts
       {:title "Benvenuto" :content "Questo è un post di prova."

@@ -15,17 +15,20 @@
            [noir.response :as resp]))
 
 (def channel-types
-  {"normal" "Normale", "group" "Gruppo",
+  {"group" "Gruppo",
    "field" "Indirizzo di studio", "course" "Corso"})
 
 (def privacy-options
   {:public "Pubblico" :private "Privato"})
 
+;(defn channel-info [ch]
+;  (str "Tipo canale: " (channel-types (:type ch))
+;    (when (= (:type ch) "group")
+;      (str " (" (privacy-options (:privacy ch)) ")"))
+;    " - Post: " (or (:posts ch) 0) " Followers: " (or (:followers ch) "0")))
+
 (defn channel-info [ch]
-  (str "Tipo canale: " (channel-types (:type ch))
-    (when (= (:type ch) "group")
-      (str " (" (privacy-options (:privacy ch)) ")"))
-    " - Post: " (or (:posts ch) 0) " Followers: " (or (:followers ch) "0")))
+  (str "(Post: " (or (:posts ch) 0) " Followers: " (or (:followers ch) 0) ")"))
 
 (defpartial channel-table [ch]
   [:div.channel
@@ -40,8 +43,24 @@
 
 (defpage "/channel/list" []
   (layout "Tutti i canali"
-    [:h2 "Elenco canali di PoliWeb:"]
-    (map channel-table (fetch :channels))))
+    ;(map channel-table (fetch :channels))
+    [:h2 "Elenco Indirizzi di studio:"]
+    [:ul.fields
+     (for [f (fetch :fields :sort {:name 1})]
+       (html [:li.field (:name f) ":"]
+         [:ul.fieldChannels
+          (for [c (fetch :channels :where {:field (:name f)}
+                    :sort {:year -1})]
+            [:li.fieldChannel [:img {:src "/images/dot.png" :height 10}] " "
+             (link-to (channel-path c) (:name c))
+             [:span.channelInfo (channel-info c)]])]))]
+    [:h2 "Elenco Gruppi:"]
+    [:ul.groups
+     (for [c (fetch :channels :where {:type "group"} :sort {:name 1})]
+       [:li.groupChannel [:img {:src "/images/dot.png" :height 10}] " "
+        (link-to (channel-path c) (:name c))
+        [:span.channelInfo (channel-info c)] [:br]
+        [:span.channelDescription (:description c)]])]))
 
 (defpartial followers [channel]
   (let [limit 10

@@ -221,7 +221,6 @@
   (not (vali/errors? :title :content :channel-id)))
 
 (defpage [:post "/edit/new-post"] {:as post}
-  (println (pr-str post))
   (if (valid-post? post)
     (let [c-id (obj-id (:channel-id post))
           ch (fetch-one :channels :where {:_id c-id})]

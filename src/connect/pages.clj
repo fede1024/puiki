@@ -5,6 +5,7 @@
     connect.pages.login
     connect.pages.registration
     connect.pages.user
+    connect.pages.search
     connect.pages.admin
     connect.pages.channel
     connect.pages.post

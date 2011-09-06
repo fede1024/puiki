@@ -13,10 +13,10 @@
    [noir.util.test :as test]))
 
 (defpage "/" []
-  (layout "PoliWeb"
+  (layout "Poli Connect"
     [:div
      [:h2 "Home"]
-     [:p "Qui credo ci scriverò qualcosa"]
      [:p (link-to "/user/" "Pagina utenti")]
+     [:p (link-to "/search" "Cerca")]
      [:p (link-to "/admin/" "Pagina amministratore")]
      [:p (link-to "/channel/list" "Elenco canali")]]))

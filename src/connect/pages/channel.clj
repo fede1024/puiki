@@ -77,7 +77,12 @@
   [:h2.userSidebarTitle "Modifica: "]
   (form-to [:get "/edit/new-post"]
     [:input {:type :hidden :name "channel-id" :value (:_id channel)}]
-    (submit-button {:class "postNew"} "Crea nuovo post")))
+    (submit-button {:class "postNew"} "Crea nuovo post"))
+  [:h2.userSidebarTitle "Cerca: "]
+  (form-to [:get "/search"]
+    [:input {:type :hidden :name "channel-id" :value (:_id channel)}]
+    (text-field {:class :channelSearchText :placeholder "Testo ricerca"} :text)
+    (submit-button {:class "channelSearch"} "Cerca")))
 
 (defpage "/channel/:id/" {:keys [id]}
   (let [id (obj-id id)

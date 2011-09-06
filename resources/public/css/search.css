@@ -1,0 +1,24 @@
+table.search {
+    width: 100%;
+}
+
+input.searchText {
+    display: inline;
+    margin: 3px;
+    font-size: 12pt;
+    width: 98%;
+}
+
+input.search {
+    margin: 3px;
+    display: inline;
+}
+
+td.searchText {
+}
+
+td.searchActions {
+    text-align: right;
+    vertical-align: middle;
+    width: 15%;
+}

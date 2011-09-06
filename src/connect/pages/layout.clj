@@ -76,7 +76,7 @@
      [:link {:rel "shortcut icon" :href "/images/favicon.gif"}]
      (include-css "/css/reset.css")
      (include-css "/css/screen.css")
-     ;(include-css "/css/comments.css")
+     (include-css "/css/search.css")
      (include-css "/css/people.css")
      (include-css "/css/channel.css")
      (include-css "/css/post.css")
@@ -88,6 +88,7 @@
        [:td.header title]
        [:td.links
         [:a.header {:href "/"} [:img.header {:src "/images/home.png"}]]
+        [:a.header {:href "/search"} [:img.header {:src "/images/search.png"}]]
         [:a.header {:href "/user/"} [:img.header {:src "/images/user.png"}]]
         [:a.header {:href "/user/following"} [:img.header {:src "/images/asterisk-green.png"}]]
         [:a.header {:href "/admin/"} [:img.header {:src "/images/admin.png"}]]]

@@ -19,8 +19,6 @@
          ret# ~expr]
      [ret# (/ (double (- (. System (nanoTime)) start#)) 1000000.0)]))
 
-(exec-time (search-by-text "post rirsposta"))
-
 (defpage "/search" {:keys [text channel-id]}
   (let [channel (when channel-id
                   (fetch-one :channels :where {:_id (obj-id channel-id)}))]
@@ -45,5 +43,8 @@
             [:p "Tempo di elaborazione: " (int exec-time) " millisecondi"]
             (when (empty? posts)
               [:p "Nessun risultato"])
-            (for [post posts]
-              [:p (link-to (post-path post) (:title post))])))))))
+            [:table
+             (for [post posts]
+               (let [channel (fetch-one :channels :where {:_id (:channel post)})]
+                 [:tr [:td (link-to (post-path post) (:title post))]
+                  [:td (:name channel)]]))]))))))

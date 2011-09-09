@@ -72,8 +72,10 @@
                               (when channel {:channel channel})))
                    keywords))]
     (sort-by :relevance >
-      (for [[id posts] groups]
-        (assoc (first posts) :relevance (count posts))))))
+      (reverse ;; TODO: migliorare qui??
+        (sort-by :created-at 
+          (for [[id posts] groups]
+            (assoc (first posts) :relevance (count posts))))))))
 
 (defn search-by-text [text & [channel]]
   (search-some-keywords (get-keywords text) channel))

@@ -2,6 +2,7 @@
   (:use connect.pages.layout
         connect.pages.utils
         connect.db
+        connect.search
         noir.core   
         hiccup.core
         hiccup.page-helpers
@@ -226,7 +227,8 @@
           ch (fetch-one :channels :where {:_id c-id})]
       (insert! :posts
         (merge post {:author (current-id) :channel c-id
-                     :created-at (java.util.Date.)}))
+                     :created-at (java.util.Date.)
+                     :keywords (post-keywords post)}))
       (update! :channels {:_id c-id}
         {:$inc {:posts 1}})
       (resp/redirect (channel-path ch)))
@@ -322,7 +324,10 @@
         {:title      (:title reply)    :content    (:content reply)
          :author     (current-id)      :channel    (:channel question)
          :created-at (java.util.Date.) :answers-to qid
-         :type       "answer"})
+         :type       "answer"
+         :keywords (distinct
+                     (concat (get-keywords (:title reply))
+                       (get-keywords (:content reply))))})
       (update! :channels {:_id (:channel question)} {:$inc {:posts 1}})
       (update! :posts {:_id qid} {:$inc {:answers 1}})
       (resp/redirect (post-path question)))

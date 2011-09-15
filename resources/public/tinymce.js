@@ -17,7 +17,7 @@ tinyMCE.init({
         theme_advanced_resizing : true,
 
         // Example content CSS (should be your site CSS)
-        content_css : "/css/screen.css",
+        content_css : "/css/reset.css,/css/screen.css",
 
         // Style formats
         style_formats : [

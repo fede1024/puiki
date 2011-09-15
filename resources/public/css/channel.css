@@ -66,22 +66,26 @@ td.channelGroup{
 ul.fields {
     padding-left: 5px;
     padding-right: 5px;
+    list-style-type: none;
 }
 
 ul.groups {
     padding-left: 5px;
     padding-right: 5px;
+    list-style-type: none;
 }
 
 li.field {
     font-size: 11pt;
     margin-top: 7px;
     padding-bottom: 3px;
+    list-style-type: none;
 }
 
 li.fieldChannel {
     font-size: 9pt;
     margin-left: 10px;
+    list-style-type: none;
 }
 
 span.channelDescription {

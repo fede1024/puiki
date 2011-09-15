@@ -21,9 +21,9 @@
 
 (defpage "/admin/" {}
   (layout "PoliWeb"
-    [:h2 "Amministrazione:"]
+    [:h2.section "Amministrazione:"]
     [:p (link-to "/admin/fields" "Modifica indirizzi di studio")]
-    [:h2 "Altro:"]
+    [:h2.section "Altro:"]
     [:p (link-to "/admin/zero" "/admin/zero")
      " Effettua una divisione per zero. "
      "Verifica il funzionamento della cattura degli errori"]
@@ -34,17 +34,17 @@
 
 (defpage "/admin/zero"[]
   (layout "Zero"
-    [:h2 "Divido per zero: " (/ 1 0)]))
+    [:h2.section "Divido per zero: " (/ 1 0)]))
 
 (defpage "/admin/fields" [& [field]]
   (layout "Amministrazione"
     (vali/on-error :name error-text)
-    [:h2 "Aggiungi indirizzo di studio:"]
+    [:h2.section "Aggiungi indirizzo di studio:"]
     (form-to {:accept-charset "utf-8"} [:post "/admin/add-field"]
       (text-field {:size 25} :name
         (if (vali/errors? :name) (or (:name field) "")))
       (submit-button "Aggiungi"))
-    [:h2 "Cancella indirizzo di studio:"]
+    [:h2.section "Cancella indirizzo di studio:"]
     [:table
      (for [field (fetch :fields)]
        [:tr [:td (:name field)]
@@ -81,7 +81,7 @@
     (let [files (sort-by #(.getName %)
                   (.listFiles (java.io.File. connect.errors/*errors-dir*)))]
       [:span 
-       [:h2 "Log errori:"]
+       [:h2.section "Log errori:"]
        [:p "Numero massimo: " connect.errors/*max-error-files*]
        [:p "Directory: " connect.errors/*errors-dir*]
        (for [f (reverse files)]

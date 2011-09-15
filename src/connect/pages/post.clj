@@ -138,12 +138,13 @@
          [:td.postAuthor "Postato da: " (user-description p)])
        [:td.postDate (format-timestamp (:created-at post))]]
       [:tr.postContent
-       [:td.postContent {:colspan 2} [:div.postContent [:pre (:content post)]]]]
+       [:td.postContent {:colspan 2}
+        [:div.postContent (:content post)]]]
       (post-comments post)
       (post-bottom post)])])
 
 (defpartial post-summary [post]
-  [:h2 "Informazioni post:"]
+  [:h2.section "Informazioni post:"]
   [:p "Commenti: " (count (:comments post))] ;; TODO: fix?
   (when (= "question" (:type post))
     [:p "Risposte: " (fetch-count :posts :where {:answers-to (:_id post)})])
@@ -163,54 +164,60 @@
                             (channel-link post))]
         (layout "Post"
           (if (= "question" (:type post))
-            [:h2 "Domanda:"]
-            [:h2 "Post:"])
+            [:h2.section "Domanda:"]
+            [:h2.section "Post:"])
           (post-table post)
           (when (= "question" (:type post))
             (let [answers (sort-by #(or (:vtotal %) 0) >
                             (fetch :posts :where {:answers-to id}))]
               [:span
-               [:h2 "Risposte: " (count answers)]
+               [:h2.section "Risposte: " (count answers)]
                (for [answ answers]
                  (post-table answ))]))))
       (render "/not-found"))))
 
+(def tinymce-header
+  (html
+    [:script {:type "text/javascript" :src "/tinymce/jscripts/tiny_mce/tiny_mce.js"}]
+    [:script {:type "text/javascript" :src "/tinymce.js"}]))
+
 (defpage "/edit/new-post" {:keys [title content channel-id type]}
-  (layout "Nuovo post"
-    (let [person (fetch-one :people :where {:_id (current-id)})]
-      (form-to {:accept-charset "utf-8" } [:post "/edit/new-post"]
-        (error-table "Errore invio post")
-        [:div.post
-         [:table.post
-          [:tr.postTitle
-           [:tr.postTitle
-            [:td.postTitle {:colspan 2}
-             (text-field {:class :postTitle :placeholder "Titolo post"} :title
-               title)]]]
-          [:tr.postInfo 
-           [:td.postAuthor "Postato da: " (user-description person)]
-           [:td.postDate (format-timestamp (java.util.Date.))]]
-          [:tr.postContent
-           [:td.postContent {:colspan 2}
-            (text-area {:class :postContent :rows 15
-                        :placeholder "Contenuto del post"}
-              :content content)]]
-          [:tr.postBottom
-           [:td.postSettings {:colspan 2} "Tipo post: "
-            [:input {:type :radio :name "type" :value "normal"
-                     :checked (when (or (not type) (= type "normal")) "true")} 
-             "Normale"]
-            [:input {:type :radio :name "type" :value "question"
-                     :checked (when (= type "question") "true")}
-             "Domanda"]]]
-          [:tr.postBottom
-           [:td.postSettings "Canale: "
-            (when channel-id
-              (let [channel (fetch-one :channels :where {:_id (obj-id channel-id)})]
-                (html [:input {:type :hidden :name :channel-id :value channel-id}]
-                (link-to (channel-path channel) (:name channel)))))]
-           [:td.postActions
-            (submit-button {:class "postSubmit"} "Invia")]]]]))))
+  (binding [*custom-header* tinymce-header]
+    (layout "Nuovo post"
+      (let [person (fetch-one :people :where {:_id (current-id)})]
+        (form-to {:accept-charset "utf-8" } [:post "/edit/new-post"]
+          (error-table "Errore invio post")
+          [:div.post
+           [:table.post
+            [:tr.postTitle
+             [:tr.postTitle
+              [:td.postTitle {:colspan 2}
+               (text-field {:class :postTitle :placeholder "Titolo post"} :title
+                 title)]]]
+            [:tr.postInfo 
+             [:td.postAuthor "Postato da: " (user-description person)]
+             [:td.postDate (format-timestamp (java.util.Date.))]]
+            [:tr.postContent
+             [:td.postContent {:colspan 2}
+              (text-area {:class :postContent :rows 15
+                          :placeholder "Contenuto del post"}
+                :content content)]]
+            [:tr.postBottom
+             [:td.postSettings {:colspan 2} "Tipo post: "
+              [:input {:type :radio :name "type" :value "normal"
+                       :checked (when (or (not type) (= type "normal")) "true")} 
+               "Normale"]
+              [:input {:type :radio :name "type" :value "question"
+                       :checked (when (= type "question") "true")}
+               "Domanda"]]]
+            [:tr.postBottom
+             [:td.postSettings "Canale: "
+              (when channel-id
+                (let [channel (fetch-one :channels :where {:_id (obj-id channel-id)})]
+                  (html [:input {:type :hidden :name :channel-id :value channel-id}]
+                    (link-to (channel-path channel) (:name channel)))))]
+             [:td.postActions
+              (submit-button {:class "postSubmit"} "Invia")]]]])))))
 
 (defn valid-post? [{:keys [title content channel-id type]}]
   (vali/rule (not (str/blank? title))
@@ -244,7 +251,7 @@
               {:$set {:removed true :removed-by (current-id)}})
           (resp/redirect url))
         (layout "Conferma"
-          [:h2 "Conferma cancellazione post"]
+          [:h2.section "Conferma cancellazione post"]
           [:p "Sei sicuro di voler cancellare il post?"]
           (form-to [:post (post-remove-path post)]
             [:input {:type :hidden :name :url :value url}]
@@ -252,7 +259,7 @@
             (submit-button {:class "confirm"} "Conferma"))
           (form-to [:get url]
             (submit-button {:class "abort"} "Annulla"))
-          [:h2 "Post da rimuovere:"]
+          [:h2.section "Post da rimuovere:"]
           (post-table post :show-remove false)))
       (render "/not-found"))))
 
@@ -296,13 +303,13 @@
           question (fetch-one :posts :where {:_id qid})]
       (if (and question (not (:removed question)))
         [:span
-         [:h2 "Tuo intervento:"]
+         [:h2.section "Tuo intervento:"]
          (post-reply-table question reply)
-         [:h2 "Post a cui stai rispondendo:"]
+         [:h2.section "Post a cui stai rispondendo:"]
          (post-table question)
          (let [answers (fetch :posts :where {:answers-to qid} :sort {:vtotal -1})]
            [:span
-            [:h2 "Risposte precedenti: " (count answers)]
+            [:h2.section "Risposte precedenti: " (count answers)]
             (for [answ answers]
               (post-table answ))])]
         [:p "Post non trovato"]))))

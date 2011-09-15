@@ -44,7 +44,7 @@
 (defpage "/channel/list" []
   (layout "Tutti i canali"
     ;(map channel-table (fetch :channels))
-    [:h2 "Elenco Indirizzi di studio:"]
+    [:h2.section "Elenco Indirizzi di studio:"]
     [:ul.fields
      (for [f (fetch :fields :sort {:name 1})]
        (html [:li.field (:name f) ":"]
@@ -54,7 +54,7 @@
             [:li.fieldChannel [:img {:src "/images/dot.png" :height 10}] " "
              (link-to (channel-path c) (:name c))
              [:span.channelInfo (channel-info c)]])]))]
-    [:h2 "Elenco Gruppi:"]
+    [:h2.section "Elenco Gruppi:"]
     [:ul.groups
      (for [c (fetch :channels :where {:type "group"} :sort {:name 1})]
        [:li.groupChannel [:img {:src "/images/dot.png" :height 10}] " "
@@ -66,7 +66,7 @@
   (let [limit 10
         flw (shuffle (fetch :people :where {:follows (:_id channel)}))
         count (count flw)]
-    (html [:h2.peopleTableTitle "Followers: ("
+    (html [:h2.section "Followers: ("
            (min limit count) (when (> count limit) (str " di " count)) ")"]
       (people-table (sort-by :lastname (sort-by :firstname (take limit flw)))
         :lastname (current-id))
@@ -78,7 +78,7 @@
   (form-to [:get "/edit/new-post"]
     [:input {:type :hidden :name "channel-id" :value (:_id channel)}]
     (submit-button {:class "postNew"} "Crea nuovo post"))
-  [:h2.userSidebarTitle "Cerca: "]
+  [:h2.section "Cerca: "]
   (form-to [:get "/search"]
     [:input {:type :hidden :name "channel-id" :value (:_id channel)}]
     (text-field {:class :channelSearchText :placeholder "Testo ricerca"} :text)
@@ -92,9 +92,9 @@
       (binding [*sidebar* (html (add-post channel)
                             (followers channel))]
         (layout (:name channel)
-          [:h2 "Canale:"]
+          [:h2.section "Canale:"]
           (channel-table channel)
-          [:h2 "Post:"]
+          [:h2.section "Post:"]
           (map post-table
             (fetch :posts :where {:channel id :type {:$ne "answer"}}
               :sort {:created-at -1})))))))

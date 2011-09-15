@@ -1,7 +1,9 @@
 pom.xml
 *jar
+*~
 /lib/
 /classes/
 /resources/public/logs/*
+/resources/public/tinymce/*
 .lein-failures
 .lein-deps-sum

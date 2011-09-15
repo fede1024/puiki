@@ -22,13 +22,13 @@
 
 (defpage "/user/" []
   (layout "Pagina utente"
-    [:h2 "Informazioni personali:"]
+    [:h2.section "Informazioni personali:"]
     [:p (link-to (user-info-path (current-id)) "Vedi")]
     [:p (link-to (user-edit-path (current-id)) "Modifica")]
-    [:h2 "Canali:"]
+    [:h2.section "Canali:"]
     [:p (link-to "/user/following" "Seguiti")]
     [:p (link-to "/channel/list" "Tutti")]
-    [:h2 "Utenti:"]
+    [:h2.section "Utenti:"]
     [:p (link-to "/user/list" "Elenco utenti")]))
 
 (defpartial student-info [person]
@@ -46,7 +46,7 @@
   (layout "Informazioni utente"
     (if (= (session/flash-get) :done) 
       [:p "I dati sono stati modificati"])
-    [:h2 (str "Informazioni utente " id)]
+    [:h2.section (str "Informazioni utente " id)]
     (let [person (fetch-one :people :where {:_id id})]
       (if person
         [:span
@@ -61,7 +61,7 @@
 
 (defpage "/user/list" []
   (layout "Elenco utenti"
-    [:h2.register "Elenco utenti"]
+    [:h2.section "Elenco utenti"]
     (people-table (fetch :people :sort {:lastname 1 :firstname 1})
       :lastname true :info true)))
 
@@ -158,12 +158,12 @@
     (let [channels (map #(fetch-one :channels :where {:_id %})
                      (:follows (fetch-one :people :where {:_id (current-id)})))]
       (html
-        [:h2 "Indirizzi di studio:"]
+        [:h2.section "Indirizzi di studio:"]
         (for [c (filter #(= (:type %) "field") channels)]
           [:p [:img {:src "/images/dot.png" :height 10}] " "
            (link-to (channel-path c) (:name c))
            [:span.channelInfo (channel-info c)]])
-        [:h2 "Gruppi:"]
+        [:h2.section "Gruppi:"]
         (for [c (filter #(= (:type %) "group") channels)]
           [:p [:img {:src "/images/dot.png" :height 10}] " "
            (link-to (channel-path c) (:name c))

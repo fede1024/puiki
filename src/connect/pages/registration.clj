@@ -15,7 +15,7 @@
 
 (defpartial registration-form [& [data]]
   [:div.registrationForm
-   [:h2.register "Inserisci i dati:"]
+   [:h2.section "Inserisci i dati:"]
    (form-to {:accept-charset "utf-8" } [:post "/register"]
      [:table.registerForm
       [:tr [:td.head "Matricola:"]

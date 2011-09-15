@@ -23,7 +23,7 @@
   (let [channel (when channel-id
                   (fetch-one :channels :where {:_id (obj-id channel-id)}))]
     (layout "Cerca"
-      [:h2 "Cerca: "]
+      [:h2.section "Cerca: "]
       (form-to [:get "/search"]
         [:input {:type :hidden :name "channel-id" :value (:_id channel)}]
         [:table.search
@@ -39,7 +39,7 @@
       (when (not (clojure.string/blank? text))
         (let [[posts exec-time] (exec-time (search-by-text text (:_id channel)))]
           (html
-            [:h2 "Risultati: " (count posts)]
+            [:h2.section "Risultati: " (count posts)]
             [:p "Tempo di elaborazione: " (int exec-time) " millisecondi"]
             (when (empty? posts)
               [:p "Nessun risultato"])

@@ -42,7 +42,7 @@
 
 (defpartial user-sidebar []
   [:div.userSidebar
-   [:h2.userSidebarTitle "Ultimi post"]
+   [:h2.section "Ultimi post"]
    [:table.lastPosts
     (for [post (fetch :posts :sort {:created-at -1} :limit 5)]
       [:tr.lastPost [:td.lastPostTitle (:title post)]
@@ -50,14 +50,14 @@
 
 (defpartial admin-sidebar []
   [:div.adminSidebar
-   [:h2.adminSidebarTitle "Strumenti di amministrazione"]
+   [:h2.section "Strumenti di amministrazione"]
    [:p (link-to "/admin/" "Pagina amministratore")]
    [:p (link-to "/logs/errors/" "Log degli errori.")]])
 
 (defpartial default-sidebar []
   (let [id (current-id)]
     (if (not id)
-      [:span [:h2.peopleTableTitle "Ultimi utenti registrati:"]
+      [:span [:h2.section "Ultimi utenti registrati:"]
        (people-table (fetch :people :limit 5 :sort {:created-at -1})
          :img true :date true :info true)]
       [:span
@@ -65,6 +65,7 @@
        (when (admin? id) (admin-sidebar))])))
 
 (def *sidebar* default-sidebar)
+(def *custom-header* nil)
 
 (defpartial layout [title & content]
   (html5
@@ -80,11 +81,11 @@
      (include-css "/css/people.css")
      (include-css "/css/channel.css")
      (include-css "/css/post.css")
-     (include-css "/css/sandbar-forms.css")
+     *custom-header*
      [:title title]]
     [:body
      [:table.home
-      [:tr.left
+      [:tr.header
        [:td.header title]
        [:td.links
         [:a.header {:href "/"} [:img.header {:src "/images/home.png"}]]
@@ -93,7 +94,7 @@
         [:a.header {:href "/user/following"} [:img.header {:src "/images/asterisk-green.png"}]]
         [:a.header {:href "/admin/"} [:img.header {:src "/images/admin.png"}]]]
        [:td.status (status-section)]]
-      [:tr.right
+      [:tr.sideBar
        [:td.content {:colspan 2} content]
        [:td.sideBar (if (fn? *sidebar*)
                       (*sidebar*)
@@ -130,6 +131,6 @@
 
 (defpage "/not-found" []
   (layout "Pagina inesistente"
-    [:h2 "Indirizzo non valido"]
+    [:h2.section "Indirizzo non valido"]
     [:img.notFound {:src "/images/dead-end.png"}]
     "La pagina cercata non è stata trovata."))

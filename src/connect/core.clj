@@ -1,6 +1,7 @@
 (ns connect.core
  (:use connect.pages
        connect.search
+       connect.db
        noir.core
        somnium.congomongo
        clojure.contrib.command-line)

@@ -30,10 +30,6 @@ img.notFound {
     height: 60px;
 }
 
-td.right {
-    text-align: right;
-}
-
 td.header {
     height: 50px;
     border-top: 1px solid #00a9fd;
@@ -89,7 +85,7 @@ td.status {
     right: 8px;
 }
 
-h2 {
+h2.section {
     width: 100%;
     border-bottom: 1px solid grey;
     font-size: 14pt;
@@ -99,7 +95,8 @@ h2 {
 }
 
 p {
-    padding-bottom: 5px;
+    margin-top: 5px;
+    margin-bottom: 5px;
     text-indent: 5px;
 }
 
@@ -115,8 +112,9 @@ table.home {
     margin-right: auto;
 }
 
-tr.right {
+td.content {
     height: 100%;
+    padding: 20px;
 }
 
 td.sideBar {
@@ -143,13 +141,6 @@ table.right {
     caption-side: bottom; 
     height: 100%;
 }*/
-
-td.content {
-    /*padding-left: 20px;
-    padding-right: 20px;
-    padding-top: 10px;*/
-    padding: 20px;
-}
 
 td.status {
 }
@@ -261,4 +252,85 @@ td.errorBody {
     text-decoration: none;
     padding: 5px;
     text-align: justify;
+}
+
+
+/* Basic formats */
+
+.bold {
+	font-weight: bold;
+}
+
+.italic {
+	font-style: italic;
+}
+
+.underline {
+	text-decoration: underline;
+}
+
+/* Global align classes */
+
+.left {
+	text-align: inherit;
+}
+
+.center {
+	text-align: center;
+}
+
+.right {
+	text-align: right;
+}
+
+.full {
+	text-align: justify
+}
+
+/* Image and table specific aligns */
+
+img.left, table.left {
+	float: left;
+	text-align: inherit;
+}
+
+img.center, table.center {
+	margin-left: auto;
+	margin-right: auto;
+	text-align: inherit;
+}
+
+img.center {
+	display: block;
+}
+
+img.right, table.right {
+	float: right;
+	text-align: inherit;
+}
+
+h1 {
+    font-size: 16pt;
+    margin-top: 10px;
+    margin-left: 0px;
+    margin-bottom: 13px;
+}
+
+h2 {
+    font-size: 13pt;
+    margin-top: 10px;
+    margin-left: 0px;
+    margin-bottom: 5px;
+}
+
+ul {
+    margin-left: 10px;
+    list-style-type: disc;  
+    list-style-position: inside;
+}
+
+ol {
+    margin-left: 10px;
+    list-style-position: inside;
+    list-style-type: decimal;
 }

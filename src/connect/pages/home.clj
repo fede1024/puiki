@@ -15,7 +15,7 @@
 (defpage "/" []
   (layout "Poli Connect"
     [:div
-     [:h2 "Home"]
+     [:h2.section "Home"]
      [:p (link-to "/user/" "Pagina utenti")]
      [:p (link-to "/search" "Cerca")]
      [:p (link-to "/admin/" "Pagina amministratore")]

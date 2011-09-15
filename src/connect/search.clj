@@ -1,7 +1,8 @@
 (ns connect.search
  (:use somnium.congomongo)
  (:require
-   [clojure.contrib.combinatorics :as comb]))
+   [clojure.contrib.combinatorics :as comb])
+ (:import [org.apache.commons.lang StringEscapeUtils]))
 
 (def stop-words
   #{"ad", "al", "allo", "ai", "agli", "all", "agl",
@@ -37,6 +38,10 @@
     "stavamo", "stavate", "stavano", "stetti", "stesti", "stette", "stemmo", "steste",
     "stettero", "stessi", "stesse", "stessimo", "stessero", "stando" })
 
+(defn extract-html-text [html]
+  (StringEscapeUtils/unescapeHtml
+    (.replaceAll html "\\<.*?>" "")))
+
 (defn tokenize [text]
   (re-seq #"[a-zA-Z0-9àèéìòù@]+" text))
 
@@ -48,7 +53,7 @@
 (defn post-keywords [post]
   (distinct
     (concat (get-keywords (:title post))
-      (get-keywords (:content post)))))
+      (get-keywords (extract-html-text (:content post))))))
 
 (defn- create-all-posts-keywords! []
   (for [p (fetch :posts)]

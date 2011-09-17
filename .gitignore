@@ -1,6 +1,7 @@
 pom.xml
 *jar
 *~
+*.directory
 /lib/
 /classes/
 /resources/public/logs/*

@@ -14,6 +14,23 @@ table.post, table.lastPosts {
     width: 100%;
 }
 
+span.loader {
+    vertical-align: middle;
+    display: none;
+    position: fixed;
+    bottom: 0px;
+    right: 0px;
+    text-align: center;
+    padding: 10px;
+    color: #3366CC;
+    font-size: 14pt;
+}
+
+img.loader {
+    vertical-align: middle;
+    margin-left: 10px;
+}
+
 span.vote {
     margin-left: 10px;
     white-space:nowrap;
@@ -168,14 +185,16 @@ input.postTitle {
     width: 95%;
 }
 
-input.postReply, input.postComment, input.postSubmit {
+input.postReply, button.postComment, input.postSubmit {
     margin: 3px;
     background-color: #d3effd;
     border: 1px solid #86d5fd;
     text-decoration: none;
+    border-radius: 3px;
+    padding: 3px;
 }
 
-input.postReply:hover, input.postComment:hover, input.postSubmit:hover  {
+input.postReply:hover, button.postComment:hover, input.postSubmit:hover  {
     border: 1px solid #59c6fd;
 }
 

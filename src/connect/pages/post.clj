@@ -9,6 +9,7 @@
         hiccup.form-helpers
         somnium.congomongo)
  (:require [clojure.contrib.string :as str]
+           [clojure.contrib.json :as json]
            [noir.server :as server]
            [noir.validation :as vali]
            [noir.session :as session]
@@ -20,23 +21,22 @@
       (render "/permission-denied"))
     (render "/login" {:redirect (:uri p)})))
 
-(defn update-vote [current dir]
-  (or (get {[-1 "up"] 0  [0 "up"] 1  [1 "up"] 1
-            [-1 "down"] -1  [0 "down"] -1 [1 "down"] 0}
-        [current dir]) current))
+(defn js-do [& objs]
+  (apply str objs))
 
-;; TODO: controllo url malformati??
-(defpage [:post "/edit/vote/:id"] {:keys [id dir url]}
-  (let [id (obj-id id)
-        post (fetch-one :posts :where {:_id id})]
-    (if (and post (or (= dir "up") (= dir "down")) (current-id))
-      (let [my-vote (or (get (:votes post) (keyword (current-id))) 0)
-            votes (merge (:votes post)
-                    {(keyword (current-id)) (update-vote my-vote dir)})]
-        (update! :posts {:_id id}
-          {:$set {:votes votes :vtotal (apply + (vals votes))}})
-        (resp/redirect url))
-      (render "/not-found"))))
+(defn js-show [& objs]
+  (str "$('" (apply str objs) "').css('display', '');"))
+
+(defn js-hide [& objs]
+  (str "$('" (apply str objs) "').css('display', 'none');"))
+
+(defn js-get [path id opts]
+  (str "$('#loader').css('display', 'inline');"
+    "$.get('" path "', " (clojure.contrib.json/json-str opts) ", function(content) {$('#" id "').html(content);"
+    "$('#loader').css('display', 'none');});"))
+
+(defn js-vote [post dir]
+  (js-get (post-vote-path post) (:_id post) {:dir dir}))
 
 (defpartial vote-section [post]
   (let [my-vote (or (when (current-id)
@@ -44,14 +44,12 @@
                   0)
         tot (or (:vtotal post) 0)]
     [:span.vote
-     (form-to [:post (post-vote-path post)]
-       (current-url-hidden)
        (when (and (current-id) (< my-vote 1))
-         [:button.vote {:name :dir :value "up"}
+         [:button.vote {:name :dir :value "up" :onClick (js-vote post :up)}
           [:img.vote {:height 16 :src "/images/up.png"}]])
        (when (and (current-id) (> my-vote -1))
-         [:button.vote {:name :dir :value "down"}
-          [:img.vote {:height 16 :src "/images/down.png"}]]))
+         [:button.vote {:name :dir :value "down" :onClick (js-vote post :down)}
+          [:img.vote {:height 16 :src "/images/down.png"}]])
      [:span.voteValue (str (when (> tot 0) "+") tot)]]))
 
 (defn user-description [p]
@@ -66,45 +64,43 @@
    "question" [:img {:src "/images/question.png"}]
    "answer"   [:img {:src "/images/exclamation.png"}]})
 
-(defpartial post-bottom [post]
-  (if (= (session/get :edit-post-comment) (str (:_id post)))
-    (form-to {:accept-charset "utf-8" } [:get (user-comment-path post)] ;; Invio commento
-      (current-url-hidden)
-      [:tr.postBottom
-       [:td.postContent {:colspan 2}
-        (text-area {:class :postComment :rows 1 :maxlength 300 :placeholder "Commento"} :comment)]]
-      [:tr.postBottom  
-       [:td.postContent
-        "Massimo 300 caratteri."]
-       [:td.postActions
-        (submit-button {:class "postComment" :name :undo} "Annulla")
-        (submit-button {:class "postComment"} "Commenta")]])
-    [:tr.postBottom     ;; Rispondi/Commenta
-     [:td.postContent
-      (when (= (:type post) "answer")
-        (html (link-to (post-path (fetch-one :posts :where {:_id (:answers-to post)}))
-                "Domanda") " "))
-      (link-to (post-path post)
-        (when (= (:type post) "question")
-          (str "Risposte: " (or (:answers post) 0))))
-      (str " Commenti: " (or (:comments-num post) 0))]
-     [:td.postActions
-      (when (= (:type post) "question")
-        (form-to [:get (user-reply-path post)]
-          (submit-button {:class "postReply"} "Rispondi")))
-      (form-to [:get (user-comment-path post)]
-        (current-url-hidden)
-        (submit-button {:class "postComment"} "Commenta"))]]))
+(defn js-comment [post]
+  (str "$('#loader').css('display', 'inline');"
+    "$.post('" (user-comment-path post) "', {comment: $('#commentText"  (:_id post) "').val()}, function(content) {$('#" (:_id post) "').html(content);"
+    "$('#loader').css('display', 'none');});"))
 
-(defn post-comments [post] ;;; TODO: fix qui
-  (for [{body :body author :autor date :created-at} (:comments post)]
-    (html
-      [:tr.commentInfo
-       (let [p (fetch-one :people :where {:_id author})]
-         [:td.commentAuthor (user-description p) " scrive:"])
-       [:td.commentDate (format-timestamp date)]]
-      [:tr.commentBody
-       [:td.commentBody {:colspan 2} [:div.commentBody body]]])))
+(defpartial post-bottom [post]
+  [:tr.postBottom {:id (str "commentArea" (:_id post)) :style "display: none"}
+   [:td.postContent {:colspan 2}
+    (text-area {:id (str "commentText" (:_id post))
+                :class :postComment :rows 1 :maxlength 300 :placeholder "Commento"} :comment)]]
+  [:tr.postBottom {:id (str "commentButtons" (:_id post)) :style "display: none"}
+   [:td.postContent 
+    "Massimo 300 caratteri."]
+   [:td.postActions
+    [:button {:class "postComment"  :onClick (js-do (js-hide "#commentArea" (:_id post))
+                                               (js-hide "#commentButtons" (:_id post))
+                                               (js-show "#actions" (:_id post)))}
+     "Annulla"]
+    [:button {:class "postComment" :onClick (js-comment post)} "Commenta"]]]
+  [:tr.postBottom {:id (str "actions" (:_id post))}    ;; Rispondi/Commenta
+   [:td.postContent
+    (when (= (:type post) "answer")
+      (html (link-to (post-path (fetch-one :posts :where {:_id (:answers-to post)}))
+              "Domanda") " "))
+    (link-to (post-path post)
+      (when (= (:type post) "question")
+        (str "Risposte: " (or (:answers post) 0))))
+    (str " Commenti: " (or (:comments-num post) 0))]
+   [:td.postActions
+    (when (= (:type post) "question")
+      (form-to [:get (user-reply-path post)]
+        (submit-button {:class "postReply"} "Rispondi")))
+    [:button (merge {:class "postComment" :onClick (js-do (js-hide "#actions" (:_id post))
+                                                     (js-show "#commentArea" (:_id post))
+                                                     (js-show "#commentButtons" (:_id post)))}
+               (if (not (current-id)) {:disabled true}))
+     "Commenta"]]])
 
 (defn post-comments [post]
   (for [{body :body author :author date :created-at} (:comments post)]
@@ -114,34 +110,37 @@
         [:span.commentInfo (user-description p) " " (format-timestamp date)])]]))
 
 (defpartial post-table [post & {:keys [show-remove] :or {show-remove true}}]
-  [:div.post
-   (if (:removed post)
-     (if (:removed-by post)
-       (if (= (:removed-by post) (:author post))
-         [:div.remMsg "Post rimosso dall'autore."]
-         (let [p (fetch-one :people :where {:_id (:removed-by post)})]
-           [:div.remMsg "Post rimosso da: " (user-description p)]))
-       [:div.remMsg "Post rimosso."])
-     [:table.post
-      [:tr.postTitle
-       [:td.postTitle (post-images (:type post)) " "
-        (link-to {:class :postTitle} (post-path post) (:title post))]
-       [:td.postTitleLeft
-        (vote-section post)
-        (when (and show-remove (current-id) 
-                (or (admin? (current-id)) (= (current-id) (:author post))))
-          (form-to [:post (post-remove-path post)]
-            (current-url-hidden)
-            (submit-button {:class "postRemove"} "Cancella")))]]
-      [:tr.postInfo 
-       (let [p (fetch-one :people :where {:_id (:author post)})]
-         [:td.postAuthor "Postato da: " (user-description p)])
-       [:td.postDate (format-timestamp (:created-at post))]]
-      [:tr.postContent
-       [:td.postContent {:colspan 2}
-        [:div.postContent (:content post)]]]
-      (post-comments post)
-      (post-bottom post)])])
+  (if (:removed post)
+    (if (:removed-by post)
+      (if (= (:removed-by post) (:author post))
+        [:div.remMsg "Post rimosso dall'autore."]
+        (let [p (fetch-one :people :where {:_id (:removed-by post)})]
+          [:div.remMsg "Post rimosso da: " (user-description p)]))
+      [:div.remMsg "Post rimosso."])
+    [:table.post
+     [:tr.postTitle
+      [:td.postTitle (post-images (:type post)) " "
+       (link-to {:class :postTitle} (post-path post) (:title post))]
+      [:td.postTitleLeft
+       (vote-section post)
+       (when (and show-remove (current-id) 
+               (or (admin? (current-id)) (= (current-id) (:author post))))
+         (form-to [:post (post-remove-path post)]
+           ;(current-url-hidden)
+           (submit-button {:class "postRemove"} "Cancella")))]]
+     [:tr.postInfo 
+      (let [p (fetch-one :people :where {:_id (:author post)})]
+        [:td.postAuthor "Postato da: " (user-description p)])
+      [:td.postDate (format-timestamp (:created-at post))]]
+     [:tr.postContent
+      [:td.postContent {:colspan 2}
+       [:div.postContent (:content post)]]]
+     (post-comments post)
+     (post-bottom post)]))
+
+(defpartial post-div [post & {:keys [show-remove] :or {show-remove true}}]
+  [:div.post {:id (:_id post)}
+   (post-table post :show-remove show-remove)])
 
 (defpartial post-summary [post]
   [:h2.section "Informazioni post:"]
@@ -166,15 +165,32 @@
           (if (= "question" (:type post))
             [:h2.section "Domanda:"]
             [:h2.section "Post:"])
-          (post-table post)
+          (post-div post)
           (when (= "question" (:type post))
             (let [answers (sort-by #(or (:vtotal %) 0) >
                             (fetch :posts :where {:answers-to id}))]
               [:span
                [:h2.section "Risposte: " (count answers)]
                (for [answ answers]
-                 (post-table answ))]))))
+                 (post-div answ))]))))
       (render "/not-found"))))
+
+(defn update-vote [current dir]
+  (or (get {[-1 "up"] 0  [0 "up"] 1  [1 "up"] 1
+            [-1 "down"] -1  [0 "down"] -1 [1 "down"] 0}
+        [current dir]) current))
+
+(defpage [:get "/edit/vote/:id"] {:keys [id dir url]}
+  (let [id (obj-id id)
+        post (fetch-one :posts :where {:_id id})]
+    (if (and post (or (= dir "up") (= dir "down")) (current-id))
+      (let [my-vote (or (get (:votes post) (keyword (current-id))) 0)
+            votes (merge (:votes post)
+                    {(keyword (current-id)) (update-vote my-vote dir)})]
+        (update! :posts {:_id id}
+          {:$set {:votes votes :vtotal (apply + (vals votes))}})
+        (post-table (fetch-one :posts :where {:_id id})))
+      "ERRORE")))
 
 (def tinymce-header
   (html
@@ -190,10 +206,9 @@
           [:div.post
            [:table.post
             [:tr.postTitle
-             [:tr.postTitle
-              [:td.postTitle {:colspan 2}
-               (text-field {:class :postTitle :placeholder "Titolo post"} :title
-                 title)]]]
+             [:td.postTitle {:colspan 2}
+              (text-field {:class :postTitle :placeholder "Titolo post"} :title
+                title)]]
             [:tr.postInfo 
              [:td.postAuthor "Postato da: " (user-description person)]
              [:td.postDate (format-timestamp (java.util.Date.))]]
@@ -260,20 +275,16 @@
           (form-to [:get url]
             (submit-button {:class "abort"} "Annulla"))
           [:h2.section "Post da rimuovere:"]
-          (post-table post :show-remove false)))
+          (post-div post :show-remove false)))
       (render "/not-found"))))
 
-(defpage [:get "/edit/comment/:pid"] {:keys [pid comment undo url]}
-  (when (current-id)
-    (if (or undo comment)
-      (session/remove! :edit-post-comment)
-      (session/put! :edit-post-comment pid))
-    (when (and comment (not undo))
-      (update! :posts {:_id (obj-id pid)}
-        {:$push {:comments {:body comment :author (current-id)
-                            :created-at (java.util.Date.)}}
-         :$inc {:comments-num 1}})))
-  (resp/redirect url))
+(defpage [:post "/edit/comment/:pid"] {:keys [pid comment]}
+  (when (and (current-id) (not (str/blank? comment)))
+    (update! :posts {:_id (obj-id pid)}
+      {:$push {:comments {:body comment :author (current-id)
+                          :created-at (java.util.Date.)}}
+       :$inc {:comments-num 1}}))
+  (post-table (fetch-one :posts :where {:_id (obj-id pid)})))
 
 (defpartial post-reply-table [question & [reply]]
   (form-to {:accept-charset "utf-8" } [:post (user-reply-path question)]
@@ -306,12 +317,12 @@
          [:h2.section "Tuo intervento:"]
          (post-reply-table question reply)
          [:h2.section "Post a cui stai rispondendo:"]
-         (post-table question)
+         (post-div question)
          (let [answers (fetch :posts :where {:answers-to qid} :sort {:vtotal -1})]
            [:span
             [:h2.section "Risposte precedenti: " (count answers)]
             (for [answ answers]
-              (post-table answ))])]
+              (post-div answ))])]
         [:p "Post non trovato"]))))
 
 (defn valid-reply? [{:keys [qid title content]}]

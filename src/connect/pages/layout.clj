@@ -75,6 +75,7 @@
      [:meta {:http-equiv "X-UA-Compatible" :content "IE=edge,chrome=1"}]
      [:meta {:name "viewport" :content "width=device-width, initial-scale=1, maximum-scale=1"}]
      [:link {:rel "shortcut icon" :href "/images/favicon.gif"}]
+     [:script {:type "text/javascript" :src "/jquery-1.6.4.min.js"}]
      (include-css "/css/reset.css")
      (include-css "/css/screen.css")
      (include-css "/css/search.css")
@@ -84,6 +85,8 @@
      *custom-header*
      [:title title]]
     [:body
+     [:span.loader {:id "loader"}
+        " Caricamento..." [:img.loader {:src "/images/loading.gif"}]]
      [:table.home
       [:tr.header
        [:td.header title]

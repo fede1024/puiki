@@ -1,0 +1,33 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Reload/Refresh a Page in jQuery</title>
+    <script type="text/javascript"
+        src="/jquery-1.6.4.min.js">
+    </script>
+ 
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $('#Button1').click(function() {
+                //location.reload();
+		//$('#content').append("<b>lol</b>");
+		$('#yeee').load("/post/4e62196044ae5ff8fa2ba484");
+// send request
+//      $.get("/post/4e62196044ae5ff8fa2ba484", {rating: 23}, function(xml) {
+//        // format and output result
+//       //alert(xml);
+//        $("#yeee").html(
+//          "mi e' arrivato: " + xml
+//        );
+//      });
+             });
+        });
+    </script>
+</head>
+<body>
+  <div id="yeee">
+    Ciaooo!!! :)
+  </div>
+  <input id="Button1" type="button" value="button" />
+  <input id="Button2" type="button" value="button2" onClick="$('#yeee').load('/post/4e62196044ae5ff8fa2ba484');" />
+</body>
+</html>

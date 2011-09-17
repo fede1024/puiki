@@ -95,6 +95,6 @@
           [:h2.section "Canale:"]
           (channel-table channel)
           [:h2.section "Post:"]
-          (map post-table
+          (map post-div
             (fetch :posts :where {:channel id :type {:$ne "answer"}}
               :sort {:created-at -1})))))))

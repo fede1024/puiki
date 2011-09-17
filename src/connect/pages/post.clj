@@ -44,13 +44,17 @@
                   0)
         tot (or (:vtotal post) 0)]
     [:span.vote
-       (when (and (current-id) (< my-vote 1))
-         [:button.vote {:name :dir :value "up" :onClick (js-vote post :up)}
-          [:img.vote {:height 16 :src "/images/up.png"}]])
-       (when (and (current-id) (> my-vote -1))
-         [:button.vote {:name :dir :value "down" :onClick (js-vote post :down)}
-          [:img.vote {:height 16 :src "/images/down.png"}]])
-     [:span.voteValue (str (when (> tot 0) "+") tot)]]))
+     (if (and (current-id) (< my-vote 1))
+       [:button.vote {:name :dir :value "up" :onClick (js-vote post :up)}
+        [:img.vote {:height 16 :src "/images/up.png"}]]
+       [:button.vote {:disabled true}
+        [:img.vote {:height 16 :src "/images/up-off.png"}]])
+     (if (and (current-id) (> my-vote -1))
+       [:button.vote {:name :dir :value "down" :onClick (js-vote post :down)}
+        [:img.vote {:height 16 :src "/images/down.png"}]]
+       [:button.vote {:disabled true}
+        [:img.vote {:height 16 :src "/images/down-off.png"}]])
+     [:span.voteValue (str (when (> tot 0) "+") (when (= tot 0) " ") tot)]]))
 
 (defn user-description [p]
   (cond (= (:job p) "student")

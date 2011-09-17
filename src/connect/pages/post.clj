@@ -35,6 +35,11 @@
     "$.get('" path "', " (clojure.contrib.json/json-str opts) ", function(content) {$('#" id "').html(content);"
     "$('#loader').css('display', 'none');});"))
 
+(defn js-post [path id opts]
+  (str "$('#loader').css('display', 'inline');"
+    "$.post('" path "', " (clojure.contrib.json/json-str opts) ", function(content) {$('#" id "').html(content);"
+    "$('#loader').css('display', 'none');});"))
+
 (defn js-vote [post dir]
   (js-get (post-vote-path post) (:_id post) {:dir dir}))
 
@@ -129,9 +134,8 @@
        (vote-section post)
        (when (and show-remove (current-id) 
                (or (admin? (current-id)) (= (current-id) (:author post))))
-         (form-to [:post (post-remove-path post)]
-           ;(current-url-hidden)
-           (submit-button {:class "postRemove"} "Cancella")))]]
+         [:button {:class "postRemove" :onClick (js-post (post-remove-path post) (:_id post) {})}
+          "Cancella"])]]
      [:tr.postInfo 
       (let [p (fetch-one :people :where {:_id (:author post)})]
         [:td.postAuthor "Postato da: " (user-description p)])
@@ -260,27 +264,25 @@
       (resp/redirect (channel-path ch)))
     (render "/edit/new-post" post)))
 
-(defpage [:post "/edit/remove/:pid"] {:keys [pid confirmed url]}
+(defpage [:post "/edit/remove/:pid"] {:keys [pid conf undo]}
   (let [id (obj-id pid)
         post (fetch-one :posts :where {:_id id})]
-    (if (and post (current-id) 
+    (if (and post (current-id) (not undo)
           (or (admin? (current-id)) (= (current-id) (:author post))))
-      (if confirmed
+      (if conf
         (do (update! :posts {:_id id}
               {:$set {:removed true :removed-by (current-id)}})
-          (resp/redirect url))
-        (layout "Conferma"
-          [:h2.section "Conferma cancellazione post"]
-          [:p "Sei sicuro di voler cancellare il post?"]
-          (form-to [:post (post-remove-path post)]
-            [:input {:type :hidden :name :url :value url}]
-            [:input {:type :hidden :name :confirmed :value :true}]
-            (submit-button {:class "confirm"} "Conferma"))
-          (form-to [:get url]
-            (submit-button {:class "abort"} "Annulla"))
-          [:h2.section "Post da rimuovere:"]
-          (post-div post :show-remove false)))
-      (render "/not-found"))))
+          (post-table (fetch-one :posts :where {:_id id})))
+        (html
+          [:p "Sei sicuro di voler cancellare il post?"
+           [:button {:class "continue"
+                     :onClick (js-post (post-remove-path post) (:_id post) {:conf true})}
+            "Conferma"]
+           [:button {:class "abort"
+                     :onClick (js-post (post-remove-path post) (:_id post) {:undo true})}
+           "Annulla"]]
+          (post-table post)))
+      (post-table post))))
 
 (defpage [:post "/edit/comment/:pid"] {:keys [pid comment]}
   (when (and (current-id) (not (str/blank? comment)))

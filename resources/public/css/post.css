@@ -198,12 +198,14 @@ input.postReply:hover, button.postComment:hover, input.postSubmit:hover  {
     border: 1px solid #59c6fd;
 }
 
-input.postRemove {
+button.postRemove {
     margin: 0px;
     padding: 0px;
     background-color: #86d5fd;
     text-decoration: none;
     display: inline;
+    border: 1px solid #86d5fd;
+    border-radius: 3px;
 }
 
 div.remMsg {

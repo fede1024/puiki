@@ -334,3 +334,12 @@ ol {
     list-style-position: inside;
     list-style-type: decimal;
 }
+
+button.continue, button.abort {
+    margin: 3px;
+    background-color: #d3effd;
+    border: 1px solid #86d5fd;
+    text-decoration: none;
+    border-radius: 3px;
+    padding: 3px;
+}

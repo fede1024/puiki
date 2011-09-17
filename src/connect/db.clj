@@ -72,3 +72,8 @@
     {:$addToSet {:follows channel-id}})
   (update! :channels {:_id channel-id}
     {:$inc {:followers 1}}))
+
+(defn- restore-all-posts! []
+  (doseq [id (map :_id (fetch :posts :where {:removed true}))]
+    (update! :posts {:_id id}
+      {:$set {:removed nil :removed-by nil}})))

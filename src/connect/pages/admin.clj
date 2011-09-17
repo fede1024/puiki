@@ -92,3 +92,7 @@
 (defpage "/logs/errors/delete" []
   (do (connect.errors/remove-all-errors)
     (resp/redirect "/logs/errors/")))
+
+(defpage "/admin/recur:n" {:keys [n]}
+  (reduce #(layout %2 %1) [:p "Contenuto pagina"]
+    (range (Integer/parseInt n))))

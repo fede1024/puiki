@@ -1,5 +1,6 @@
 (ns connect.pages.utils
-  (:use somnium.congomongo)
+  (:use hiccup.core
+    somnium.congomongo)
   (:require [noir.session :as session]))
 
 (defn current-id []
@@ -56,3 +57,18 @@
 ;(defn current-url-hidden []
 ;  [:script {:type "text/javascript"}
 ;             "document.write(\"<input type='hidden' name='url' value='\" + document.URL + \"'>\");"])
+
+(defn html-redirect [url & {:keys [wait] :or {wait 0}}]
+  (html [:meta {:http-equiv :REFRESH
+                :content (str wait ";url=" url)}]))
+
+(defn js-redirect [url]
+  (html
+    [:html
+     [:head
+      [:script {:type "text/javascript" :src "/jquery-1.6.4.min.js"}]
+      [:script {:type "text/javascript"}
+       "$(document).ready(function() {"
+       (str "$('body').load('" url "');")
+       "});"]]
+     [:body ]]))

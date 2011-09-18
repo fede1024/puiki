@@ -134,7 +134,7 @@
       (handler request)
       (catch Throwable ex
         {:status 500 :headers {"Content-Type" "text/html"}
-          :body (log-error-page (str "Errore pagina: " (:uri request)
+         :body (log-error-page (str "Errore pagina: " (:uri request)
                                   " (" (:request-method request)  ")")
                   ex request)}))))
 

@@ -43,6 +43,8 @@
 ;    (swap! servers assoc port
 ;      (server/start port {:mode (keyword mode) :ns 'connect}))))
 
+(reset! noir.server/*middleware* #{})
+
 (defn -main [& args]
   (with-command-line args
     "PoliConnect software."
@@ -50,6 +52,8 @@
      remaining]
     (let [p (Integer/parseInt port)]
       (server/add-middleware connect.errors/wrap-error-check)
+      (noir.statuses/set-page! 404
+        (connect.pages.utils/js-redirect "/not-found"))
       (mongo! :db "connect")
       (swap! servers assoc p
         (server/start p {:mode :dev :ns 'connect})))))
@@ -58,3 +62,6 @@
   (when (@servers port)
     (server/stop (@servers port))
     (swap! servers dissoc port)))
+
+;(stop-server 8080)
+;(-main)

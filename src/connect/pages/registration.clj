@@ -14,37 +14,39 @@
            [noir.response :as resp]))
 
 (defpartial registration-form [& [data]]
-  [:div.registrationForm
-   [:h2.section "Inserisci i dati:"]
-   (form-to {:accept-charset "utf-8" } [:post "/register"]
-     [:table.registerForm
-      [:tr [:td.head "Matricola:"]
-       [:td (text-field {:size 15} :id (or (:id data) ""))]
-       (error-cell :id) [:td]]
-      [:tr [:td.head "Password:"]
-       [:td (password-field {:size 15} :pwd)]
-       (error-cell :pwd) [:td]]
-      [:tr [:td.head "Email:"]
-       [:td {:colspan 2} 
-        (text-field {:size 30} :email (or (:email data) ""))]
-       (error-cell :email)]
-      [:tr [:td.head "Nome:"]
-       [:td {:colspan 2} 
-        (text-field {:size 30} :firstname (or (:firstname data) ""))]
-       (error-cell :firstname)]
-      [:tr [:td.head "Cognome:"]
-       [:td {:colspan 2} 
-        (text-field {:size 30} :lastname (or (:lastname data) ""))]
-       (error-cell :lastname)]
-      [:tr [:td.head "Ruolo:"]
-       [:td [:input (merge {:type :radio :name "job" :value "student"}
-                      (if (= (:job data) "student") {:checked "true"} {})) 
-             "Studente"]
-        [:input (merge {:type :radio :name "job" :value "professor"}
-                  (if (= (:job data) "professor") {:checked "true"} {}))
-         "Docente"]]
-       (error-cell :job)[:td]]
-      [:tr [:td] [:td] [:td (submit-button "Registrati")]]])])
+  (if (current-id)
+    [:p "Sei già registrato, username: " (current-id)]
+    [:div.registrationForm
+     [:h2.section "Inserisci i dati:"]
+     (form-to {:accept-charset "utf-8" } [:post "/register"]
+       [:table.registerForm
+        [:tr [:td.head "Matricola:"]
+         [:td (text-field {:size 15} :id (or (:id data) ""))]
+         (error-cell :id) [:td]]
+        [:tr [:td.head "Password:"]
+         [:td (password-field {:size 15} :pwd)]
+         (error-cell :pwd) [:td]]
+        [:tr [:td.head "Email:"]
+         [:td {:colspan 2} 
+          (text-field {:size 30} :email (or (:email data) ""))]
+         (error-cell :email)]
+        [:tr [:td.head "Nome:"]
+         [:td {:colspan 2} 
+          (text-field {:size 30} :firstname (or (:firstname data) ""))]
+         (error-cell :firstname)]
+        [:tr [:td.head "Cognome:"]
+         [:td {:colspan 2} 
+          (text-field {:size 30} :lastname (or (:lastname data) ""))]
+         (error-cell :lastname)]
+        [:tr [:td.head "Ruolo:"]
+         [:td [:input (merge {:type :radio :name "job" :value "student"}
+                        (if (= (:job data) "student") {:checked "true"} {})) 
+               "Studente"]
+          [:input (merge {:type :radio :name "job" :value "professor"}
+                    (if (= (:job data) "professor") {:checked "true"} {}))
+           "Docente"]]
+         (error-cell :job)[:td]]
+        [:tr [:td] [:td] [:td (submit-button "Registrati")]]])]))
 
 (defpage "/register" {:as user}
   (layout "Registrazione"

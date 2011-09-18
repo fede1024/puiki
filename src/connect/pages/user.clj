@@ -14,11 +14,11 @@
            [noir.session :as session]
            [noir.response :as resp]))
 
-(pre-route "/user*" p
+(pre-route "/user*" request
   (if (current-id)
     (if (not (user? (current-id)))
       (render "/permission-denied"))
-    (render "/login" {:redirect (:uri p)})))
+    (render "/login" {:redirect (get-request-uri request)})))
 
 (defpage "/user/" []
   (layout "Pagina utente"
@@ -93,7 +93,7 @@
 
 (defpage "/user/:id/edit" {:keys [id]}
   (layout "Modifica utente"
-    [:h2.register "Modifica i dati di " id ":"]
+    [:h2.section "Modifica i dati di " id ":"]
     (let [person (fetch-one :people :where {:_id id})]
       (if person
         (if (or (admin? (current-id)) (= id (current-id)))

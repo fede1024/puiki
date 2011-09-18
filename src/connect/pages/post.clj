@@ -15,11 +15,11 @@
            [noir.session :as session]
            [noir.response :as resp]))
 
-(pre-route "/edit*" p
+(pre-route "/edit*" request
   (if (current-id)
     (if (not (user? (current-id)))
       (render "/permission-denied"))
-    (render "/login" {:redirect (:uri p)})))
+    (render "/login" {:redirect (get-request-uri request)})))
 
 (defn js-do [& objs]
   (apply str objs))

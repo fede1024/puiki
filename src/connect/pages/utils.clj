@@ -50,6 +50,9 @@
     (.format (java.text.SimpleDateFormat. "d-M-yy HH:mm") ts)
     "???"))
 
-(defn current-url-hidden []
-  [:script {:type "text/javascript"}
-             "document.write(\"<input type='hidden' name='url' value='\" + document.URL + \"'>\");"])
+(defn get-request-uri [req]
+  (str (:uri req) "?" (:query-string req)))
+
+;(defn current-url-hidden []
+;  [:script {:type "text/javascript"}
+;             "document.write(\"<input type='hidden' name='url' value='\" + document.URL + \"'>\");"])

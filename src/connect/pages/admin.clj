@@ -13,11 +13,11 @@
            [noir.session :as session]
            [noir.response :as resp]))
 
-(pre-route "/admin*" p
+(pre-route "/admin*" request
   (if (current-id)
     (if (not (admin? (current-id)))
       (render "/permission-denied"))
-    (render "/login" {:redirect (:uri p)})))
+    (render "/login" {:redirect (get-request-uri request)})))
 
 (defpage "/admin/" {}
   (layout "PoliWeb"
@@ -70,11 +70,11 @@
   (destroy! :fields {:name (:name field)})
   (resp/redirect "/admin/fields"))
 
-(pre-route "/logs*" p
+(pre-route "/logs*" request
   (if (current-id)
     (if (not (admin? (current-id)))
       (render "/permission-denied"))
-    (render "/login" {:redirect (:uri p)})))
+    (render "/login" {:redirect (get-request-uri request)})))
 
 (defpage "/logs/errors/" []
   (layout "Log Errori"

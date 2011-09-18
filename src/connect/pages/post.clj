@@ -252,17 +252,19 @@
   (not (vali/errors? :title :content :channel-id)))
 
 (defpage [:post "/edit/new-post"] {:as post}
-  (if (valid-post? post)
-    (let [c-id (obj-id (:channel-id post))
-          ch (fetch-one :channels :where {:_id c-id})]
-      (insert! :posts
-        (merge post {:author (current-id) :channel c-id
-                     :created-at (java.util.Date.)
-                     :keywords (post-keywords post)}))
-      (update! :channels {:_id c-id}
-        {:$inc {:posts 1}})
-      (resp/redirect (channel-path ch)))
-    (render "/edit/new-post" post)))
+  (if (current-id)
+    (if (valid-post? post)
+      (let [c-id (obj-id (:channel-id post))
+            ch (fetch-one :channels :where {:_id c-id})]
+        (insert! :posts
+          (merge post {:author (current-id) :channel c-id
+                       :created-at (java.util.Date.)
+                       :keywords (post-keywords post)}))
+        (update! :channels {:_id c-id}
+          {:$inc {:posts 1}})
+        (resp/redirect (channel-path ch)))
+      (render "/edit/new-post" post))
+    (resp/redirect "/login")))
 
 (defpage [:post "/edit/remove/:pid"] {:keys [pid conf undo]}
   (let [id (obj-id pid)

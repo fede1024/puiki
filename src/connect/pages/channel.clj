@@ -19,27 +19,13 @@
    "field" "Indirizzo di studio", "course" "Corso"})
 
 (def privacy-options
-  {:public "Pubblico" :private "Privato"})
+  {"public" "Pubblico" "private" "Privato"})
 
-;(defn channel-info [ch]
-;  (str "Tipo canale: " (channel-types (:type ch))
-;    (when (= (:type ch) "group")
-;      (str " (" (privacy-options (:privacy ch)) ")"))
-;    " - Post: " (or (:posts ch) 0) " Followers: " (or (:followers ch) "0")))
-
-(defn channel-info [ch]
-  (str "(Post: " (or (:posts ch) 0) " Followers: " (or (:followers ch) 0) ")"))
-
-(defpartial channel-table [ch]
-  [:div.channel
-   [:table.channel
-    [:tr.channelTitle
-     [:td.channelName {:colspan 2} (link-to (channel-path ch) (:name ch))]]
-    [:tr.channelInfo
-     [:td.channelInfo (channel-info ch)]
-     [:td.channelDate (format-timestamp (:created-at ch))]]
-    [:tr.channelDescription
-     [:td.channelDescription {:colspan 2} (:description ch)]]]])
+(defpartial channel-info [ch]
+  "Tipo canale: " (channel-types (:type ch))
+  " (" (privacy-options (or (:privacy ch) "public")) "), "
+  "contiene " (or (:posts ch) 0) " post ed è seguito da "
+  (or (:followers ch) 0) " persone.")
 
 (defpage "/channel/list" []
   (layout "Tutti i canali"
@@ -49,11 +35,14 @@
      (for [f (fetch :fields :sort {:name 1})]
        (html [:li.field (:name f) ":"]
          [:ul.fieldChannels
-          (for [c (fetch :channels :where {:field (:name f)}
-                    :sort {:year -1})]
-            [:li.fieldChannel [:img {:src "/images/dot.png" :height 10}] " "
-             (link-to (channel-path c) (:name c))
-             [:span.channelInfo (channel-info c)]])]))]
+          (let [channels (fetch :channels :where {:field (:name f)}
+                           :sort {:year -1})]
+            (if (empty? channels)
+              "Nessuno"
+              (for [c channels]
+                [:li.fieldChannel [:img {:src "/images/dot.png" :height 10}] " "
+                 (link-to (channel-path c) (:name c))
+                 [:span.channelInfo (channel-info c)]])))]))]
     [:h2.section "Elenco Gruppi:"]
     [:ul.groups
      (for [c (fetch :channels :where {:type "group"} :sort {:name 1})]
@@ -86,15 +75,18 @@
 
 (defpage "/channel/:id/" {:keys [id]}
   (let [id (obj-id id)
-        channel (fetch-one :channels :where {:_id id})]
-    (if (not channel)
+        ch (fetch-one :channels :where {:_id id})]
+    (if (not ch)
       (render "/not-found")
-      (binding [*sidebar* (html (add-post channel)
-                            (followers channel))]
-        (layout (:name channel)
-          [:h2.section "Canale:"]
-          (channel-table channel)
-          [:h2.section "Post:"]
+      (binding [*sidebar* (html (add-post ch)
+                            (followers ch))]
+        (layout (:name ch)
+          [:h2.section "Canale: " (:name ch)]
+          [:p (:description ch)]
+          [:p (channel-info ch)]
+          [:p "Canale creato il: " (format-timestamp (:created-at ch))]
+          [:br]
+          [:h2.section "Tutti i post:"]
           (map post-div
             (fetch :posts :where {:channel id :type {:$ne "answer"}}
               :sort {:created-at -1})))))))

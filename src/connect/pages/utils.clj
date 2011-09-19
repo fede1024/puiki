@@ -1,7 +1,8 @@
 (ns connect.pages.utils
   (:use hiccup.core
     somnium.congomongo)
-  (:require [noir.session :as session]))
+  (:require [clojure.contrib.string :as str]
+    [noir.session :as session]))
 
 (defn current-id []
   (session/get :username))
@@ -52,7 +53,9 @@
     "???"))
 
 (defn get-request-uri [req]
-  (str (:uri req) "?" (:query-string req)))
+  (if (str/blank? (:query-string req))
+    (:uri req)
+    (str (:uri req) "?" (:query-string req))))
 
 ;(defn current-url-hidden []
 ;  [:script {:type "text/javascript"}

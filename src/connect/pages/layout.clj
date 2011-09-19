@@ -23,8 +23,9 @@
         [:td.statusInfo "Loggato come " id " ("
          (translate-job (:job person)) ") "]]])
     [:div.register "Effettua il " 
-     ;[:a {:href "/login"} "login"]
-     [:script "document.write('<a href = \"/login?redirect=' + document.URL + '\">login</a>')"]
+     [:a {:href "/login" :id :loginLink} "login"]
+     ;[:script "document.write('<a href = \"/login?redirect=' + document.URL + '\">login</a>')"]
+     [:script "$('#loginLink').attr('href', '/login?redirect=' + document.URL);"]
      " oppure " [:a {:href "/register"} "registrati"] "."]))
 
 (defpartial people-table [people & {:keys [img id info date lastname]
@@ -92,7 +93,7 @@
      *custom-header*
      [:title title]]
     [:body
-     [:span.loader {:id "loader"}
+     [:span.loader {:id "loader" :style "display: none;"}
         " Caricamento..." [:img.loader {:src "/images/loading.gif"}]]
      [:table.home
       [:tr.header

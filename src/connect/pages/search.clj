@@ -3,6 +3,7 @@
         connect.pages.utils
         connect.search
         connect.db
+        connect.utils
         noir.core   
         hiccup.core
         hiccup.page-helpers
@@ -13,11 +14,6 @@
            [noir.validation :as vali]
            [noir.session :as session]
            [noir.response :as resp]))
-
-(defmacro exec-time [expr]
-  `(let [start# (. System (nanoTime))
-         ret# ~expr]
-     [ret# (/ (double (- (. System (nanoTime)) start#)) 1000000.0)]))
 
 (defpage "/search" {:keys [text channel-id]}
   (let [channel (when channel-id

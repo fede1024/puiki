@@ -7,6 +7,7 @@
        clojure.contrib.command-line)
  (:require
        connect.errors
+       connect.logs
        [noir.server :as server]
        [noir.validation :as vali]
        [noir.session :as session]
@@ -43,15 +44,15 @@
 ;    (swap! servers assoc port
 ;      (server/start port {:mode (keyword mode) :ns 'connect}))))
 
-(reset! noir.server/*middleware* #{})
-
 (defn -main [& args]
   (with-command-line args
     "PoliConnect software."
     [[port "Specify the http port" "8080"]
      remaining]
     (let [p (Integer/parseInt port)]
+      (reset! noir.server/*middleware* #{})
       (server/add-middleware connect.errors/wrap-error-check)
+      (server/add-middleware connect.logs/wrap-logging)
       (noir.statuses/set-page! 404
         (connect.pages.utils/js-redirect "/not-found"))
       (mongo! :db "connect")

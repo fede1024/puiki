@@ -317,21 +317,22 @@
         (submit-button {:class "postReply"} "Invia")]]]]))
 
 (defpage "/edit/reply/:qid" {:keys [qid] :as reply}
-  (layout "Rispondi"
-    (let [qid (obj-id qid)
-          question (fetch-one :posts :where {:_id qid})]
-      (if (and question (not (:removed question)))
-        [:span
-         [:h2.section "Tuo intervento:"]
-         (post-reply-table question reply)
-         [:h2.section "Post a cui stai rispondendo:"]
-         (post-div question)
-         (let [answers (fetch :posts :where {:answers-to qid} :sort {:vtotal -1})]
-           [:span
-            [:h2.section "Risposte precedenti: " (count answers)]
-            (for [answ answers]
-              (post-div answ))])]
-        [:p "Post non trovato"]))))
+  (binding [*custom-header* tinymce-header]
+    (layout "Rispondi"
+      (let [qid (obj-id qid)
+            question (fetch-one :posts :where {:_id qid})]
+        (if (and question (not (:removed question)))
+          [:span
+           [:h2.section "Tuo intervento:"]
+           (post-reply-table question reply)
+           [:h2.section "Post a cui stai rispondendo:"]
+           (post-div question)
+           (let [answers (fetch :posts :where {:answers-to qid} :sort {:vtotal -1})]
+             [:span
+              [:h2.section "Risposte precedenti: " (count answers)]
+              (for [answ answers]
+                (post-div answ))])]
+          [:p "Post non trovato"])))))
 
 (defn valid-reply? [{:keys [qid title content]}]
   (vali/rule (not (str/blank? title))
@@ -351,9 +352,7 @@
          :author     (current-id)      :channel    (:channel question)
          :created-at (java.util.Date.) :answers-to qid
          :type       "answer"
-         :keywords (distinct
-                     (concat (get-keywords (:title reply))
-                       (get-keywords (:content reply))))})
+         :keywords   (post-keywords reply)})
       (update! :channels {:_id (:channel question)} {:$inc {:posts 1}})
       (update! :posts {:_id qid} {:$inc {:answers 1}})
       (resp/redirect (post-path question)))

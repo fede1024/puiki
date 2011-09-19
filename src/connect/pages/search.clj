@@ -24,7 +24,7 @@
                   (fetch-one :channels :where {:_id (obj-id channel-id)}))]
     (layout "Cerca"
       [:h2.section "Cerca: "]
-      (form-to [:get "/search"]
+      (form-to {:accept-charset "utf-8" } [:get "/search"]
         [:input {:type :hidden :name "channel-id" :value (:_id channel)}]
         [:table.search
          [:tr.searchText

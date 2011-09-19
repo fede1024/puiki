@@ -22,7 +22,9 @@
        [:tr.statusInfo
         [:td.statusInfo "Loggato come " id " ("
          (translate-job (:job person)) ") "]]])
-    [:div.register "Effettua il " [:a {:href "/login"} "login"]
+    [:div.register "Effettua il " 
+     ;[:a {:href "/login"} "login"]
+     [:script "document.write('<a href = \"/login?redirect=' + document.URL + '\">login</a>')"]
      " oppure " [:a {:href "/register"} "registrati"] "."]))
 
 (defpartial people-table [people & {:keys [img id info date lastname]
@@ -40,13 +42,20 @@
       (when info [:tr [:td.personId {:colspan "2"} (translate-job job) " "
                        (when id matr)]])])])
 
+(defpartial last-posts []
+  [:h2.section "Ultimi post"]
+  [:table.lastPosts
+   (for [post (fetch :posts :sort {:created-at -1} :limit 5)]
+     [:tr.lastPost [:td.lastPostTitle (link-to (post-path post) (:title post))]
+      [:td.lastPostDate (format-timestamp (:created-at post))]])])
+
+(defpartial last-registrations []
+  [:h2.section "Ultimi utenti registrati:"]
+  (people-table (fetch :people :limit 5 :sort {:created-at -1})
+    :img true :date true :info true))
+
 (defpartial user-sidebar []
-  [:div.userSidebar
-   [:h2.section "Ultimi post"]
-   [:table.lastPosts
-    (for [post (fetch :posts :sort {:created-at -1} :limit 5)]
-      [:tr.lastPost [:td.lastPostTitle (:title post)]
-       [:td.lastPostDate (format-timestamp (:created-at post))]])]])
+  (last-posts) (last-registrations))
 
 (defpartial admin-sidebar []
   [:div.adminSidebar
@@ -57,12 +66,10 @@
 (defpartial default-sidebar []
   (let [id (current-id)]
     (if (not id)
-      [:span [:h2.section "Ultimi utenti registrati:"]
-       (people-table (fetch :people :limit 5 :sort {:created-at -1})
-         :img true :date true :info true)]
-      [:span
-       (when (user? id)  (user-sidebar))
-       (when (admin? id) (admin-sidebar))])))
+      (html (last-posts) (last-registrations))
+      (html
+        (when (user? id)  (user-sidebar))
+        (when (admin? id) (admin-sidebar))))))
 
 (def *sidebar* default-sidebar)
 (def *custom-header* nil)

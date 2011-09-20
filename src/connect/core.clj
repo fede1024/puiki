@@ -8,6 +8,7 @@
  (:require
        connect.errors
        connect.logs
+       [clojure.contrib.string :as str]
        [noir.server :as server]
        [noir.validation :as vali]
        [noir.session :as session]
@@ -44,10 +45,17 @@
 ;    (swap! servers assoc port
 ;      (server/start port {:mode (keyword mode) :ns 'connect}))))
 
+;(mongo! :host "dbh42.mongolab.com" :port 27427 :db "connect-test")
+
 (defn -main [& args]
   (with-command-line args
     "PoliConnect software."
     [[port "Specify the http port" "8080"]
+     [mongo-port "Specify the mongodb post" "27017"]
+     [mongo-host "Specify the mongodb host" "localhost"]
+     [mongo-db   "Specify the mongodb database" "connect"]
+     [mongo-user "Specify the mongodb user" ""]
+     [mongo-pwd  "Specify the mongodb password" ""]
      remaining]
     (let [p (Integer/parseInt port)]
       (reset! noir.server/*middleware* #{})
@@ -55,7 +63,10 @@
       (server/add-middleware connect.logs/wrap-logging)
       (noir.statuses/set-page! 404
         (connect.pages.utils/js-redirect "/not-found"))
-      (mongo! :db "connect")
+      ;(mongo! :db "connect")
+      (mongo! :host mongo-host :port (Integer/parseInt mongo-port) :db mongo-db)
+      (when (not (str/blank? mongo-user))
+        (authenticate mongo-user mongo-pwd))
       (swap! servers assoc p
         (server/start p {:mode :dev :ns 'connect})))))
 

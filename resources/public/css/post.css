@@ -14,6 +14,11 @@ table.post, table.lastPosts {
     width: 100%;
 }
 
+table.postLink {
+    width: 100%;
+    margin-bottom: 10px;
+}
+
 span.loader {
     vertical-align: middle;
     display: none;
@@ -36,10 +41,6 @@ span.vote {
     white-space:nowrap;
     height: 100%;
     padding: 3px;
-    /*border: 2px solid #86d5fd;
-    background-color: #86d5fd;
-    border-radius: 3px;
-    vertical-align: middle;*/
 }
 
 img.vote{
@@ -67,6 +68,10 @@ tr.postTitle {
     background-color: #d3effd;
 }
 
+tr.postLinkTitle {
+    border-bottom: 1px dotted #86d5fd;
+}
+
 tr.postContent{
     border-bottom: 1px solid #d3effd;
 }
@@ -86,6 +91,23 @@ td.postTitle {
     text-decoration: none;
     vertical-align: middle;
     font-weight: bold;
+}
+
+td.postLinkTitle {
+    margin: 8px;
+    font-size: 12pt;
+    color: #36c;
+    text-decoration: none;
+    vertical-align: bottom;
+    font-weight: bold;
+}
+
+td.postLinkVote {
+    color: #36c;
+    width: 30px;
+    text-align: right;
+    vertical-align: bottom;
+    white-space:nowrap;
 }
 
 a.postTitle {

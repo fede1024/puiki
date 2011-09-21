@@ -73,6 +73,26 @@
     (text-field {:class :channelSearchText :placeholder "Testo ricerca"} :text)
     (submit-button {:class "channelSearch"} "Cerca")))
 
+(defpartial post-link [post]
+  (when (not (:removed post))
+    (let [vote (or (:vtotal post) 0)]
+      [:table.postLink
+       [:tr.postLinkTitle
+        [:td.postLinkTitle 
+         (link-to {:class :postTitle} (post-path post)
+           (post-images (:type post)) " " (:title post))]
+        [:td.postLinkVote
+         [:span.voteValue (str (when (> vote 0) "+") (when (= vote 0) " ") vote)]]]
+       [:tr.postInfo
+        (let [p (fetch-one :people :where {:_id (:author post)})]
+          [:td.postAuthor "Postato da: " (user-description p)])
+        [:td.postDate (format-timestamp (:created-at post))]]
+       [:tr
+        [:td 
+         (when (= (:type post) "question")
+           (str "Risposte: " (or (:answers post) 0) " "))
+         "Commenti: " (or (:comments-num post) 0)]]])))
+
 (defpage "/channel/:id/" {:keys [id]}
   (let [id (obj-id id)
         ch (fetch-one :channels :where {:_id id})]
@@ -86,7 +106,6 @@
           [:p (channel-info ch)]
           [:p "Canale creato il: " (format-timestamp (:created-at ch))]
           [:br]
-          [:h2.section "Tutti i post:"]
-          (map post-div
+          (map post-link
             (fetch :posts :where {:channel id :type {:$ne "answer"}}
               :sort {:created-at -1})))))))

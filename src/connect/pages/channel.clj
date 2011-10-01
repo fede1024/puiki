@@ -106,6 +106,12 @@
           [:p (channel-info ch)]
           [:p "Canale creato il: " (format-timestamp (:created-at ch))]
           [:br]
-          (map post-link
-            (fetch :posts :where {:channel id :type {:$ne "answer"}}
-              :sort {:created-at -1})))))))
+          (let [posts (fetch :posts :where {:channel id :type {:$ne "answer"}}
+                          :sort {:created-at -1})]
+            (html
+              [:div.news
+               [:h2.section "Notizie"]
+               (map post-link (filter #(= (:type %) "normal") posts))]
+              [:div.questions
+               [:h2.section "Domande"]
+               (map post-link (filter #(= (:type %) "question") posts))])))))))

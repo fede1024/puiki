@@ -207,40 +207,41 @@
 
 (defpage "/edit/new-post" {:keys [title content channel-id type]}
   (binding [*custom-header* tinymce-header]
-    (layout "Nuovo post"
-      (let [person (fetch-one :people :where {:_id (current-id)})]
-        (form-to {:accept-charset "utf-8" } [:post "/edit/new-post"]
-          (error-table "Errore invio post")
-          [:div.post
-           [:table.post
-            [:tr.postTitle
-             [:td.postTitle {:colspan 2}
-              (text-field {:class :postTitle :placeholder "Titolo post"} :title
-                title)]]
-            [:tr.postInfo 
-             [:td.postAuthor "Postato da: " (user-description person)]
-             [:td.postDate (format-timestamp (java.util.Date.))]]
-            [:tr.postContent
-             [:td.postContent {:colspan 2}
-              (text-area {:class :postContent :rows 15
-                          :placeholder "Contenuto del post"}
-                :content content)]]
-            [:tr.postBottom
-             [:td.postSettings {:colspan 2} "Tipo post: "
-              [:input {:type :radio :name "type" :value "normal"
-                       :checked (when (or (not type) (= type "normal")) "true")} 
-               "Normale"]
-              [:input {:type :radio :name "type" :value "question"
-                       :checked (when (= type "question") "true")}
-               "Domanda"]]]
-            [:tr.postBottom
-             [:td.postSettings "Canale: "
-              (when channel-id
-                (let [channel (fetch-one :channels :where {:_id (obj-id channel-id)})]
-                  (html [:input {:type :hidden :name :channel-id :value channel-id}]
-                    (link-to (channel-path channel) (:name channel)))))]
-             [:td.postActions
-              (submit-button {:class "postSubmit"} "Invia")]]]])))))
+    (let [person (fetch-one :people :where {:_id (current-id)})
+          channel (fetch-one :channels :where {:_id (obj-id channel-id)})]
+      (if (not (and person channel))
+        (render "/permission-denied")
+        (layout "Nuovo post"
+          (form-to {:accept-charset "utf-8" } [:post "/edit/new-post"]
+            (error-table "Errore invio post")
+            [:div.post
+             [:table.post
+              [:tr.postTitle
+               [:td.postTitle {:colspan 2}
+                (text-field {:class :postTitle :placeholder "Titolo post"} :title
+                  title)]]
+              [:tr.postInfo 
+               [:td.postAuthor "Postato da: " (user-description person)]
+               [:td.postDate (format-timestamp (java.util.Date.))]]
+              [:tr.postContent
+               [:td.postContent {:colspan 2}
+                (text-area {:class :postContent :rows 15
+                            :placeholder "Contenuto del post"}
+                  :content content)]]
+              [:tr.postBottom
+               [:td.postSettings {:colspan 2} "Tipo post: "
+                [:input {:type :radio :name "type" :value "normal"
+                         :checked (when (or (not type) (= type "normal")) "true")} 
+                 "Normale"]
+                [:input {:type :radio :name "type" :value "question"
+                         :checked (when (= type "question") "true")}
+                 "Domanda"]]]
+              [:tr.postBottom
+               [:td.postSettings "Canale: "
+                [:input {:type :hidden :name :channel-id :value channel-id}]
+                (link-to (channel-path channel) (:name channel))]
+               [:td.postActions
+                (submit-button {:class "postSubmit"} "Invia")]]]]))))))
 
 (defn valid-post? [{:keys [title content channel-id type]}]
   (vali/rule (not (str/blank? title))

@@ -69,8 +69,8 @@
     (if (not id)
       (html (last-posts) (last-registrations))
       (html
-        (when (user? id)  (user-sidebar))
-        (when (admin? id) (admin-sidebar))))))
+        (when (admin? id) (admin-sidebar))
+        (when (user? id)  (user-sidebar))))))
 
 (def *sidebar* default-sidebar)
 (def *custom-header* nil)

@@ -1,7 +1,7 @@
 (ns connect.db
   (:use somnium.congomongo))
 
-(mongo! :db "connect")
+;(mongo! :db "connect")
 
 (defn reset-db []
   (destroy! :people {})

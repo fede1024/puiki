@@ -27,29 +27,28 @@
   "contiene " (or (:posts ch) 0) " post ed è seguito da "
   (or (:followers ch) 0) " persone.")
 
-(defpartial channel-follow-buttons [c action]
+(defpartial channel-follow-buttons [c action & {:keys [only-button]}]
   (if (= action 'add)
     [:button {:class "follow"
               :onClick (js-post "/channel/follow" (:_id c)
-                         {:channel-id (str (:_id c)) :action "add"})}
+                         {:channel-id (str (:_id c)) :action "add" :only-button only-button})}
      "Segui"]
     [:button {:class "follow"
               :onClick (js-post "/channel/follow" (:_id c)
-                         {:channel-id (str (:_id c)) :action "remove"})}
-     "Non seguire"]))
+                         {:channel-id (str (:_id c)) :action "remove" :only-button only-button})}
+     "Non seguire più"]))
 
-(defpartial channels-list [channels & {:keys [follows]}]
-  [:ul.fieldChannels
-   (for [c channels]
-     [:li.fieldChannel
-      (link-to (channel-path c) (:name c))
-      (when (current-id)
-        [:span {:id (:_id c)}
-         (channel-follow-buttons c
-           (if (get follows (:_id c)) 'remove 'add))])
-      [:p.channelInfo (channel-info c)]
-      (when (= (:type c) "group")
-        [:p.channelDescription (:description c)])])])
+(defpartial channel-data [c & {:keys [follows]}]
+  (if (get follows (:_id c))
+    [:img.channel {:src "/images/red-dot.png"}]
+    [:img.channel {:src "/images/dot.png"}])
+  (link-to (channel-path c) (:name c))
+  (when (current-id)
+    (channel-follow-buttons c
+      (if (get follows (:_id c)) 'remove 'add)))
+  [:p.channelInfo (channel-info c)]
+  (when (= (:type c) "group")
+    [:p.channelDescription (:description c)]))
 
 (defpage "/channel/list" []
   (let [follows (when (current-id)
@@ -63,12 +62,17 @@
                             :sort {:year -1})]
              (if (empty? channels)
                [:p "Nessuno"]
-               (channels-list channels :follows follows)))))]
+               [:ul.channels
+                (for [c channels]
+                  [:li.channel {:id (:_id c)}
+                   (channel-data c :follows follows)])]))))]
       [:h2.section "Elenco Gruppi:"]
-       (channels-list (fetch :channels :where {:type "group"} :sort {:name 1})
-         :follows follows))))
+      [:ul.channels
+       (for [c (fetch :channels :where {:type "group"} :sort {:name 1})]
+        [:li.channel {:id (:_id c)}
+         (channel-data c :follows follows)])])))
 
-(defpage [:post "/channel/follow"] {:keys [channel-id action]}
+(defpage [:post "/channel/follow"] {:keys [channel-id action only-button]}
   (let [id (obj-id channel-id)
         c (fetch-one :channels :where {:_id id})]
     (when (current-id)
@@ -78,8 +82,9 @@
         (update! :people {:_id (current-id)}
           {:$pull {:follows id}})))
     (let [follows (into #{} (:follows (fetch-one :people :where {:_id (current-id)})))]
-      (channel-follow-buttons c
-        (if (get follows (:_id c)) 'remove 'add)))))
+      (if (= only-button "true")
+        (channel-follow-buttons c (if (get follows id) 'remove 'add) :only-button true)
+        (channel-data c :follows follows)))))
 
 (defpartial followers [channel]
   (let [limit 10
@@ -139,7 +144,7 @@
             [:span {:id id}
              (let [follows (into #{} (:follows (fetch-one :people :where {:_id (current-id)})))]
                (channel-follow-buttons ch
-                 (if (get follows id) 'remove 'add)))])
+                 (if (get follows id) 'remove 'add) :only-button true))])
           [:br]
           (let [posts (fetch :posts :where {:channel id :type {:$ne "answer"}}
                           :sort {:created-at -1})]

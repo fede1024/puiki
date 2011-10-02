@@ -27,29 +27,59 @@
   "contiene " (or (:posts ch) 0) " post ed è seguito da "
   (or (:followers ch) 0) " persone.")
 
+(defpartial channel-follow-buttons [c action]
+  (if (= action 'add)
+    [:button {:class "follow"
+              :onClick (js-post "/channel/follow" (:_id c)
+                         {:channel-id (str (:_id c)) :action "add"})}
+     "Segui"]
+    [:button {:class "follow"
+              :onClick (js-post "/channel/follow" (:_id c)
+                         {:channel-id (str (:_id c)) :action "remove"})}
+     "Non seguire"]))
+
+(defpartial channels-list [channels & {:keys [follows]}]
+  [:ul.fieldChannels
+   (for [c channels]
+     [:li.fieldChannel
+      (link-to (channel-path c) (:name c))
+      (when (current-id)
+        [:span {:id (:_id c)}
+         (channel-follow-buttons c
+           (if (get follows (:_id c)) 'remove 'add))])
+      [:p.channelInfo (channel-info c)]
+      (when (= (:type c) "group")
+        [:p.channelDescription (:description c)])])])
+
 (defpage "/channel/list" []
-  (layout "Tutti i canali"
-    ;(map channel-table (fetch :channels))
-    [:h2.section "Elenco Indirizzi di studio:"]
-    [:ul.fields
-     (for [f (fetch :fields :sort {:name 1})]
-       (html [:li.field (:name f) ":"]
-         [:ul.fieldChannels
-          (let [channels (fetch :channels :where {:field (:name f)}
-                           :sort {:year -1})]
-            (if (empty? channels)
-              "Nessuno"
-              (for [c channels]
-                [:li.fieldChannel [:img {:src "/images/dot.png" :height 10}] " "
-                 (link-to (channel-path c) (:name c))
-                 [:span.channelInfo (channel-info c)]])))]))]
-    [:h2.section "Elenco Gruppi:"]
-    [:ul.groups
-     (for [c (fetch :channels :where {:type "group"} :sort {:name 1})]
-       [:li.groupChannel [:img {:src "/images/dot.png" :height 10}] " "
-        (link-to (channel-path c) (:name c))
-        [:span.channelInfo (channel-info c)] [:br]
-        [:span.channelDescription (:description c)]])]))
+  (let [follows (when (current-id)
+                  (into #{} (:follows (fetch-one :people :where {:_id (current-id)}))))]
+    (layout "Tutti i canali"
+      [:h2.section "Elenco Indirizzi di studio:"]
+      [:ul.fields
+       (for [f (fetch :fields :sort {:name 1})]
+         (html [:li.field (:name f) ":"]
+           (let [channels (fetch :channels :where {:field (:name f)}
+                            :sort {:year -1})]
+             (if (empty? channels)
+               [:p "Nessuno"]
+               (channels-list channels :follows follows)))))]
+      [:h2.section "Elenco Gruppi:"]
+       (channels-list (fetch :channels :where {:type "group"} :sort {:name 1})
+         :follows follows))))
+
+(defpage [:post "/channel/follow"] {:keys [channel-id action]}
+  (let [id (obj-id channel-id)
+        c (fetch-one :channels :where {:_id id})]
+    (when (current-id)
+      (if (= action "add")
+        (update! :people {:_id (current-id)}
+          {:$push {:follows id}})
+        (update! :people {:_id (current-id)}
+          {:$pull {:follows id}})))
+    (let [follows (into #{} (:follows (fetch-one :people :where {:_id (current-id)})))]
+      (channel-follow-buttons c
+        (if (get follows (:_id c)) 'remove 'add)))))
 
 (defpartial followers [channel]
   (let [limit 10
@@ -63,7 +93,7 @@
         [:p "..."]))))
 
 (defpartial add-post [channel]
-  [:h2.userSidebarTitle "Modifica: "]
+  [:h2.section "Modifica: "]
   (form-to [:get "/edit/new-post"]
     [:input {:type :hidden :name "channel-id" :value (:_id channel)}]
     (submit-button {:class "postNew"} "Crea nuovo post"))
@@ -105,6 +135,11 @@
           [:p (:description ch)]
           [:p (channel-info ch)]
           [:p "Canale creato il: " (format-timestamp (:created-at ch))]
+          (when (current-id)
+            [:span {:id id}
+             (let [follows (into #{} (:follows (fetch-one :people :where {:_id (current-id)})))]
+               (channel-follow-buttons ch
+                 (if (get follows id) 'remove 'add)))])
           [:br]
           (let [posts (fetch :posts :where {:channel id :type {:$ne "answer"}}
                           :sort {:created-at -1})]

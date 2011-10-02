@@ -162,10 +162,10 @@
         (for [c (filter #(= (:type %) "field") channels)]
           [:p [:img {:src "/images/dot.png" :height 10}] " "
            (link-to (channel-path c) (:name c))
-           [:span.channelInfo (channel-info c)]])
+           [:p.channelInfo (channel-info c)]])
         [:h2.section "Gruppi:"]
         (for [c (filter #(= (:type %) "group") channels)]
           [:p [:img {:src "/images/dot.png" :height 10}] " "
            (link-to (channel-path c) (:name c))
-           [:span.channelInfo (channel-info c)] [:br]
-           [:span.channelDescription (:description c)]])))))
+           [:p.channelInfo (channel-info c)]
+           [:p.channelDescription (:description c)]])))))

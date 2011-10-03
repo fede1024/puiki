@@ -142,16 +142,8 @@ table.right {
     height: 100%;
 }*/
 
-td.status {
-}
-
 table.status {
     width: 100%;
-}
-
-td.statusWelcome {
-    font-size: 12pt;
-    text-align: center;
 }
 
 td.statusLogout {
@@ -164,7 +156,7 @@ td.statusInfo {
     padding-left: 10px;
     padding-right: 10px;
     text-align: center;
-    font-size: 8pt;
+    font-size: 9pt;
     vertical-align: middle;
 }
 

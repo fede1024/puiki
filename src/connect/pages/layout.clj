@@ -17,11 +17,9 @@
           person (fetch-one :people :where {:_id id})]
       [:table.status
        [:tr.statusWelcome
-        [:td.statusWelcome (str "Benvenuto " (:firstname person) "! ")]
-        [:td.statusLogout {:rowspan 2} (link-to "/logout" "Logout")]]
-       [:tr.statusInfo
         [:td.statusInfo "Loggato come " id " ("
-         (translate-job (:job person)) ") "]]])
+         (translate-job (:job person)) ") "]
+        [:td.statusLogout (link-to "/logout" "Logout")]]])
     [:div.register "Effettua il " 
      [:a {:href "/login" :id :loginLink} "login"]
      ;[:script "document.write('<a href = \"/login?redirect=' + document.URL + '\">login</a>')"]
@@ -53,7 +51,7 @@
 (defpartial last-registrations []
   [:h2.section "Ultimi utenti registrati:"]
   (people-table (fetch :people :limit 5 :sort {:created-at -1})
-    :img true :date true :info true))
+    :img true :date true :info true :lastname (current-id)))
 
 (defpartial user-sidebar []
   (last-posts) (last-registrations))

@@ -27,7 +27,7 @@ td.personName{
     font-weight: bold;
     font-style: normal;
     color: #0033ff;
-    
+    padding-bottom: 0px;
     /*margin-right: 10px;
     vertical-align: baseline;*/
 }
@@ -38,12 +38,15 @@ td.personDate{
     font-style: normal;
     font-size: 7pt;
     text-align: right;
+    padding-bottom: 0px;
     /*vertical-align: middle;*/
+    white-space:nowrap;
 }
 
 td.personId{
     padding-left: 20px;
-    padding-bottom: 10px;
+    padding-bottom: 3px;
+    padding-top: 0px;
     font-size: 9pt;
     /*text-indent: 10px;*/
     text-align: justify;

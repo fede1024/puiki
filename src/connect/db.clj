@@ -69,9 +69,10 @@
 
 (defn follow-channel [channel-id person-id] ;;TODO: qui è il posto giusto?
   (update! :people {:_id person-id}
-    {:$addToSet {:follows channel-id}})
-  (update! :channels {:_id channel-id}
-    {:$inc {:followers 1}}))
+    {:$addToSet {:follows channel-id}}))
+
+(defn count-followers [channel-id] ;;TODO: qui è il posto giusto?
+  (fetch-count :people :where {:follows channel-id}))
 
 (defn- restore-all-posts! []
   (doseq [id (map :_id (fetch :posts :where {:removed true}))]

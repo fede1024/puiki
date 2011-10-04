@@ -25,7 +25,7 @@
   "Tipo canale: " (channel-types (:type ch))
   " (" (privacy-options (or (:privacy ch) "public")) "), "
   "contiene " (or (:posts ch) 0) " post ed è seguito da "
-  (or (:followers ch) 0) " persone.")
+  (or (count-followers (:_id ch)) 0) " persone.")
 
 (defpartial channel-follow-buttons [c action & {:keys [only-button]}]
   (if (= action 'add)
@@ -76,16 +76,10 @@
   (let [id (obj-id channel-id)]
     (when (current-id)
       (if (= action "add")
-        (do
-          (update! :people {:_id (current-id)}
-            {:$push {:follows id}})
-          (update! :channels {:_id id}
-            {:$inc {:followers 1}}))
-        (do
-          (update! :people {:_id (current-id)}
-            {:$pull {:follows id}})
-          (update! :channels {:_id id}
-            {:$inc {:followers -1}}))))
+        (update! :people {:_id (current-id)}
+          {:$push {:follows id}})
+        (update! :people {:_id (current-id)}
+          {:$pull {:follows id}})))
     (let [c (fetch-one :channels :where {:_id id})
           follows (into #{} (:follows (fetch-one :people :where {:_id (current-id)})))]
       (if (= only-button "true")

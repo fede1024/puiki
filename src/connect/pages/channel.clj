@@ -73,15 +73,21 @@
          (channel-data c :follows follows)])])))
 
 (defpage [:post "/channel/follow"] {:keys [channel-id action only-button]}
-  (let [id (obj-id channel-id)
-        c (fetch-one :channels :where {:_id id})]
+  (let [id (obj-id channel-id)]
     (when (current-id)
       (if (= action "add")
-        (update! :people {:_id (current-id)}
-          {:$push {:follows id}})
-        (update! :people {:_id (current-id)}
-          {:$pull {:follows id}})))
-    (let [follows (into #{} (:follows (fetch-one :people :where {:_id (current-id)})))]
+        (do
+          (update! :people {:_id (current-id)}
+            {:$push {:follows id}})
+          (update! :channels {:_id id}
+            {:$inc {:followers 1}}))
+        (do
+          (update! :people {:_id (current-id)}
+            {:$pull {:follows id}})
+          (update! :channels {:_id id}
+            {:$inc {:followers -1}}))))
+    (let [c (fetch-one :channels :where {:_id id})
+          follows (into #{} (:follows (fetch-one :people :where {:_id (current-id)})))]
       (if (= only-button "true")
         (channel-follow-buttons c (if (get follows id) 'remove 'add) :only-button true)
         (channel-data c :follows follows)))))

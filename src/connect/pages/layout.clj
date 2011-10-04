@@ -97,11 +97,16 @@
       [:tr.header
        [:td.header title]
        [:td.links
-        [:a.header {:href "/"} [:img.header {:src "/images/home.png"}]]
-        [:a.header {:href "/search"} [:img.header {:src "/images/search.png"}]]
-        [:a.header {:href "/user/"} [:img.header {:src "/images/user.png"}]]
-        [:a.header {:href "/user/following"} [:img.header {:src "/images/asterisk-green.png"}]]
-        [:a.header {:href "/admin/"} [:img.header {:src "/images/admin.png"}]]]
+        [:a.header {:href "/" :title "Home"}
+         [:img.header {:src "/images/home.png"}]]
+        [:a.header {:href "/search" :title "Ricerca"}
+         [:img.header {:src "/images/search.png"}]]
+        [:a.header {:href "/user/" :title "Info utente"}
+         [:img.header {:src "/images/user.png"}]]
+        [:a.header {:href "/user/following" :title "Canali seguiti"}
+         [:img.header {:src "/images/asterisk-green.png"}]]
+        [:a.header {:href "/admin/" :title "Amministratore"}
+         [:img.header {:src "/images/admin.png"}]]]
        [:td.status (status-section)]]
       [:tr.sideBar
        [:td.content {:colspan 2} content]

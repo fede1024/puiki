@@ -103,8 +103,8 @@
          [:img.header {:src "/images/search.png"}]]
         [:a.header {:href "/user/" :title "Info utente"}
          [:img.header {:src "/images/user.png"}]]
-        [:a.header {:href "/user/following" :title "Canali seguiti"}
-         [:img.header {:src "/images/asterisk-green.png"}]]
+        [:a.header {:href "/user/following" :title "Canali seguiti e notifiche"}
+         [:img.header {:src "/images/following.png"}]]
         [:a.header {:href "/admin/" :title "Amministratore"}
          [:img.header {:src "/images/admin.png"}]]]
        [:td.status (status-section)]]

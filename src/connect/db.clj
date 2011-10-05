@@ -78,3 +78,7 @@
   (doseq [id (map :_id (fetch :posts :where {:removed true}))]
     (update! :posts {:_id id}
       {:$set {:removed nil :removed-by nil}})))
+
+(defn- reset-all-news! []
+  (update! :people {} ;; Cancella tutte le notifiche
+    {:$unset {:news 1}} :multiple true))

@@ -148,17 +148,40 @@
 ;    (map channel-table
 ;      (map #(fetch-one :channels :where {:_id %})
 ;        (:follows (fetch-one :people :where {:_id (current-id)}))))
-    (let [channels (map #(fetch-one :channels :where {:_id %})
-                     (:follows (fetch-one :people :where {:_id (current-id)})))]
+    (let [user (fetch-one :people :where {:_id (current-id)})
+          channels (map #(fetch-one :channels :where {:_id %})
+                     (:follows user))
+          fields (filter #(= (:type %) "field") channels)
+          groups (filter #(= (:type %) "group") channels)
+          new-posts (filter #(= (:action %) "new-post") (:news user))
+          new-answers (filter #(= (:action %) "new-answer") (:news user))
+          new-comments (filter #(= (:action %) "new-comment") (:news user))]
       (html
-        [:h2.section "Indirizzi di studio:"]
-        (for [c (filter #(= (:type %) "field") channels)]
+        [:h2.section "Notifiche: " (count (:news user))]
+        [:p "Nuovi post: " (count new-posts)]
+        (for [n new-posts]
+          [:p [:img {:src "/images/dot.png" :height 10}] " "
+           (link-to (str "/post/" (:post n)) (:title n))
+           " - "  (:channel-name n)])
+        [:p "Nuove risposte ai tuoi post: " (count new-answers)]
+        (for [n new-answers]
+          [:p [:img {:src "/images/dot.png" :height 10}] " "
+           (link-to (str "/post/" (:post n)) (:title n))
+           " - "  (:question-title n)])
+        [:p "Nuovi commenti ai tuoi post: " (count new-comments)]
+        (for [n new-comments]
+          [:p [:img {:src "/images/dot.png" :height 10}] " "
+           (link-to (str "/post/" (:post n)) (:title n))])
+        [:h2.section "Canali seguiti:"]
+        [:p "Indirizzi di studio: " (count fields)]
+        (for [c fields]
           [:p [:img {:src "/images/dot.png" :height 10}] " "
            (link-to (channel-path c) (:name c))
            [:p.channelInfo (channel-info c)]])
-        [:h2.section "Gruppi:"]
-        (for [c (filter #(= (:type %) "group") channels)]
+        [:p "Gruppi: " (count groups)]
+        (for [c groups]
           [:p [:img {:src "/images/dot.png" :height 10}] " "
            (link-to (channel-path c) (:name c))
            [:p.channelInfo (channel-info c)]
-           [:p.channelDescription (:description c)]])))))
+           [:p.channelDescription (:description c)]])
+        [:p (link-to "/channel/list" "Modifica canali seguiti")]))))

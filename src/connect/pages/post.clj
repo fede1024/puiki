@@ -169,6 +169,10 @@
     (if post
       (binding [*sidebar* (html (post-summary post)
                             (channel-link post))]
+        (when (current-id)
+          (update! :people {:_id (current-id)} ;; Toglie il post dalle notifiche
+            {:$pull {:news {:post id}}}
+            :multiple true))
         (layout "Post"
           (if (= "question" (:type post))
             [:h2.section "Domanda:"]
@@ -256,13 +260,18 @@
   (if (current-id)
     (if (valid-post? post)
       (let [c-id (obj-id (:channel-id post))
-            ch (fetch-one :channels :where {:_id c-id})]
-        (insert! :posts
-          (merge post {:author (current-id) :channel c-id
-                       :created-at (java.util.Date.)
-                       :keywords (post-keywords post)}))
+            ch (fetch-one :channels :where {:_id c-id})
+            new-post (insert! :posts
+                       (merge post {:author (current-id) :channel c-id
+                                    :created-at (java.util.Date.)
+                                    :keywords (post-keywords post)}))]
         (update! :channels {:_id c-id}
           {:$inc {:posts 1}})
+        (update! :people {:follows c-id :_id {:$ne (current-id)}} ;; Update a tutti i followers
+          {:$push {:news {:action :new-post :post (:_id new-post)
+                          :title (:title new-post) :channel c-id
+                          :channel-name (:name ch) :time (java.util.Date.)}}}
+          :multiple true)
         (resp/redirect (channel-path ch)))
       (render "/edit/new-post" post))
     (resp/redirect "/login")))
@@ -288,11 +297,16 @@
       (post-table post))))
 
 (defpage [:post "/edit/comment/:pid"] {:keys [pid comment]}
-  (when (and (current-id) (not (str/blank? comment)))
-    (update! :posts {:_id (obj-id pid)}
-      {:$push {:comments {:body comment :author (current-id)
-                          :created-at (java.util.Date.)}}
-       :$inc {:comments-num 1}}))
+  (let [post (fetch-one :posts :where {:_id (obj-id pid)})]
+    (when (and (current-id) post (not (str/blank? comment)))
+      (update! :posts {:_id (obj-id pid)}
+        {:$push {:comments {:body comment :author (current-id)
+                            :created-at (java.util.Date.)}}
+         :$inc {:comments-num 1}})
+      (when (not (= (:author post) (current-id)))
+        (update! :people {:_id (:author post)} ;; Update dell'autore
+          {:$push {:news {:action :new-comment :post (:_id post)
+                          :title (:title post) :time (java.util.Date.)}}}))))
   (post-table (fetch-one :posts :where {:_id (obj-id pid)})))
 
 (defpartial post-reply-table [question & [reply]]
@@ -347,14 +361,19 @@
 (defpage [:post "/edit/reply/:qid"] {:keys [qid] :as reply}
   (if (valid-reply? reply)
     (let [qid (obj-id qid)
-          question (fetch-one :posts :where {:_id qid})]
-      (insert! :posts
-        {:title      (:title reply)    :content    (:content reply)
-         :author     (current-id)      :channel    (:channel question)
-         :created-at (java.util.Date.) :answers-to qid
-         :type       "answer"
-         :keywords   (post-keywords reply)})
+          question (fetch-one :posts :where {:_id qid})
+          new-post (insert! :posts
+                     {:title      (:title reply)    :content    (:content reply)
+                      :author     (current-id)      :channel    (:channel question)
+                      :created-at (java.util.Date.) :answers-to qid
+                      :type       "answer"          :keywords   (post-keywords reply)})]
       (update! :channels {:_id (:channel question)} {:$inc {:posts 1}})
       (update! :posts {:_id qid} {:$inc {:answers 1}})
+      (when (not (= (:author question) (current-id)))
+        (update! :people {:_id (:author question)} ;; Update dell'autore
+          {:$push {:news {:action :new-answer :post (:_id new-post)
+                          :title (:title new-post) :question-id qid
+                          :question-title (:title question)
+                          :time (java.util.Date.)}}}))
       (resp/redirect (post-path question)))
     (render "/edit/reply/:qid" reply)))

@@ -61,6 +61,7 @@ a.header {
     font-size: 18px; 
     line-height: 50px;
     color: #1f29ec;
+    text-decoration: none;
 }
 
 img.header {
@@ -98,6 +99,15 @@ p {
     margin-top: 5px;
     margin-bottom: 5px;
     text-indent: 5px;
+}
+
+span.newsCount{
+    position: fixed;
+    width: 38px;
+    text-align: center;
+    text-decoration: none;
+    padding-top: 2px;
+    padding-left: 1px;
 }
 
 /*

@@ -104,6 +104,11 @@
         [:a.header {:href "/user/" :title "Info utente"}
          [:img.header {:src "/images/user.png"}]]
         [:a.header {:href "/user/following" :title "Canali seguiti e notifiche"}
+         (when (current-id)
+           (let [news (count (:news (fetch-one :people :where {:_id (current-id)})))]
+             (cond (= news 0) ""
+               (<= news 10) [:span.newsCount news]
+               (> news 10) [:span.newsCount "10+"])))
          [:img.header {:src "/images/following.png"}]]
         [:a.header {:href "/admin/" :title "Amministratore"}
          [:img.header {:src "/images/admin.png"}]]]

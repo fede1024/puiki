@@ -54,18 +54,24 @@
   (let [follows (when (current-id)
                   (into #{} (:follows (fetch-one :people :where {:_id (current-id)}))))]
     (layout "Tutti i canali"
+      (link-to "/user/new-course" "Crea nuovo corso")
       [:h2.section "Elenco Indirizzi di studio:"]
       [:ul.fields
        (for [f (fetch :fields :sort {:name 1})]
          (html [:li.field (:name f) ":"]
-           (let [channels (fetch :channels :where {:field (:name f)}
-                            :sort {:year -1})]
-             (if (empty? channels)
-               [:p "Nessuno"]
-               [:ul.channels
-                (for [c channels]
-                  [:li.channel {:id (:_id c)}
-                   (channel-data c :follows follows)])]))))]
+           (let [channels (fetch :channels :where {:field (:name f)})
+                 years (sort-by :year > (filter #(= (:type %) "field") channels))
+                 courses (sort-by :name (fetch :courses :where {:field (:name f)}))]
+               (if (empty? years)
+                 [:p "Nessun canale per " (:name f)]
+                 [:ul.channels
+                  (for [c years]  ;; Canali per l'indirizzo
+                    [:li.channel {:id (:_id c)}
+                     (channel-data c :follows follows)])
+                  (for [course courses] ;; Corsi
+                    (let [ch (fetch-one :channels :where {:_id (:channel course)})]
+                      [:li.channel {:id (:_id ch)}
+                       (channel-data ch :follows follows)]))]))))]
       [:h2.section "Elenco Gruppi:"]
       [:ul.channels
        (for [c (fetch :channels :where {:type "group"} :sort {:name 1})]
@@ -136,6 +142,8 @@
       (binding [*sidebar* (html (add-post ch)
                             (followers ch))]
         (layout (:name ch)
+          (if (= (session/flash-get) :new) 
+            [:p "Nuovo canale creato."])
           [:h2.section "Canale: " (:name ch)]
           [:p (:description ch)]
           [:p (channel-info ch)]

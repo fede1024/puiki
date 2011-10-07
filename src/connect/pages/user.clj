@@ -153,6 +153,7 @@
                      (:follows user))
           fields (filter #(= (:type %) "field") channels)
           groups (filter #(= (:type %) "group") channels)
+          courses (filter #(= (:type %) "course") channels)
           new-posts (filter #(= (:action %) "new-post") (:news user))
           new-answers (filter #(= (:action %) "new-answer") (:news user))
           new-comments (filter #(= (:action %) "new-comment") (:news user))]
@@ -178,6 +179,11 @@
           [:p [:img {:src "/images/dot.png" :height 10}] " "
            (link-to (channel-path c) (:name c))
            [:p.channelInfo (channel-info c)]])
+        [:p "Corsi: " (count courses)]
+        (for [c courses]
+          [:p [:img {:src "/images/dot.png" :height 10}] " "
+           (link-to (channel-path c) (:name c))
+           [:p.channelInfo (channel-info c)]])
         [:p "Gruppi: " (count groups)]
         (for [c groups]
           [:p [:img {:src "/images/dot.png" :height 10}] " "
@@ -185,3 +191,56 @@
            [:p.channelInfo (channel-info c)]
            [:p.channelDescription (:description c)]])
         [:p (link-to "/channel/list" "Modifica canali seguiti")]))))
+
+(defpage "/user/new-course" {:keys [field name]:as data}
+  (layout "Nuovo corso di studi"
+    (form-to {:accept-charset "utf-8"} [:post "/user/new-course"]
+      [:table
+       [:tr [:td.head "Indirizzo: "]
+        [:td (drop-down :field (map :name (fetch :fields))
+               field)]
+        (error-cell :field)]
+       [:tr [:td.head "Nome corso: "]
+        [:td (text-field {:placeholder "Nome corso"} :name
+                (or (:name data) ""))]
+        (error-cell :name)]
+       [:tr [:td] [:td (submit-button "Aggiungi")]]])))
+
+(defn course-channel-description [field name]
+  (str name " (" field ")"))
+
+(defn create-course-channel! [field name]
+  (insert! :channels
+    {:name name :privacy :public
+     :description (course-channel-description field name)
+     :type :course :created-at (java.util.Date.)}))
+
+(defn create-course! [field name channel]
+  (insert! :courses
+    {:name name
+     :channel channel
+     :field field
+     :created-by (current-id)
+     :created-at (java.util.Date.)}))
+
+(defn valid-course? [{:keys [field name]}]
+  (vali/rule (vali/has-value? field)
+    [:field "Il campo non deve essere vuoto."])
+  (vali/rule (fetch-one :fields :where {:name field})
+    [:field "Indirizzo non esistente."])
+  (vali/rule (not (fetch-one :courses :where {:field field :name name}))
+    [:name "Corso già esistente."])
+  (vali/rule (not (str/blank? name))
+    [:name "Nome corso non valido"])
+  (not (vali/errors? :field :name)))
+
+(defpage [:post "/user/new-course"] {:keys [field name] :as data}
+  (if (current-id)
+    (if (valid-course? data)
+      (let [channel (create-course-channel! field name)]
+        (create-course! field name ;; Crea il nuovo canale comunque
+          (:_id channel))
+        (session/flash-put! :new)
+        (resp/redirect (channel-path channel)))
+      (render "/user/new-course" data))
+    (render "/permission-denied")))

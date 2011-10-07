@@ -20,7 +20,7 @@
     (render "/login" {:redirect (get-request-uri request)})))
 
 (defpage "/admin/" {}
-  (layout "PoliWeb"
+  (layout "PoliConnect"
     [:h2.section "Amministrazione:"]
     [:p (link-to "/admin/fields" "Modifica indirizzi di studio")]
     [:h2.section "Altro:"]

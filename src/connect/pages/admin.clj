@@ -121,7 +121,7 @@
   (let [logs (log-tail n)]
     [:table.logs
      [:caption "All sessions"]
-     [:tr.logs [:th "Session"] [:th.logs "Date"] [:th.logs "Time"] [:th.logs "Method"]
+     [:tr.logs [:th "Session"] [:th.logs "IP"] [:th.logs "Date"] [:th.logs "Time"] [:th.logs "Method"]
       [:th.logs "URL"] [:th.logs "Status"] [:th.logs "Type"] [:th.logs "ID"]]
      (for [log logs]
        [:tr.logs
@@ -129,6 +129,7 @@
                     (link-to (str "/admin/logs?session=" (:session log) "&n=" n)
                       (subs (:session log) 0 5))
                     (link-to (str "/admin/logs?session=&n=" n) "NEW"))]
+        [:td.logsB (:ip log)]
         [:td.logsB (format-log-date (:date log))]
         [:td.logsB (:resp-time log)]
         [:td.logsB (:method log)]
@@ -139,7 +140,15 @@
 
 (defpage "/admin/logs" {:keys [session n] :or {n "50"}}
   (let [num (Integer/parseInt n)]
-    (layout "Logs"
-      (if session
-        (session-logs-table num session)
+    (if session
+      (layout "Logs"
+        (session-logs-table num session))
+      (layout "Logs"
+        [:table.logs
+         [:caption "Active sessions"]
+         [:tr.logs [:th "Identifier"] [:th.logs "data"]]
+         (for [[id data] @noir.session/mem]
+           [:tr.logs
+            [:td.logs (link-to (str "/admin/logs?session=" id "&n=" n) id)]
+            [:td.logsB (pr-str data)]])]
         (logs-table num)))))

@@ -15,7 +15,7 @@
          :referer (get-in req [:headers "referer"])
          :session (:value (get-in req [:cookies "ring-session"]))
          :status (:status out) :out-type (get-in out [:headers "Content-Type"])
-         :username (session/get :username)})
+         :username (session/get :username) :ip (:remote-addr req)})
       out)))
 
 (defn format-log-date [date]
@@ -58,10 +58,6 @@
       :where {:out-type {:$nin ["image/png" "image/gif" "text/css" "text/javascript"]}
               :session session}
       :sort {:$natural -1} :limit num)))
-
-(fetch :logs
-  :where {:out-type {:$nin ["image/png" "image/gif" "text/css" "text/javascript"]}
-          :session nil})
 
 (defn print-logs [num]
   (dorun (map print-log (log-tail num))))

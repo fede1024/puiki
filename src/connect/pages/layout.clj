@@ -87,6 +87,7 @@
      (include-css "/css/search.css")
      (include-css "/css/people.css")
      (include-css "/css/channel.css")
+     (include-css "/css/admin.css")
      (include-css "/css/post.css")
      *custom-header*
      [:title title]]

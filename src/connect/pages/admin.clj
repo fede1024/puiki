@@ -1,5 +1,6 @@
 (ns connect.pages.admin
-  (:use connect.pages.layout
+  (:use connect.logs
+        connect.pages.layout
         connect.pages.utils
         noir.core   
         hiccup.core
@@ -29,10 +30,12 @@
      "Verifica il funzionamento della cattura degli errori"]
     [:p (link-to "/logs/errors/" "/logs/errors/")
      " Log degli errori."]
+    [:p (link-to "/admin/logs" "/admin/logs")
+     " Log deglle pagine."]
     [:p (link-to "/admin/recur3" "/admin/recur3") 
      " Mostra ricorsivamente il layout."]))
 
-(defpage "/admin/zero"[]
+(defpage "/admin/zero" []
   (layout "Zero"
     [:h2.section "Divido per zero: " (/ 1 0)]))
 
@@ -96,3 +99,24 @@
 (defpage "/admin/recur:n" {:keys [n]}
   (reduce #(layout %2 %1) [:p "Contenuto pagina"]
     (range (Integer/parseInt n))))
+
+(defpage "/admin/logs" {:keys [session n] :or {n "500"}}
+  (let [logs (log-tail (Integer/parseInt n) :session session)
+        grouped (sort-by first (group-by :session logs))]
+    (layout "Logs"
+      (for [[session s-logs] grouped]
+        [:table.logs
+         [:caption "Session " (if session 
+                                (link-to (str "/admin/logs?session=" session "&n=" n) session)
+                                "new")]
+         [:tr.logs [:th "Date"] [:th.logs "Time"] [:th.logs "Method"]
+          [:th.logs "URL"] [:th.logs "Type"] [:th.logs "ID"]]
+         (for [log s-logs]
+           [:tr.logs
+            [:td.logs (format-log-date (:date log))]
+            [:td.logsB (:resp-time log)]
+            [:td.logsB (:method log)]
+            [:td.logsB (:uri log)]
+            [:td.logsB (:out-type log)]
+            [:td.logsB (:username log)]])]))))
+

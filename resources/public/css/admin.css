@@ -1,0 +1,22 @@
+table.logs {
+    width: 100%;
+    margin-bottom: 20px;
+    border: 1px solid #aaa;
+}
+
+tr.logs {
+    border-bottom: 1px dotted #aaa;
+}
+
+th.logs {
+    border-left: 1px dotted #aaa;
+}
+
+td.logs {
+    font-size: 7pt;
+}
+
+td.logsB {
+    border-left: 1px dotted #aaa;
+    font-size: 7pt;
+}

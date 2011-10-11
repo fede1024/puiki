@@ -38,15 +38,26 @@
     (.getTime d)))
 
 (defn logs-since [& keys]
-  (dorun (map print-log
-           (fetch :logs :where {:date {:$gt (apply get-time-ago keys)}}))))
+  (fetch :logs :where {:date {:$gt (apply get-time-ago keys)}}))
+
+(defn print-logs-since [& keys]
+  (dorun (map print-log (apply logs-since keys))))
 
 (defn delete-logs! []
   (destroy! :logs {}))
 
-(defn print-logs [& [num]]
-  (let [tail (reverse (fetch :logs :sort {:$natural -1} :limit (or num 100)))]
-    (dorun (map print-log tail))))
+(defn log-tail [num & {:keys [session]}]
+  (reverse (fetch :logs
+             :where (merge {:out-type {:$nin ["image/png" "image/gif" "text/css" "text/javascript"]}}
+                      (when session {:session session}))
+             :sort {:$natural -1} :limit (or num 100))))
 
-;(print-logs 200)
-;(print-log (logs-since :hours 3))
+(defn print-logs [num]
+  (dorun (map print-log (log-tail num))))
+
+;(log-tail 10 :session "ac51d74a-d0f9-495b-80e2-4547fd5f4ed6")
+;(fetch :logs :where {:uri "/logout"})
+;(print-logs-since :hours 1)
+;(logs-since :hours 1)
+;
+;(group-by :session (log-tail 100))

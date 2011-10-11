@@ -46,11 +46,22 @@
 (defn delete-logs! []
   (destroy! :logs {}))
 
-(defn log-tail [num & {:keys [session]}]
-  (reverse (fetch :logs
-             :where (merge {:out-type {:$nin ["image/png" "image/gif" "text/css" "text/javascript"]}}
-                      (when session {:session session}))
-             :sort {:$natural -1} :limit (or num 100))))
+(defn log-tail [num]
+  (reverse
+    (fetch :logs
+      :where {:out-type {:$nin ["image/png" "image/gif" "text/css" "text/javascript"]}}
+      :sort {:$natural -1} :limit num)))
+
+(defn log-tail-by-session [num session]
+  (reverse
+    (fetch :logs
+      :where {:out-type {:$nin ["image/png" "image/gif" "text/css" "text/javascript"]}
+              :session session}
+      :sort {:$natural -1} :limit num)))
+
+(fetch :logs
+  :where {:out-type {:$nin ["image/png" "image/gif" "text/css" "text/javascript"]}
+          :session nil})
 
 (defn print-logs [num]
   (dorun (map print-log (log-tail num))))

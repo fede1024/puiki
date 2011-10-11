@@ -100,23 +100,46 @@
   (reduce #(layout %2 %1) [:p "Contenuto pagina"]
     (range (Integer/parseInt n))))
 
-(defpage "/admin/logs" {:keys [session n] :or {n "500"}}
-  (let [logs (log-tail (Integer/parseInt n) :session session)
-        grouped (sort-by first (group-by :session logs))]
-    (layout "Logs"
-      (for [[session s-logs] grouped]
-        [:table.logs
-         [:caption "Session " (if session 
-                                (link-to (str "/admin/logs?session=" session "&n=" n) session)
-                                "new")]
-         [:tr.logs [:th "Date"] [:th.logs "Time"] [:th.logs "Method"]
-          [:th.logs "URL"] [:th.logs "Type"] [:th.logs "ID"]]
-         (for [log s-logs]
-           [:tr.logs
-            [:td.logs (format-log-date (:date log))]
-            [:td.logsB (:resp-time log)]
-            [:td.logsB (:method log)]
-            [:td.logsB (:uri log)]
-            [:td.logsB (:out-type log)]
-            [:td.logsB (:username log)]])]))))
+(defpartial session-logs-table [n session-str]
+  (let [session (if (str/blank? session-str) nil session-str)
+        logs (log-tail-by-session n session)]
+    [:table.logs
+     [:caption "Session " (or session "NEW")]
+     [:tr.logs [:th "Date"] [:th.logs "Time"] [:th.logs "Method"]
+      [:th.logs "URL"] [:th.logs "Status"] [:th.logs "Type"] [:th.logs "ID"]]
+     (for [log logs]
+       [:tr.logs
+        [:td.logs (format-log-date (:date log))]
+        [:td.logsB (:resp-time log)]
+        [:td.logsB (:method log)]
+        [:td.logsB (:uri log)]
+        [:td.logsB (:status log)]
+        [:td.logsB (:out-type log)]
+        [:td.logsB (:username log)]])]))
 
+(defpartial logs-table [n]
+  (let [logs (log-tail n)]
+    [:table.logs
+     [:caption "All sessions"]
+     [:tr.logs [:th "Session"] [:th.logs "Date"] [:th.logs "Time"] [:th.logs "Method"]
+      [:th.logs "URL"] [:th.logs "Status"] [:th.logs "Type"] [:th.logs "ID"]]
+     (for [log logs]
+       [:tr.logs
+        [:td.logs (if (:session log)
+                    (link-to (str "/admin/logs?session=" (:session log) "&n=" n)
+                      (subs (:session log) 0 5))
+                    (link-to (str "/admin/logs?session=&n=" n) "NEW"))]
+        [:td.logsB (format-log-date (:date log))]
+        [:td.logsB (:resp-time log)]
+        [:td.logsB (:method log)]
+        [:td.logsB (:uri log)]
+        [:td.logsB (:status log)]
+        [:td.logsB (:out-type log)]
+        [:td.logsB (:username log)]])]))
+
+(defpage "/admin/logs" {:keys [session n] :or {n "50"}}
+  (let [num (Integer/parseInt n)]
+    (layout "Logs"
+      (if session
+        (session-logs-table num session)
+        (logs-table num)))))

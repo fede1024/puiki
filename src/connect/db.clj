@@ -1,5 +1,6 @@
 (ns connect.db
-  (:use somnium.congomongo))
+  (:use connect.email
+    somnium.congomongo))
 
 ;(mongo! :db "connect")
 
@@ -10,6 +11,13 @@
   (destroy! :posts {}))
 
 (defn init-db []
+  (set-email!
+    :username "poli.connect0@gmail.com"
+    :password "mettereunapasswordsqui"
+    :server "smtp.gmail.com"
+    :port 465
+    :protocol "smtp"
+    :ssl true)
   (when (not (fetch-one :channels :where {:name "Poli Connect"}))
     (insert! :channels
       {:name "Poli Connect" :description "Canale dedicato a Poli Connect"

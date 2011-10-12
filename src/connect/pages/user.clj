@@ -93,6 +93,8 @@
 
 (defpage "/user/:id/edit" {:keys [id]}
   (layout "Modifica utente"
+    (if (= (session/flash-get) :new-user) 
+      [:p "Nuovo utente registrato"])
     [:h2.section "Modifica i dati di " id ":"]
     (let [person (fetch-one :people :where {:_id id})]
       (if person

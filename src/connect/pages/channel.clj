@@ -148,11 +148,14 @@
           [:p (:description ch)]
           [:p (channel-info ch)]
           [:p "Canale creato il: " (format-timestamp (:created-at ch))]
-          (when (current-id)
+          [:p
+           (when (current-id)
             [:span {:id id}
              (let [follows (into #{} (:follows (fetch-one :people :where {:_id (current-id)})))]
                (channel-follow-buttons ch
                  (if (get follows id) 'remove 'add) :only-button true))])
+           " " (link-to "/channel/list" "Elenco canali") " "
+           (link-to "/user/following" "Canali seguiti")]
           [:br]
           (let [posts (fetch :posts :where {:channel id :type {:$ne "answer"}}
                           :sort {:created-at -1})]

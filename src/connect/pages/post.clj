@@ -300,7 +300,7 @@
   (let [post (fetch-one :posts :where {:_id (obj-id pid)})]
     (when (and (current-id) post (not (str/blank? comment)))
       (update! :posts {:_id (obj-id pid)}
-        {:$push {:comments {:body comment :author (current-id)
+        {:$push {:comments {:body (escape-html comment) :author (current-id)
                             :created-at (java.util.Date.)}}
          :$inc {:comments-num 1}})
       (when (not (= (:author post) (current-id)))

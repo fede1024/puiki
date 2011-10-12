@@ -105,11 +105,12 @@
         logs (log-tail-by-session n session)]
     [:table.logs
      [:caption "Session " (or session "NEW")]
-     [:tr.logs [:th "Date"] [:th.logs "Time"] [:th.logs "Method"]
+     [:tr.logs [:th "IP"] [:th "Date"] [:th.logs "Time"] [:th.logs "Method"]
       [:th.logs "URL"] [:th.logs "Status"] [:th.logs "Type"] [:th.logs "ID"]]
      (for [log logs]
        [:tr.logs
-        [:td.logs (format-log-date (:date log))]
+        [:td.logs (:ip log)]
+        [:td.logsB (format-log-date (:date log))]
         [:td.logsB (:resp-time log)]
         [:td.logsB (:method log)]
         [:td.logsB (:uri log)]

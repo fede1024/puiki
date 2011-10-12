@@ -159,6 +159,7 @@
           new-comments (filter #(= (:action %) "new-comment") (:news user))]
       (html
         [:h2.section "Notifiche: " (count (:news user))]
+        [:p (link-to "/channel/list" "Modifica canali seguiti")]
         [:p "Nuovi post: " (count new-posts)]
         (for [n new-posts]
           [:p [:img {:src "/images/dot.png" :height 10}] " "
@@ -189,8 +190,7 @@
           [:p [:img {:src "/images/dot.png" :height 10}] " "
            (link-to (channel-path c) (:name c))
            [:p.channelInfo (channel-info c)]
-           [:p.channelDescription (:description c)]])
-        [:p (link-to "/channel/list" "Modifica canali seguiti")]))))
+           [:p.channelDescription (:description c)]])))))
 
 (defpage "/user/new-course" {:keys [field name]:as data}
   (layout "Nuovo corso di studi"

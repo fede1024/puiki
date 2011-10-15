@@ -6,6 +6,13 @@ div.channel {
     background-color: #dcf9c8;
 }
 
+h1.channelName {
+    margin-bottom: 20px;
+    font-size: 19pt;
+    font-weight: bold;
+    color: #3366CC;
+}
+
 table.channel {
     width:100%;
 }
@@ -65,6 +72,7 @@ td.channelGroup{
 */
 ul.fields {
     list-style-type: none;
+    margin-bottom: 20px;
 }
 
 ul.channels {

@@ -55,10 +55,10 @@
                   (into #{} (:follows (fetch-one :people :where {:_id (current-id)}))))]
     (layout "Tutti i canali"
       (link-to "/user/new-course" "Crea nuovo corso")
-      [:h2.section "Elenco Indirizzi di studio:"]
+      [:h1.section "Elenco Indirizzi di studio:"]
       [:ul.fields
        (for [f (fetch :fields :sort {:name 1})]
-         (html [:li.field (:name f) ":"]
+         (html [:li.field [:h2.section (:name f) ":"]]
            (let [channels (fetch :channels :where {:field (:name f)})
                  years (sort-by :year > (filter #(= (:type %) "field") channels))
                  courses (sort-by :name (fetch :courses :where {:field (:name f)}))]
@@ -72,7 +72,7 @@
                     (let [ch (fetch-one :channels :where {:_id (:channel course)})]
                       [:li.channel {:id (:_id ch)}
                        (channel-data ch :follows follows)]))]))))]
-      [:h2.section "Elenco Gruppi:"]
+      [:h1.section "Elenco Gruppi:"]
       [:ul.channels
        (for [c (fetch :channels :where {:type "group"} :sort {:name 1})]
         [:li.channel {:id (:_id c)}
@@ -144,7 +144,7 @@
         (layout (:name ch)
           (if (= (session/flash-get) :new) 
             [:p "Nuovo canale creato."])
-          [:h2.section "Canale: " (:name ch)]
+          [:h1.channelName "Canale: " (:name ch)]
           [:p (:description ch)]
           [:p (channel-info ch)]
           [:p "Canale creato il: " (format-timestamp (:created-at ch))]
@@ -158,11 +158,13 @@
            (link-to "/user/following" "Canali seguiti")]
           [:br]
           (let [posts (fetch :posts :where {:channel id :type {:$ne "answer"}}
-                          :sort {:created-at -1})]
+                          :sort {:created-at -1})
+                news (filter #(= (:type %) "normal") posts)
+                questions (filter #(= (:type %) "question") posts)]
             (html
               [:div.news
-               [:h2.section "Notizie"]
-               (map post-link (filter #(= (:type %) "normal") posts))]
+               [:h2.section "Notizie: " (count news)]
+               (map post-link news)]
               [:div.questions
-               [:h2.section "Domande"]
-               (map post-link (filter #(= (:type %) "question") posts))])))))))
+               [:h2.section "Domande: " (count questions)]
+               (map post-link questions)])))))))

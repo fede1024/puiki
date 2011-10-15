@@ -14,6 +14,29 @@ body {
     line-height: 130%;
 }
 
+body.mceContentBody {
+    padding: 5px;
+}
+
+span.loader {
+    bottom: 0;
+    color: #3366CC;
+    display: none;
+    font-size: 14pt;
+    padding: 10px;
+    position: fixed;
+    right: 0;
+    text-align: center;
+    vertical-align: middle;
+}
+
+h1.section {
+    margin-bottom: 10px;
+    font-size: 18pt;
+    font-weight: bold;
+    color: #3366CC;
+}
+
 a {
     color: #36c;
     text-decoration: underline;
@@ -88,17 +111,20 @@ td.status {
 
 h2.section {
     width: 100%;
-    border-bottom: 1px solid grey;
-    font-size: 14pt;
+    text-decoration: underline;
+    font-size: 13pt;
     font-weight: normal;
     margin-top: 10px;
     margin-bottom: 8px;
 }
 
 p {
-    margin-top: 5px;
     margin-bottom: 5px;
-    text-indent: 5px;
+}
+
+div.section {
+    padding-left: 10px;
+    margin-bottom: 20px;
 }
 
 span.newsCount{
@@ -329,12 +355,14 @@ ul {
     margin-left: 10px;
     list-style-type: disc;  
     list-style-position: inside;
+    margin-bottom: 5px;
 }
 
 ol {
     margin-left: 10px;
     list-style-position: inside;
     list-style-type: decimal;
+    margin-bottom: 5px;
 }
 
 button.continue, button.abort {

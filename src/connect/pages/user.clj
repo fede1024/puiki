@@ -160,39 +160,44 @@
           new-answers (filter #(= (:action %) "new-answer") (:news user))
           new-comments (filter #(= (:action %) "new-comment") (:news user))]
       (html
-        [:h2.section "Notifiche: " (count (:news user))]
-        [:p (link-to "/channel/list" "Modifica canali seguiti")]
-        [:p "Nuovi post: " (count new-posts)]
-        (for [n new-posts]
-          [:p [:img {:src "/images/dot.png" :height 10}] " "
-           (link-to (str "/post/" (:post n)) (:title n))
-           " - "  (:channel-name n)])
-        [:p "Nuove risposte ai tuoi post: " (count new-answers)]
-        (for [n new-answers]
-          [:p [:img {:src "/images/dot.png" :height 10}] " "
-           (link-to (str "/post/" (:post n)) (:title n))
-           " - "  (:question-title n)])
-        [:p "Nuovi commenti ai tuoi post: " (count new-comments)]
-        (for [n new-comments]
-          [:p [:img {:src "/images/dot.png" :height 10}] " "
-           (link-to (str "/post/" (:post n)) (:title n))])
-        [:h2.section "Canali seguiti:"]
-        [:p "Indirizzi di studio: " (count fields)]
-        (for [c fields]
-          [:p [:img {:src "/images/dot.png" :height 10}] " "
-           (link-to (channel-path c) (:name c))
-           [:p.channelInfo (channel-info c)]])
-        [:p "Corsi: " (count courses)]
-        (for [c courses]
-          [:p [:img {:src "/images/dot.png" :height 10}] " "
-           (link-to (channel-path c) (:name c))
-           [:p.channelInfo (channel-info c)]])
-        [:p "Gruppi: " (count groups)]
-        (for [c groups]
-          [:p [:img {:src "/images/dot.png" :height 10}] " "
-           (link-to (channel-path c) (:name c))
-           [:p.channelInfo (channel-info c)]
-           [:p.channelDescription (:description c)]])))))
+        [:h1.section "Notifiche: " (count (:news user))]
+        [:div.section
+         [:p (link-to "/channel/list" "Modifica canali seguiti")]
+         [:p "Nuovi post: " (count new-posts)]
+         (for [n new-posts]
+           [:p [:img {:src "/images/dot.png" :height 10}] " "
+            (link-to (str "/post/" (:post n)) (:title n))
+            " - "  (:channel-name n)])
+         [:p "Nuove risposte ai tuoi post: " (count new-answers)]
+         (for [n new-answers]
+           [:p [:img {:src "/images/dot.png" :height 10}] " "
+            (link-to (str "/post/" (:post n)) (:title n))
+            " - "  (:question-title n)])
+         [:p "Nuovi commenti ai tuoi post: " (count new-comments)]
+         (for [n new-comments]
+           [:p [:img {:src "/images/dot.png" :height 10}] " "
+            (link-to (str "/post/" (:post n)) (:title n))])]
+        [:h1.section "Canali seguiti:"]
+        [:div.section
+         [:h2.section "Indirizzi di studio: " (count fields)]
+         [:ul.channels
+          (for [c fields]
+            [:li.channel [:img {:src "/images/dot.png" :height 10}] " "
+             (link-to (channel-path c) (:name c))
+             [:p.channelInfo (channel-info c)]])]
+         [:h2.section "Corsi: " (count courses)]
+         [:ul.channels
+          (for [c courses]
+            [:li.channel [:img {:src "/images/dot.png" :height 10}] " "
+             (link-to (channel-path c) (:name c))
+             [:p.channelInfo (channel-info c)]])]
+         [:h2.section "Gruppi: " (count groups)]
+         [:ul.channels
+          (for [c groups]
+            [:li.channel [:img {:src "/images/dot.png" :height 10}] " "
+             (link-to (channel-path c) (:name c))
+             [:p.channelInfo (channel-info c)]
+             [:p.channelDescription (:description c)]])]]))))
 
 (defpage "/user/new-course" {:keys [field name]:as data}
   (layout "Nuovo corso di studi"

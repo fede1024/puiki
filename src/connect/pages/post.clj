@@ -50,14 +50,14 @@
         tot (or (:vtotal post) 0)]
     [:span.vote
      (if (and (current-id) (< my-vote 1))
-       [:button.vote {:name :dir :value "up" :onClick (js-vote post :up)}
+       [:a.vote {:onClick (js-vote post :up)}
         [:img.vote {:height 16 :src "/images/up.png"}]]
-       [:button.vote {:disabled true}
+       [:a.vote {:disabled true}
         [:img.vote {:height 16 :src "/images/up-off.png"}]])
      (if (and (current-id) (> my-vote -1))
-       [:button.vote {:name :dir :value "down" :onClick (js-vote post :down)}
+       [:a.vote {:onClick (js-vote post :down)}
         [:img.vote {:height 16 :src "/images/down.png"}]]
-       [:button.vote {:disabled true}
+       [:a.vote {:disabled true}
         [:img.vote {:height 16 :src "/images/down-off.png"}]])
      [:span.voteValue (str (when (> tot 0) "+") (when (= tot 0) " ") tot)]]))
 
@@ -80,11 +80,11 @@
 
 (defpartial post-bottom [post]
   [:tr.postBottom {:id (str "commentArea" (:_id post)) :style "display: none"}
-   [:td.postContent {:colspan 2}
+   [:td.postInfo {:colspan 2}
     (text-area {:id (str "commentText" (:_id post))
                 :class :postComment :rows 1 :maxlength 300 :placeholder "Commento"} :comment)]]
   [:tr.postBottom {:id (str "commentButtons" (:_id post)) :style "display: none"}
-   [:td.postContent 
+   [:td.postInfo 
     "Massimo 300 caratteri."]
    [:td.postActions
     [:button {:class "postComment"  :onClick (js-do (js-hide "#commentArea" (:_id post))
@@ -93,7 +93,8 @@
      "Annulla"]
     [:button {:class "postComment" :onClick (js-comment post)} "Commenta"]]]
   [:tr.postBottom {:id (str "actions" (:_id post))}    ;; Rispondi/Commenta
-   [:td.postContent
+   [:td.postInfo
+    (link-to (post-path post) "Link") " "
     (when (= (:type post) "answer")
       (html (link-to (post-path (fetch-one :posts :where {:_id (:answers-to post)}))
               "Domanda") " "))
@@ -126,25 +127,27 @@
         (let [p (fetch-one :people :where {:_id (:removed-by post)})]
           [:div.remMsg "Post rimosso da: " (user-description p)]))
       [:div.remMsg "Post rimosso."])
-    [:table.post
-     [:tr.postTitle
-      [:td.postTitle (post-images (:type post)) " "
-       (link-to {:class :postTitle} (post-path post) (:title post))]
-      [:td.postTitleLeft
-       (vote-section post)
-       (when (and show-remove (current-id) 
-               (or (admin? (current-id)) (= (current-id) (:author post))))
-         [:button {:class "postRemove" :onClick (js-post (post-remove-path post) (:_id post) {})}
-          "Cancella"])]]
-     [:tr.postInfo 
-      (let [p (fetch-one :people :where {:_id (:author post)})]
-        [:td.postAuthor "Postato da: " (user-description p)])
-      [:td.postDate (format-timestamp (:created-at post))]]
-     [:tr.postContent
-      [:td.postContent {:colspan 2}
-       [:div.postContent (:content post)]]]
-     (post-comments post)
-     (post-bottom post)]))
+    (html
+      (when (not (= (:type post) "answer"))
+        [:h2.postTitle (post-images (:type post)) " "
+         (link-to {:class :postTitle} (post-path post) (:title post))])
+      [:table.post
+       [:tr
+        (let [p (fetch-one :people :where {:_id (:author post)})]
+          [:td.postAuthor "Postato da: " (user-description p)])
+        [:td.postVote {:rowspan 2}
+         (when (and show-remove (current-id) 
+                 (or (admin? (current-id)) (= (current-id) (:author post))))
+           [:a.postRemove {:onClick (js-post (post-remove-path post) (:_id post) {})
+                           :title "Cancella il post"}
+            [:img.remove {:src "/images/remove.png"}]])
+         (vote-section post)]]
+       [:tr [:td.postDate (format-timestamp (:created-at post))]]
+       [:tr [:td.postContent {:colspan 2}
+             [:div.postContent (:content post)]]]
+       (post-comments post)
+       (post-bottom post)
+       ])))
 
 (defpartial post-div [post & {:keys [show-remove] :or {show-remove true}}]
   [:div.post {:id (:_id post)}
@@ -163,6 +166,16 @@
   (let [ch (fetch-one :channels :where {:_id (:channel post)})]
     [:p "Canale: " (link-to (channel-path ch) (:name ch))]))
 
+(defpartial post-answers [post]
+  (when (= "question" (:type post))
+    (let [answers (sort-by #(or (:vtotal %) 0) >
+                    (fetch :posts :where {:answers-to (:_id post)}))
+          n (count answers)]
+      (html
+        [:h2.answers "Risposte: " (if (zero? n) "nessuna" n)]
+        (for [answ answers]
+          (post-div answ))))))
+
 (defpage "/post/:id" {:keys [id]}
   (let [id (obj-id id)
         post (fetch-one :posts :where {:_id id})]
@@ -174,17 +187,10 @@
             {:$pull {:news {:post id}}}
             :multiple true))
         (layout "Post"
-          (if (= "question" (:type post))
-            [:h2.section "Domanda:"]
-            [:h2.section "Post:"])
+          (let [ch (fetch-one :channels :where {:_id (:channel post)})]
+            [:h1.channelName (link-to {:class "channelName"} (channel-path ch) (:name ch))])
           (post-div post)
-          (when (= "question" (:type post))
-            (let [answers (sort-by #(or (:vtotal %) 0) >
-                            (fetch :posts :where {:answers-to id}))]
-              [:span
-               [:h2.section "Risposte: " (count answers)]
-               (for [answ answers]
-                 (post-div answ))]))))
+          (post-answers post)))
       (render "/not-found"))))
 
 (defn update-vote [current dir]
@@ -216,17 +222,17 @@
       (if (not (and person channel))
         (render "/permission-denied")
         (layout "Nuovo post"
+          [:h1.section "Crea nuovo post"]
           (form-to {:accept-charset "utf-8" } [:post "/edit/new-post"]
             (error-table "Errore invio post")
             [:div.post
              [:table.post
-              [:tr.postTitle
-               [:td.postTitle {:colspan 2}
+              [:tr
+               [:td.newPostTitle "Titolo: "
                 (text-field {:class :postTitle :placeholder "Titolo post"} :title
                   title)]]
-              [:tr.postInfo 
-               [:td.postAuthor "Postato da: " (user-description person)]
-               [:td.postDate (format-timestamp (java.util.Date.))]]
+              [:tr [:td.postAuthor "Postato da: " (user-description person)]]
+              [:tr [:td.postDate (format-timestamp (java.util.Date.))]]
               [:tr.postContent
                [:td.postContent {:colspan 2}
                 (text-area {:class :postContent :rows 15
@@ -236,7 +242,7 @@
                [:td.postSettings {:colspan 2} "Tipo post: "
                 [:input {:type :radio :name "type" :value "normal"
                          :checked (when (or (not type) (= type "normal")) "true")} 
-                 "Normale"]
+                 "Messaggio"]
                 [:input {:type :radio :name "type" :value "question"
                          :checked (when (= type "question") "true")}
                  "Domanda"]]]
@@ -301,8 +307,7 @@
     (when (and (current-id) post (not (str/blank? comment)))
       (update! :posts {:_id (obj-id pid)}
         {:$push {:comments {:body (escape-html comment) :author (current-id)
-                            :created-at (java.util.Date.)}}
-         :$inc {:comments-num 1}})
+                            :created-at (java.util.Date.)}}})
       (when (not (= (:author post) (current-id)))
         (update! :people {:_id (:author post)} ;; Update dell'autore
           {:$push {:news {:action :new-comment :post (:_id post)
@@ -314,14 +319,10 @@
     (error-table "Errore invio post")
     [:div.post
      [:table.post
-      [:tr.postTitle
-       [:td.postTitle {:colspan 2}
-        ;(post-images "answer") " "
-        (text-field {:class :postTitle} :title
-          (or (:title reply) (str "Risposta a: " (:title question))))]]
-      [:tr.postInfo 
+      [:tr
        (let [p (fetch-one :people :where {:_id (current-id)})]
-         [:td.postAuthor "Postato da: " (user-description p)])
+         [:td.postAuthor "Postato da: " (user-description p)])]
+      [:tr
        [:td.postDate (format-timestamp (java.util.Date.))]]
       [:tr.postContent
        [:td.postContent {:colspan 2}
@@ -333,25 +334,19 @@
 
 (defpage "/edit/reply/:qid" {:keys [qid] :as reply}
   (binding [*custom-header* tinymce-header]
-    (layout "Rispondi"
-      (let [qid (obj-id qid)
-            question (fetch-one :posts :where {:_id qid})]
+    (let [qid (obj-id qid)
+          question (fetch-one :posts :where {:_id qid})
+          ch (fetch-one :channels :where {:_id (:channel question)})]
+      (layout "Rispondi"
+        [:h1.channelName "Risposta a: " (:title question)]
         (if (and question (not (:removed question)))
           [:span
-           [:h2.section "Tuo intervento:"]
            (post-reply-table question reply)
-           [:h2.section "Post a cui stai rispondendo:"]
            (post-div question)
-           (let [answers (fetch :posts :where {:answers-to qid} :sort {:vtotal -1})]
-             [:span
-              [:h2.section "Risposte precedenti: " (count answers)]
-              (for [answ answers]
-                (post-div answ))])]
+           (post-answers question)]
           [:p "Post non trovato"])))))
 
 (defn valid-reply? [{:keys [qid title content]}]
-  (vali/rule (not (str/blank? title))
-    [:title "Titolo non valido"])
   (vali/rule (not (str/blank? content))
     [:content "Contenuto non valido"])
   (vali/rule (fetch-one :posts :where {:_id (obj-id qid)})
@@ -363,10 +358,12 @@
     (let [qid (obj-id qid)
           question (fetch-one :posts :where {:_id qid})
           new-post (insert! :posts
-                     {:title      (:title reply)    :content    (:content reply)
+                     {:title (str "Risposta a: " (:title question))
+                      :content    (:content reply)
                       :author     (current-id)      :channel    (:channel question)
                       :created-at (java.util.Date.) :answers-to qid
-                      :type       "answer"          :keywords   (post-keywords reply)})]
+                      :type       :answer
+                      :keywords   (get-keywords (extract-html-text (:content reply)))})]
       (update! :channels {:_id (:channel question)} {:$inc {:posts 1}})
       (update! :posts {:_id qid} {:$inc {:answers 1}})
       (when (not (= (:author question) (current-id)))

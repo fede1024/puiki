@@ -46,21 +46,32 @@
 (defn delete-logs! []
   (destroy! :logs {}))
 
+(defn all-logs []
+  (fetch :logs
+    :where {:out-type {:$nin ["image/x-icon" "image/png" "image/gif" "text/css" "text/javascript"]}}))
+
 (defn log-tail [num]
   (reverse
     (fetch :logs
-      :where {:out-type {:$nin ["image/png" "image/gif" "text/css" "text/javascript"]}}
+      :where {:out-type {:$nin ["image/x-icon" "image/png" "image/gif" "text/css" "text/javascript"]}}
       :sort {:$natural -1} :limit num)))
 
 (defn log-tail-by-session [num session]
   (reverse
     (fetch :logs
-      :where {:out-type {:$nin ["image/png" "image/gif" "text/css" "text/javascript"]}
+      :where {:out-type {:$nin ["image/x-icon" "image/png" "image/gif" "text/css" "text/javascript"]}
               :session session}
       :sort {:$natural -1} :limit num)))
 
 (defn print-logs [num]
   (dorun (map print-log (log-tail num))))
+
+(defn analize-logs-resp-time [& [n]]
+  (let [all-logs (log-tail (or n 10000))
+        sum (reduce + (map :resp-time all-logs))
+        n (count all-logs)]
+    (println "Elaborati" n "logs, a partire dal" (format-log-date (:date (first all-logs))))
+    (println "Tempo di risposta medio:" (int (/ sum n)) "millisecondi")))
 
 ;(log-tail 10 :session "ac51d74a-d0f9-495b-80e2-4547fd5f4ed6")
 ;(fetch :logs :where {:uri "/logout"})

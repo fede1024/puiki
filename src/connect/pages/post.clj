@@ -48,7 +48,7 @@
                       (get (:votes post) (keyword (current-id))))
                   0)
         tot (or (:vtotal post) 0)]
-    [:span.vote
+    [:span.vote {:title "Vota il post"}
      (if (and (current-id) (< my-vote 1))
        [:a.vote {:onClick (js-vote post :up)}
         [:img.vote {:height 16 :src "/images/up.png"}]]
@@ -59,7 +59,11 @@
         [:img.vote {:height 16 :src "/images/down.png"}]]
        [:a.vote {:disabled true}
         [:img.vote {:height 16 :src "/images/down-off.png"}]])
-     [:span.voteValue (str (when (> tot 0) "+") (when (= tot 0) " ") tot)]]))
+     [:span.voteValue {:title (str "+" (count (filter #(= (second %) 1) (:votes post)))
+                                " -" (count (filter #(= (second %) -1) (:votes post))))}
+      (str (when (> tot 0) "+") (when (= tot 0) " ") tot)]]))
+    
+(filter #(= (second %) -1) {:a 1 :b 1 :c -1})
 
 (defpartial user-description [p & {:keys [field] :or {field true}}]
   (cond (= (:job p) "student")

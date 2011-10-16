@@ -180,7 +180,8 @@
           (html
             (post-div answ)
             [:hr.answer]))
-        (post-div (last answers))))))
+        (when (not (empty? answers))
+          (post-div (last answers)))))))
 
 (defpage "/post/:id" {:keys [id]}
   (let [id (obj-id id)

@@ -116,11 +116,11 @@
 (defn post-comments [post]
   (for [{body :body author :author date :created-at} (:comments post)]
     [:tr.comment
-      (let [p (fetch-one :people :where {:_id author})]
-        [:td.comment {:colspan 2} body
-         [:span.commentInfo {:title (str (user-description p) " " (format-timestamp date))}
-          (user-description p :field false)]])
-     ]))
+     (let [p (fetch-one :people :where {:_id author})]
+       [:td.comment {:colspan 2}
+        [:span.commentInfo {:title (str (user-description p) " " (format-timestamp date))}
+         (user-description p :field false)]
+        body])]))
 
 (defpartial post-table [post & {:keys [show-remove] :or {show-remove true}}]
   (if (:removed post)
@@ -137,7 +137,7 @@
       [:table.post
        [:tr
         (let [p (fetch-one :people :where {:_id (:author post)})]
-          [:td.postAuthor "Postato da: " (user-description p)])
+          [:td.postAuthor (user-description p)])
         [:td.postVote {:rowspan 2}
          (when (and show-remove (current-id) 
                  (or (admin? (current-id)) (= (current-id) (:author post))))
@@ -238,7 +238,7 @@
                [:td.newPostTitle "Titolo: "
                 (text-field {:class :postTitle :placeholder "Titolo post"} :title
                   title)]]
-              [:tr [:td.postAuthor "Postato da: " (user-description person)]]
+              [:tr [:td.postAuthor (user-description person)]]
               [:tr [:td.postDate (format-timestamp (java.util.Date.))]]
               [:tr.postContent
                [:td.postContent {:colspan 2}
@@ -328,7 +328,7 @@
      [:table.post
       [:tr
        (let [p (fetch-one :people :where {:_id (current-id)})]
-         [:td.postAuthor "Postato da: " (user-description p)])]
+         [:td.postAuthor (user-description p)])]
       [:tr
        [:td.postDate (format-timestamp (java.util.Date.))]]
       [:tr.postContent

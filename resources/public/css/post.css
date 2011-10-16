@@ -87,8 +87,7 @@ td.newPostTitle {
 td.postAuthor{
     padding-left: 5px;
     padding-bottom: 0px;
-    font-size: 8pt;
-    text-decoration: none;
+    font-size: 9pt;
     vertical-align: bottom;
     padding-top: 2px;
 }
@@ -100,7 +99,7 @@ td.postDate, td.lastPostDate{
     padding-bottom: 0px;
     color: teal;
     font-style: normal;
-    font-size: 7pt;
+    font-size: 8pt;
 }
 
 td.postVote {

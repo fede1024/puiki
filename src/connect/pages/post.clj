@@ -61,10 +61,11 @@
         [:img.vote {:height 16 :src "/images/down-off.png"}]])
      [:span.voteValue (str (when (> tot 0) "+") (when (= tot 0) " ") tot)]]))
 
-(defn user-description [p]
+(defpartial user-description [p & {:keys [field] :or {field true}}]
   (cond (= (:job p) "student")
     (str (:firstname p) " " (:lastname p)
-      (when (:field p) (str " (" (:field p) " " (- 2012 (:year p)) "° anno)"))) ;;TODO:fix
+      (when (and field (:field p))
+        (str " (" (:field p) " " (- 2012 (:year p)) "°anno)")))
     (= (:job p) "professor") " (Docente)"
     :else nil))
 
@@ -115,9 +116,11 @@
 (defn post-comments [post]
   (for [{body :body author :author date :created-at} (:comments post)]
     [:tr.comment
-     [:td.comment {:colspan 2} body
       (let [p (fetch-one :people :where {:_id author})]
-        [:span.commentInfo (user-description p) " " (format-timestamp date)])]]))
+        [:td.comment {:colspan 2} body
+         [:span.commentInfo {:title (str (user-description p) " " (format-timestamp date))}
+          (user-description p :field false)]])
+     ]))
 
 (defpartial post-table [post & {:keys [show-remove] :or {show-remove true}}]
   (if (:removed post)
@@ -173,8 +176,11 @@
           n (count answers)]
       (html
         [:h2.answers "Risposte: " (if (zero? n) "nessuna" n)]
-        (for [answ answers]
-          (post-div answ))))))
+        (for [answ (butlast answers)]
+          (html
+            (post-div answ)
+            [:hr.answer]))
+        (post-div (last answers))))))
 
 (defpage "/post/:id" {:keys [id]}
   (let [id (obj-id id)

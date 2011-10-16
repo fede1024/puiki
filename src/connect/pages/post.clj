@@ -62,8 +62,6 @@
      [:span.voteValue {:title (str "+" (count (filter #(= (second %) 1) (:votes post)))
                                 " -" (count (filter #(= (second %) -1) (:votes post))))}
       (str (when (> tot 0) "+") (when (= tot 0) " ") tot)]]))
-    
-(filter #(= (second %) -1) {:a 1 :b 1 :c -1})
 
 (defpartial user-description [p & {:keys [field] :or {field true}}]
   (cond (= (:job p) "student")
@@ -187,12 +185,24 @@
         (when (not (empty? answers))
           (post-div (last answers)))))))
 
+(def sh-header
+  (let [brushes '(AppleScript AS3 Bash ColdFusion Cpp CSharp Css Delphi Diff
+                   Erlang Groovy JavaFX Java JScript Perl Php Plain PowerShell
+                   Python Ruby Sass Scala Sql Vb Xml)]
+    (html
+      [:script {:type "text/javascript" :src "/syntaxhighlighter/scripts/shCore.js"}]
+      (for [brush brushes]
+        [:script {:type "text/javascript" :src (str "/syntaxhighlighter/scripts/shBrush" brush ".js")}])
+      [:link {:type "text/css" :rel "stylesheet" :href "/syntaxhighlighter/styles/shCoreDefault.css"}]
+      [:script {:type "text/javascript"} "SyntaxHighlighter.all()"])))
+
 (defpage "/post/:id" {:keys [id]}
   (let [id (obj-id id)
         post (fetch-one :posts :where {:_id id})]
     (if post
       (binding [*sidebar* (html (post-summary post)
-                            (channel-link post))]
+                            (channel-link post))
+                *custom-header* sh-header]
         (when (current-id)
           (update! :people {:_id (current-id)} ;; Toglie il post dalle notifiche
             {:$pull {:news {:post id}}}
@@ -221,13 +231,13 @@
         (post-table (fetch-one :posts :where {:_id id})))
       "ERRORE")))
 
-(def tinymce-header
+(def ckeditor-header
   (html
-    [:script {:type "text/javascript" :src "/tinymce/jscripts/tiny_mce/tiny_mce.js"}]
-    [:script {:type "text/javascript" :src "/tinymce.js"}]))
+    [:script {:type "text/javascript" :src "/ckeditor/ckeditor.js"}]
+    [:script {:type "text/javascript" :src "/ckeditor-config.js"}]))
 
 (defpage "/edit/new-post" {:keys [title content channel-id type]}
-  (binding [*custom-header* tinymce-header]
+  (binding [*custom-header* ckeditor-header]
     (let [person (fetch-one :people :where {:_id (current-id)})
           channel (fetch-one :channels :where {:_id (obj-id channel-id)})]
       (if (not (and person channel))
@@ -246,7 +256,7 @@
               [:tr [:td.postDate (format-timestamp (java.util.Date.))]]
               [:tr.postContent
                [:td.postContent {:colspan 2}
-                (text-area {:class :postContent :rows 15
+                (text-area {:class :ckeditor :rows 15
                             :placeholder "Contenuto del post"}
                   :content content)]]
               [:tr.postBottom

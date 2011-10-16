@@ -14,8 +14,11 @@ body {
     line-height: 130%;
 }
 
-body.mceContentBody {
-    padding: 5px;
+pre {
+    border: 1px solid #ececec;
+    border-radius: 3px;
+    padding-top: 2px;
+    padding-bottom: 2px;
 }
 
 span.loader {

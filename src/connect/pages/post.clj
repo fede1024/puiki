@@ -191,24 +191,12 @@
         (when (not (empty? answers))
           (post-div (last answers)))))))
 
-(def sh-header
-  (let [brushes '(AppleScript AS3 Bash ColdFusion Cpp CSharp Css Delphi Diff
-                   Erlang Groovy JavaFX Java JScript Perl Php Plain PowerShell
-                   Python Ruby Sass Scala Sql Vb Xml)]
-    (html
-      [:script {:type "text/javascript" :src "/syntaxhighlighter/scripts/shCore.js"}]
-      (for [brush brushes]
-        [:script {:type "text/javascript" :src (str "/syntaxhighlighter/scripts/shBrush" brush ".js")}])
-      [:link {:type "text/css" :rel "stylesheet" :href "/syntaxhighlighter/styles/shCoreDefault.css"}]
-      [:script {:type "text/javascript"} "SyntaxHighlighter.all()"])))
-
 (defpage "/post/:id" {:keys [id]}
   (let [id (obj-id id)
         post (fetch-one :posts :where {:_id id})]
     (if post
       (binding [*sidebar* (html (post-summary post)
-                            (channel-link post))
-                *custom-header* sh-header]
+                            (channel-link post))]
         (when (current-id)
           (update! :people {:_id (current-id)} ;; Toglie il post dalle notifiche
             {:$pull {:news {:post id}}}
@@ -360,7 +348,7 @@
         (submit-button {:class "postReply"} "Invia")]]]]))
 
 (defpage "/edit/reply/:qid" {:keys [qid] :as reply}
-  (binding [*custom-header* (html ckeditor-header sh-header)]
+  (binding [*custom-header* ckeditor-header]
     (let [qid (obj-id qid)
           question (fetch-one :posts :where {:_id qid})
           ch (fetch-one :channels :where {:_id (:channel question)})]

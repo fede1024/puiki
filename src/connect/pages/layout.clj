@@ -70,6 +70,18 @@
         (when (admin? id) (admin-sidebar))
         (when (user? id)  (user-sidebar))))))
 
+(def sh-header
+  (html
+    [:script {:type "text/javascript" :src "/syntaxhighlighter/scripts/shCore.js"}]
+    [:script {:type "text/javascript" :src "/syntaxhighlighter/scripts/shAutoloader.js"}]
+    [:link {:type "text/css" :rel "stylesheet" :href "/syntaxhighlighter/styles/shCoreDefault.css"}]
+    [:script {:type "text/javascript"}
+     "SyntaxHighlighter.all();"]))
+
+(def sh-autoloader
+  (html
+    [:script {:type "text/javascript" :src "/sh-autoloader.js"}]))
+
 (def *sidebar* default-sidebar)
 (def *custom-header* nil)
 
@@ -89,6 +101,7 @@
      (include-css "/css/channel.css")
      (include-css "/css/admin.css")
      (include-css "/css/post.css")
+     sh-header
      *custom-header*
      [:title title]]
     [:body
@@ -124,7 +137,8 @@
         "Powered by: "
         (link-to "http://www.clojure.org" [:img.footer {:height 25 :src "/images/Clojure.png"}])
         (link-to "http://www.mongodb.org" [:img.footer {:height 25 :src "/images/mongodb.png"}])
-        (link-to "http://aws.amazon.com/" [:img.footer {:height 25 :src "/images/aws.png"}])]]]]))
+        (link-to "http://aws.amazon.com/" [:img.footer {:height 25 :src "/images/aws.png"}])]]]
+     sh-autoloader]))
     
 (defpartial error-text [errors]
   (map #(html [:p [:img {:src "/images/error.png"}] " " %]) errors))

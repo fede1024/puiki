@@ -293,7 +293,7 @@
                           :title (:title new-post) :channel c-id
                           :channel-name (:name ch) :time (java.util.Date.)}}}
           :multiple true)
-        (resp/redirect (channel-path ch)))
+        (resp/redirect (post-path new-post)))
       (render "/edit/new-post" post))
     (resp/redirect "/login")))
 

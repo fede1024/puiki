@@ -78,8 +78,12 @@
 
 (defn js-comment [post]
   (str "$('#loader').css('display', 'inline');"
-    "$.post('" (user-comment-path post) "', {comment: $('#commentText"  (:_id post) "').val()}, function(content) {$('#" (:_id post) "').html(content);"
-    "$('#loader').css('display', 'none');});"))
+    "$.post('" (user-comment-path post) "', {comment: $('#commentText"  (:_id post) "').val()}, function(content) {$('#comments" (:_id post) "').html(content);"
+    "$('#loader').css('display', 'none');});"
+    "$('#commentText"  (:_id post) "').val('');"
+    (js-hide "#commentArea" (:_id post))
+    (js-hide "#commentButtons" (:_id post))
+    (js-show "#actions" (:_id post))))
 
 (defpartial post-bottom [post]
   [:tr.postBottom {:id (str "commentArea" (:_id post)) :style "display: none"}
@@ -115,14 +119,15 @@
                (if (not (current-id)) {:disabled true}))
      "Commenta"]]])
 
-(defn post-comments [post]
-  (for [{body :body author :author date :created-at} (:comments post)]
-    [:tr.comment
-     (let [p (fetch-one :people :where {:_id author})]
-       [:td.comment {:colspan 2}
-        [:span.commentInfo {:title (str (user-description p) " " (format-timestamp date))}
-         (user-description p :field false)]
-        body])]))
+(defpartial post-comments [post]
+  [:table
+   (for [{body :body author :author date :created-at} (:comments post)]
+     [:tr.comment
+      (let [p (fetch-one :people :where {:_id author})]
+        [:td.comment
+         [:span.commentInfo {:title (str (user-description p) " " (format-timestamp date))}
+          (user-description p :field false)]
+         body])])])
 
 (defpartial post-table [post & {:keys [show-remove] :or {show-remove true}}]
   (if (:removed post)
@@ -150,9 +155,9 @@
        [:tr [:td.postDate (format-timestamp (:created-at post))]]
        [:tr [:td.postContent {:colspan 2}
              [:div.postContent (:content post)]]]
-       (post-comments post)
-       (post-bottom post)
-       ])))
+       [:tr [:td {:id (str "comments" (:_id post))}
+             (post-comments post)]]
+       (post-bottom post)])))
 
 (defpartial post-div [post & {:keys [show-remove] :or {show-remove true}}]
   [:div.post {:id (:_id post)}
@@ -333,7 +338,7 @@
         (update! :people {:_id (:author post)} ;; Update dell'autore
           {:$push {:news {:action :new-comment :post (:_id post)
                           :title (:title post) :time (java.util.Date.)}}}))))
-  (post-table (fetch-one :posts :where {:_id (obj-id pid)})))
+  (post-comments (fetch-one :posts :where {:_id (obj-id pid)})))
 
 (defpartial post-reply-table [question & [reply]]
   (form-to {:accept-charset "utf-8" } [:post (user-reply-path question)]

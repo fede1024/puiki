@@ -41,7 +41,7 @@
     "$('#loader').css('display', 'none');});"))
 
 (defn js-vote [post dir]
-  (js-get (post-vote-path post) (:_id post) {:dir dir}))
+  (js-get (post-vote-path post) (str "votes" (:_id post)) {:dir dir}))
 
 (defpartial vote-section [post]
   (let [my-vote (or (when (current-id)
@@ -94,9 +94,9 @@
    [:td.postInfo 
     "Massimo 300 caratteri."]
    [:td.postActions
-    [:button {:class "postComment"  :onClick (js-do (js-hide "#commentArea" (:_id post))
-                                               (js-hide "#commentButtons" (:_id post))
-                                               (js-show "#actions" (:_id post)))}
+    [:button {:class "postComment" :onClick (js-do (js-hide "#commentArea" (:_id post))
+                                              (js-hide "#commentButtons" (:_id post))
+                                              (js-show "#actions" (:_id post)))}
      "Annulla"]
     [:button {:class "postComment" :onClick (js-comment post)} "Commenta"]]]
   [:tr.postBottom {:id (str "actions" (:_id post))}    ;; Rispondi/Commenta
@@ -151,7 +151,8 @@
            [:a.postRemove {:onClick (js-post (post-remove-path post) (:_id post) {})
                            :title "Cancella il post"}
             [:img.remove {:src "/images/remove.png"}]])
-         (vote-section post)]]
+         [:span {:id (str "votes" (:_id post))}
+          (vote-section post)]]]
        [:tr [:td.postDate (format-timestamp (:created-at post))]]
        [:tr [:td.postContent {:colspan 2}
              [:div.postContent (:content post)]]]
@@ -233,7 +234,7 @@
                     {(keyword (current-id)) (update-vote my-vote dir)})]
         (update! :posts {:_id id}
           {:$set {:votes votes :vtotal (apply + (vals votes))}})
-        (post-table (fetch-one :posts :where {:_id id})))
+        (vote-section (fetch-one :posts :where {:_id id})))
       "ERRORE")))
 
 (def ckeditor-header

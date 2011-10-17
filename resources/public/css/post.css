@@ -46,6 +46,9 @@ img.vote, img.remove{
 }
 
 span.voteValue{
+    display: inline-block;
+    width: 30px;
+    text-align: right;
     font-size: 16pt;
     margin-left: 5px;
     margin-right: 5px;

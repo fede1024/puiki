@@ -347,14 +347,14 @@
        [:td.postDate (format-timestamp (java.util.Date.))]]
       [:tr.postContent
        [:td.postContent {:colspan 2}
-        (text-area {:class :postContent :rows 15 :placeholder "Contenuto del post"}
+        (text-area {:class :ckeditor :rows 15 :placeholder "Contenuto del post"}
           :content (:content reply))]]
       [:tr.postBottom
        [:td.postActions {:colspan 2}
         (submit-button {:class "postReply"} "Invia")]]]]))
 
 (defpage "/edit/reply/:qid" {:keys [qid] :as reply}
-  (binding [*custom-header* tinymce-header]
+  (binding [*custom-header* (html ckeditor-header sh-header)]
     (let [qid (obj-id qid)
           question (fetch-one :posts :where {:_id qid})
           ch (fetch-one :channels :where {:_id (:channel question)})]

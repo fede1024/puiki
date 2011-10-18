@@ -12,7 +12,8 @@
            [noir.server :as server]
            [noir.validation :as vali]
            [noir.session :as session]
-           [noir.response :as resp])
+           [noir.response :as resp]
+           [noir.util.crypt :as crypt])
  (:import [java.util UUID]))
 
 (defpartial registration-form [& [data]]
@@ -89,7 +90,8 @@
 
 (defpage [:post "/register"] {:as reg-data}
   (if (valid? reg-data)
-    (let [email (new-pending-user reg-data)]
+    (let [email (new-pending-user
+                  (merge reg-data {:pwd (crypt/encrypt (:pwd reg-data))}))]
       (layout "Registrazione"
         [:p "Un'email è stata inviata a " email]
         [:p "Controlla la tua casella di posta elettronica."]))

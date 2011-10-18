@@ -9,7 +9,12 @@
  (:require [noir.server :as server]
            [noir.validation :as vali]
            [noir.session :as session]
-           [noir.response :as resp]))
+           [noir.response :as resp]
+           [noir.util.crypt :as crypt]))
+
+;(for [{id :_id pwd :pwd} (fetch :people)]
+;  (update! :people {:_id id}
+;    {:$set {:pwd (crypt/encrypt pwd)}}))
 
 (defpage "/login" {:keys [redirect username]}
   (if (current-id)
@@ -29,7 +34,7 @@
 
 (defn login! [{:keys [username password] :as user}]
   (let [stored-pass (:pwd (fetch-one :people :where {:_id username}))]
-    (if (and stored-pass (= password stored-pass))
+    (if (and stored-pass (crypt/compare password stored-pass))
       (session/put! :username username)
       (vali/set-error :username "Password o nome utente non valido."))))
 

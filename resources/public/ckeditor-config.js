@@ -12,9 +12,9 @@ CKEDITOR.editorConfig = function( config )
 	CKEDITOR.config.toolbar_Full = [
 	['Format', 'Bold','Italic','Underline','Strike','-','Subscript','Superscript'],	['NumberedList','BulletedList','-','Outdent','Indent','-','JustifyLeft','JustifyCenter','JustifyRight','JustifyBlock'],
 	['Link','Unlink'],
-	['Image','Table','SpecialChar']
+	['Image','Table','SpecialChar'],
 	['Undo','Redo','-','Find','Replace','-','SelectAll','RemoveFormat'],
-	['Source','-','Save','Preview'],
+	//['Source','-','Save','Preview'],
 	]; 
 	
 	config.extraPlugins = 'syntaxhighlight';

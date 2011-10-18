@@ -205,7 +205,7 @@ input.postTitle {
     display: inline;
     margin: 3px;
     font-size: 12pt;
-    width: 100%;
+    width: 90%;
 }
 
 input.postReply, button.postComment, input.postSubmit {

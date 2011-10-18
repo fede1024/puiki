@@ -164,7 +164,7 @@
          (post-bottom post))])))
 
 (defpartial post-div [post & {:keys [preview]}]
-  [:div.post {:id (:_id post)}
+  [:div.post
    (post-table post :preview preview)])
 
 (defpartial post-summary [post]
@@ -233,6 +233,14 @@
     [:script {:type "text/javascript" :src "/ckeditor/ckeditor.js"}]
     [:script {:type "text/javascript" :src "/ckeditor-config.js"}]))
 
+(def new-post-help
+  (html
+    [:p "Per inserire il codice sorgente clicca sul tasto code. Per inserire una formula "
+     "matematica puoi utilizzare " [:a {:href "http://mathurl.com" :target "_blank"} "questo sito"]
+     ". Una volta realizzata la formula clicca su \"make mathURL\" e inserisci qui la formula "
+     [:em "come immagine"] " (usando l'indirizzo che trovi cliccando sulla formula col tasto destro "
+     "e successivamente su \"Indirizzo immagine\")."]))
+
 (defpage "/edit/new-post" {:keys [title content channel-id type]}
   (binding [*custom-header* ckeditor-header]
     (let [person (fetch-one :people :where {:_id (current-id)})
@@ -246,7 +254,7 @@
             [:div.post
              [:table.post
               [:tr
-               [:td.newPostTitle "Titolo: "
+               [:td.newPostTitle {:colspan 2} "Titolo: "
                 (text-field {:class :postTitle :placeholder "Titolo post"} :title
                   title)]]
               [:tr [:td.postAuthor (user-description person)]]
@@ -269,7 +277,8 @@
                 [:input {:type :hidden :name :channel-id :value channel-id}]
                 (link-to (channel-path channel) (:name channel))]
                [:td.postActions
-                (submit-button {:class "postSubmit"} "Anteprima e invio")]]]]))))))
+                (submit-button {:class "postSubmit"} "Anteprima e invio")]]]])
+          new-post-help)))))
 
 (defn valid-post? [{:keys [title content channel-id type]}]
   (vali/rule (not (str/blank? title))
@@ -366,7 +375,8 @@
           :content (:content reply))]]
       [:tr.postBottom
        [:td.postActions {:colspan 2}
-        (submit-button {:class "postReply"} "Invia")]]]]))
+        (submit-button {:class "postReply"} "Invia")]]]])
+  new-post-help)
 
 (defpage "/edit/reply/:qid" {:keys [qid] :as reply}
   (binding [*custom-header* ckeditor-header]

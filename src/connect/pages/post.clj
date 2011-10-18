@@ -129,7 +129,7 @@
           (user-description p :field false)]
          body])])])
 
-(defpartial post-table [post & {:keys [show-remove] :or {show-remove true}}]
+(defpartial post-table [post & {:keys [preview]}]
   (if (:removed post)
     (if (:removed-by post)
       (if (= (:removed-by post) (:author post))
@@ -146,23 +146,26 @@
         (let [p (fetch-one :people :where {:_id (:author post)})]
           [:td.postAuthor (user-description p)])
         [:td.postVote {:rowspan 2}
-         (when (and show-remove (current-id) 
+         (when (and (not preview) (current-id) 
                  (or (admin? (current-id)) (= (current-id) (:author post))))
            [:a.postRemove {:onClick (js-post (post-remove-path post) (:_id post) {})
                            :title "Cancella il post"}
             [:img.remove {:src "/images/remove.png"}]])
-         [:span {:id (str "votes" (:_id post))}
-          (vote-section post)]]]
+         (when (not preview)
+           [:span {:id (str "votes" (:_id post))}
+            (vote-section post)])]]
        [:tr [:td.postDate (format-timestamp (:created-at post))]]
        [:tr [:td.postContent {:colspan 2}
              [:div.postContent (:content post)]]]
-       [:tr [:td {:id (str "comments" (:_id post))}
-             (post-comments post)]]
-       (post-bottom post)])))
+       (when (not preview)
+         [:tr [:td {:id (str "comments" (:_id post))}
+               (post-comments post)]])
+       (when (not preview)
+         (post-bottom post))])))
 
-(defpartial post-div [post & {:keys [show-remove] :or {show-remove true}}]
+(defpartial post-div [post & {:keys [preview]}]
   [:div.post {:id (:_id post)}
-   (post-table post :show-remove show-remove)])
+   (post-table post :preview preview)])
 
 (defpartial post-summary [post]
   [:h2.section "Informazioni post:"]
@@ -238,7 +241,7 @@
         (render "/permission-denied")
         (layout "Nuovo post"
           [:h1.section "Crea nuovo post"]
-          (form-to {:accept-charset "utf-8" } [:post "/edit/new-post"]
+          (form-to {:accept-charset "utf-8" } [:post "/edit/new-post/preview"]
             (error-table "Errore invio post")
             [:div.post
              [:table.post
@@ -266,7 +269,7 @@
                 [:input {:type :hidden :name :channel-id :value channel-id}]
                 (link-to (channel-path channel) (:name channel))]
                [:td.postActions
-                (submit-button {:class "postSubmit"} "Invia")]]]]))))))
+                (submit-button {:class "postSubmit"} "Anteprima e invio")]]]]))))))
 
 (defn valid-post? [{:keys [title content channel-id type]}]
   (vali/rule (not (str/blank? title))
@@ -276,6 +279,24 @@
   (vali/rule (fetch-one :channels :where {:_id (obj-id channel-id)})
     [:channel-id "Canale non valido"]) ;;TODO: controllo sul tipo
   (not (vali/errors? :title :content :channel-id)))
+
+(defpage [:post "/edit/new-post/preview"] {:as post}
+  (if (current-id)
+    (if (valid-post? post)
+      (let [hiddens (for [[name value] post]
+                      [:input {:type :hidden :name name :value value}])]
+        (layout "Anteprima"
+          (post-div (merge post {:author (current-id) :channel (:channel-id post)
+                                 :created-at (java.util.Date.)})
+            :preview true)
+          (form-to {:accept-charset "utf-8" } [:get "/edit/new-post"]
+            hiddens
+            (submit-button {:class "postSubmit"} "Modifica post"))
+          (form-to {:accept-charset "utf-8" } [:post "/edit/new-post"]
+            hiddens
+            (submit-button {:class "postSubmit"} "Invia post"))))
+      (render "/edit/new-post" post))
+    (resp/redirect "/login")))
 
 (defpage [:post "/edit/new-post"] {:as post}
   (if (current-id)

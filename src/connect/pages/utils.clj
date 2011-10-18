@@ -20,7 +20,7 @@
   (str "/user/" id "/info"))
 
 (defn channel-path [channel]
-  (str "/channel/" (:_id channel) "/"))
+  (str "/channel/" (:_id channel)))
 
 (defn user-reply-path [post]
   (str "/edit/reply/" (:_id post)))

@@ -134,7 +134,7 @@
            (str "Risposte: " (or (:answers post) 0) " "))
          "Commenti: " (or (:comments-num post) 0)]]])))
 
-(defpage "/channel/:id/" {:keys [id]}
+(defpage "/channel/:id" {:keys [id]}
   (let [id (obj-id id)
         ch (fetch-one :channels :where {:_id id})]
     (if (not ch)
@@ -144,7 +144,7 @@
         (layout (:name ch)
           (if (= (session/flash-get) :new) 
             [:p "Nuovo canale creato."])
-          [:h1.channelName "Canale: " (:name ch)]
+          [:h1.channelName "Canale: " (link-to (channel-path ch) (:name ch))]
           [:p (:description ch)]
           [:p (channel-info ch)]
           [:p "Canale creato il: " (format-timestamp (:created-at ch))]
@@ -158,13 +158,52 @@
            (link-to "/user/following" "Canali seguiti")]
           [:br]
           (let [posts (fetch :posts :where {:channel id :type {:$ne "answer"}}
-                          :sort {:created-at -1})
+                        :sort {:created-at -1})
                 news (filter #(= (:type %) "normal") posts)
                 questions (filter #(= (:type %) "question") posts)]
             (html
               [:div.news
-               [:h2.section "Notizie: " (count news)]
-               (map post-link news)]
+               [:h2.section "Ultime notizie:"]
+               (take 5 (map post-link news))
+               [:p (link-to (str (channel-path ch) "/news") "Mostra tutte le notizie")]
+               [:br]]
               [:div.questions
-               [:h2.section "Domande: " (count questions)]
-               (map post-link questions)])))))))
+               [:h2.section "Ultime domande: "]
+               (take 5 (map post-link questions))
+               [:p (link-to (str (channel-path ch) "/questions") "Mostra tutte le domande")]
+               [:br]])))))))
+            
+(defpage "/channel/:id/:show" {:keys [id show]}
+  (let [id (obj-id id)
+        ch (fetch-one :channels :where {:_id id})]
+    (if (not ch)
+      (render "/not-found")
+      (binding [*sidebar* (html (add-post ch)
+                            (followers ch))]
+        (layout (:name ch)
+          (if (= (session/flash-get) :new) 
+            [:p "Nuovo canale creato."])
+          [:h1.channelName "Canale: " (link-to (channel-path ch) (:name ch))]
+          [:p (:description ch)]
+          [:p (channel-info ch)]
+          [:p "Canale creato il: " (format-timestamp (:created-at ch))]
+          [:p
+           (when (current-id)
+            [:span {:id id}
+             (let [follows (into #{} (:follows (fetch-one :people :where {:_id (current-id)})))]
+               (channel-follow-buttons ch
+                 (if (get follows id) 'remove 'add) :only-button true))])
+           " " (link-to "/channel/list" "Elenco canali") " "
+           (link-to "/user/following" "Canali seguiti")]
+          [:br]
+          (html
+            (cond (= show "news")
+              [:div.news
+               [:h2.section "Tutte le notizie:"]
+               (map post-link (fetch :posts :where {:channel id :type "normal"}
+                                :sort {:created-at -1}))]
+              (= show "questions")
+              [:div.questions
+               [:h2.section "Tutte le domande: "]
+               (map post-link (fetch :posts :where {:channel id :type "question"}
+                                :sort {:created-at -1}))])))))))

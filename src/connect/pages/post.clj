@@ -360,7 +360,7 @@
   (post-comments (fetch-one :posts :where {:_id (obj-id pid)})))
 
 (defpartial post-reply-table [question & [reply]]
-  (form-to {:accept-charset "utf-8" } [:post (user-reply-path question)]
+  (form-to {:accept-charset "utf-8" } [:post (str (user-reply-path question) "/preview")]
     (error-table "Errore invio post")
     [:div.post
      [:table.post
@@ -375,7 +375,7 @@
           :content (:content reply))]]
       [:tr.postBottom
        [:td.postActions {:colspan 2}
-        (submit-button {:class "postReply"} "Invia")]]]])
+        (submit-button {:class "postReply"} "Anteprima e invio")]]]])
   new-post-help)
 
 (defpage "/edit/reply/:qid" {:keys [qid] :as reply}
@@ -399,8 +399,27 @@
     [:post "Non esiste un post di domanda"])
   (not (vali/errors? :title :content)))
 
+(defpage [:post "/edit/reply/:qid/preview"] {:keys [qid] :as reply}
+  (if (and (current-id) (valid-reply? reply))
+    (let [hiddens (html
+                    (for [[name value] reply]
+                      [:input {:type :hidden :name name :value value}])
+                    [:input {:type :hidden :name :qid :value qid}])]
+      (println (pr-str reply))
+      (layout "Anteprima"
+        (post-div (merge reply {:author (current-id) :channel (:channel-id reply)
+                                :type   "answer" :created-at (java.util.Date.)})
+          :preview true)
+        (form-to {:accept-charset "utf-8" } [:get (str "/edit/reply/" qid)]
+          hiddens
+          (submit-button {:class "postSubmit"} "Modifica post"))
+        (form-to {:accept-charset "utf-8" } [:post (str "/edit/reply/" qid)]
+          hiddens
+          (submit-button {:class "postSubmit"} "Invia post"))))
+    (render "/edit/reply/:qid" reply)))
+  
 (defpage [:post "/edit/reply/:qid"] {:keys [qid] :as reply}
-  (if (valid-reply? reply)
+  (if (and (current-id) (valid-reply? reply))
     (let [qid (obj-id qid)
           question (fetch-one :posts :where {:_id qid})
           new-post (insert! :posts

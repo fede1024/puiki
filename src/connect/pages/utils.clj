@@ -49,7 +49,7 @@
 
 (defn format-timestamp [ts]
   (if ts
-    (.format (java.text.SimpleDateFormat. "d-M-yy HH:mm") ts)
+    (.format (java.text.SimpleDateFormat. "dd-MM-yyyy HH:mm") ts)
     "???"))
 
 (defn get-request-uri [req]

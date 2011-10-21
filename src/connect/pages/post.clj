@@ -265,13 +265,14 @@
                             :placeholder "Contenuto del post"}
                   :content content)]]
               [:tr.postBottom
-               [:td.postSettings {:colspan 2} "Tipo post: "
+               [:td.postSettings {:colspan 2}
                 [:input {:type :radio :name "type" :value "normal"
-                         :checked (when (or (not type) (= type "normal")) "true")} 
-                 "Messaggio"]
+                         :checked (when (= type "normal") "true")} 
+                 "Messaggio - gli utenti possono solo lasciare commenti"]
+                [:br]
                 [:input {:type :radio :name "type" :value "question"
                          :checked (when (= type "question") "true")}
-                 "Domanda"]]]
+                 "Domanda - gli utenti possono anche risopndere con nuovi post"]]]
               [:tr.postBottom
                [:td.postSettings "Canale: "
                 [:input {:type :hidden :name :channel-id :value channel-id}]
@@ -285,9 +286,11 @@
     [:title "Titolo non valido"])
   (vali/rule (not (str/blank? content))
     [:content "Contenuto non valido"])
+  (vali/rule (or (= type "normal") (= type "question"))
+    [:type "Non hai selezionato il tipo di post che vuoi creare"])
   (vali/rule (fetch-one :channels :where {:_id (obj-id channel-id)})
     [:channel-id "Canale non valido"]) ;;TODO: controllo sul tipo
-  (not (vali/errors? :title :content :channel-id)))
+  (not (vali/errors? :title :content :channel-id :type)))
 
 (defpage [:post "/edit/new-post/preview"] {:as post}
   (if (current-id)
@@ -298,6 +301,11 @@
           (post-div (merge post {:author (current-id) :channel (:channel-id post)
                                  :created-at (java.util.Date.)})
             :preview true)
+          [:p "Tipo post: "
+           (when (= (:type post) "normal")
+             "Messaggio - gli utenti possono solo commentare, non sono permessi post di risposta.")
+           (when (= (:type post) "question")
+             "Domanda - gli utenti possono solo commentare e aggiungere post di risposta.")]
           (form-to {:accept-charset "utf-8" } [:get "/edit/new-post"]
             hiddens
             (submit-button {:class "postSubmit"} "Modifica post"))
@@ -392,7 +400,7 @@
            (post-answers question)]
           [:p "Post non trovato"])))))
 
-(defn valid-reply? [{:keys [qid title content]}]
+(defn valid-reply? [{:keys [qid title content type]}]
   (vali/rule (not (str/blank? content))
     [:content "Contenuto non valido"])
   (vali/rule (fetch-one :posts :where {:_id (obj-id qid)})

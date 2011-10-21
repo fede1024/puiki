@@ -81,7 +81,7 @@
              (if data (:field data) (:field person)))]
       (error-cell :field)]
      [:tr [:td.head "Anno immatr.: "]
-      [:td (drop-down :year (range 2003 2022)
+      [:td (drop-down :year (range 2007 2012)
              (to-integer (if data
                            (:year data)
                            (:year person))))]
@@ -131,7 +131,7 @@
   (vali/rule (fetch-one :people :where {:_id id})
      [:id "Matricola non valida."]) ;; Non visualizzato
   (vali/rule (let [y (Integer/parseInt year)]
-               (and (> y 2003) (< y 2011)))
+               (and (>= y 2007) (<= y 2012)))
      [:year "Anno di immatricolazione non valido."])
   (not (vali/errors? :field :year :id)))
 

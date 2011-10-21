@@ -100,7 +100,8 @@
 (defn valid? [data]
   (vali/rule (re-matches #"s[0-9]+" (:id data))
     [:id "Matricola non valida"])
-  (vali/rule (not (fetch-one :people :where {:_id (:id data)}))
+  (vali/rule (and (not (fetch-one :people :where {:_id (:id data)}))
+               (not (fetch-one :people-pending :where {:_id (:id data)})))
     [:id "Matricola già registrata"])
   (vali/rule (vali/min-length? (:pwd data) 4)
     [:pwd "Deve avere almeno 4 lettere."])

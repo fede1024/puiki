@@ -6,17 +6,20 @@
 
 ;db.createCollection("mycoll", {capped:true, size:10000000})
 
+(def *ip* nil)
+
 (defn wrap-logging [handler]
   (fn [req]
-    (let [[out exec-time] (exec-time (handler req))]
-      (insert! :logs
-        {:date (java.util.Date.) :resp-time exec-time
-         :method (:request-method req) :uri (:uri req)
-         :referer (get-in req [:headers "referer"])
-         :session (:value (get-in req [:cookies "ring-session"]))
-         :status (:status out) :out-type (get-in out [:headers "Content-Type"])
-         :username (session/get :username) :ip (:remote-addr req)})
-      out)))
+    (binding [*ip* (:remote-addr req)]
+      (let [[out exec-time] (exec-time (handler req))]
+        (insert! :logs
+          {:date (java.util.Date.) :resp-time exec-time
+           :method (:request-method req) :uri (:uri req)
+           :referer (get-in req [:headers "referer"])
+           :session (:value (get-in req [:cookies "ring-session"]))
+           :status (:status out) :out-type (get-in out [:headers "Content-Type"])
+           :username (session/get :username) :ip (:remote-addr req)})
+        out))))
 
 (defn format-log-date [date]
   (.format (java.text.SimpleDateFormat. "yy-MM-dd HH:mm:ss") date))

@@ -3,6 +3,7 @@
         connect.pages.utils
         connect.db
         connect.email
+        connect.logs
         noir.core   
         hiccup.core
         hiccup.page-helpers
@@ -13,22 +14,63 @@
            [noir.validation :as vali]
            [noir.session :as session]
            [noir.response :as resp]
-           [noir.util.crypt :as crypt])
+           [noir.util.crypt :as crypt]
+           [clj-http.client :as client])
  (:import [java.util UUID]))
+
+;(insert! :admin
+;  {:_id "recaptcha"
+;   :public-key "6LfZQMkSAAAAAK08y4NUQ9X63MvgWG2Vi77iGUoe"
+;   :private-key "6LfZQMkSAAAAAEfHR2lQDXAaCc-Q06nPv5NZdHR9"})
+
+(def recaptcha-config
+  (html [:script {:type "text/javascript"}
+         "var RecaptchaOptions = {theme : 'clean', lang : 'it'};"]))
+
+(defn recaptcha []
+  (let [public-key (:public-key (fetch-one :admin :where {:_id "recaptcha"}))]
+    (html
+      [:script {:type "text/javascript"
+                :src (str "http://www.google.com/recaptcha/api/challenge?k=" public-key)}]
+      [:noscript
+       [:iframe {:src (str "http://www.google.com/recaptcha/api/noscript?k=" public-key)
+                 :height "300" :width "500" :frameborder "0"}] [:br]
+       [:input {:type "hidden" :name "recaptcha_response_field"
+                :value "manual_challenge"}]])))
+
+(def *uri* "http://www.google.com/recaptcha/api/verify")
+
+(defn post-request [params]
+  (let [{challenge :recaptcha_challenge_field
+         response :recaptcha_response_field} params
+        query-params {:privatekey (:private-key (fetch-one :admin :where {:_id "recaptcha"}))
+                      :challenge challenge :response response
+                      :remoteip connect.logs/*ip*}]
+    (:body (client/post *uri* {:query-params query-params}))))
+
+(defn verify-captcha [params]
+  (let [result-string (post-request params)
+        [status error] (.split result-string "\n" -1)]
+    {:status (= status "true") :error-str error}))
 
 (defpartial registration-form [& [data]]
   (if (current-id)
     [:p "Sei già registrato, username: " (current-id)]
     [:div.registrationForm
-     [:h2.section "Inserisci i dati:"]
+     [:h2.section "Completa i campi seguenti:"]
+     recaptcha-config
      (form-to {:accept-charset "utf-8" } [:post "/register"]
        [:table.registerForm
         [:tr [:td.head "Matricola:"]
-         [:td (text-field {:size 15} :id (or (:id data) ""))]
-         (error-cell :id) [:td "Esempio: s12345"]]
+         [:td (text-field {:size 15} :id (or (:id data) "")) " Esempio: s12345"]
+         (error-cell :id)]
+        [:tr [:td {:colspan 3} "Per verificare la matricola verrà inviata una email a &lt;matricola&gt;@studenti.polito.it"]]
         [:tr [:td.head "Password:"]
          [:td (password-field {:size 15} :pwd)]
          (error-cell :pwd) [:td]]
+        [:tr [:td.head "Conf. password:"]
+         [:td (password-field {:size 15} :pwd2)]
+         (error-cell :pwd2) [:td]]
         [:tr [:td.head "Nome:"]
          [:td {:colspan 2} 
           (text-field {:size 30} :firstname (or (:firstname data) ""))]
@@ -45,12 +87,15 @@
           [:input (merge {:type :radio :name "job" :value "professor" :disabled "true"}
                     (if (= (:job data) "professor") {:checked "true"} {}))
            "Docente"]]
-         (error-cell :job) [:td (submit-button "Registrati")]]])]))
+         (error-cell :job)]
+        [:tr [:td {:colspan 3} (recaptcha)]]
+        [:tr (when-let [err (first (vali/get-errors :captcha))]
+               [:td [:img {:src "/images/error.png"}] " " err])
+         [:td {:colspan 2} (submit-button "Registrati")]]])]))
 
 (defpage "/register" {:as user}
   (layout "Registrazione"
-    (registration-form user)
-    [:p "Per verificare la matricola verrà inviata una email a &lt;matricola&gt;@studenti.polito.it"]))
+    (registration-form user)))
 
 (defn valid? [data]
   (vali/rule (re-matches #"s[0-9]+" (:id data))
@@ -59,11 +104,15 @@
     [:id "Matricola già registrata"])
   (vali/rule (vali/min-length? (:pwd data) 4)
     [:pwd "Deve avere almeno 4 lettere."])
+  (vali/rule (= (:pwd data) (:pwd2 data))
+    [:pwd2 "Le password non corrispondono"])
   (vali/rule (not (str/blank? (:firstname data)))
     [:firstname "Campo richiesto"])
   (vali/rule (not (str/blank? (:lastname data)))
     [:lastname "Campo richiesto"])
-  (not (vali/errors? :id :pwd :firstname :lastname)))
+  (vali/rule (:status (verify-captcha data))
+    [:captcha "Stringa errata"])
+  (not (vali/errors? :id :pwd :pwd2 :firstname :lastname :captcha)))
 
 (defn get-email-address [reg-data]
   (str (:id reg-data) "@studenti.polito.it"))

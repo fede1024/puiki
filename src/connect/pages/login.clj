@@ -12,10 +12,6 @@
            [noir.response :as resp]
            [noir.util.crypt :as crypt]))
 
-;(for [{id :_id pwd :pwd} (fetch :people)]
-;  (update! :people {:_id id}
-;    {:$set {:pwd (crypt/encrypt pwd)}}))
-
 (defpage "/login" {:keys [redirect username]}
   (if (current-id)
     (resp/redirect "/")

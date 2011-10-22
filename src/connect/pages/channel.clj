@@ -114,25 +114,26 @@
     (text-field {:class :channelSearchText :placeholder "Testo ricerca"} :text)
     (submit-button {:class "channelSearch"} "Cerca")))
 
-(defpartial post-link [post]
-  (when (not (:removed post))
-    (let [vote (or (:vtotal post) 0)]
-      [:table.postLink
-       [:tr.postLinkTitle
-        [:td.postLinkTitle 
-         (link-to {:class :postTitle} (post-path post)
-           (post-images (:type post)) " " (:title post))]
-        [:td.postLinkVote
-         [:span.voteValue (str (when (> vote 0) "+") (when (= vote 0) " ") vote)]]]
-       [:tr.postInfo
-        (let [p (fetch-one :people :where {:_id (:author post)})]
-          [:td.postAuthor "Postato da: " (user-description p)])
-        [:td.postDate (format-timestamp (:created-at post))]]
-       [:tr
-        [:td 
-         (when (= (:type post) "question")
-           (str "Risposte: " (or (:answers post) 0) " "))
-         "Commenti: " (or (:comments-num post) 0)]]])))
+(defpartial post-links [posts]
+  [:table.postLink
+   (for [post posts]
+     (when (not (:removed post))
+       (let [vote (or (:vtotal post) 0)]
+         (html
+           [:tr
+            [:td.postLinkVote {:title "Voto"}
+             (str (when (> vote 0) "+") (when (= vote 0) " ") vote)]
+            [:td.postLinkSpace]
+            (if (= (:type post) "question")
+              [:td.postLinkAnswers {:title "Risposte"}
+               (or (:answers post) 0)]
+              [:td.postLinkAnswers {:title "Commenti"}
+               (count (:comments post))])
+            [:td.postLinkSpace]
+            [:td.postLinkTitle 
+             (link-to {:class :postTitle} (post-path post) (:title post))]
+            [:td.postLinkDate (format-timestamp (:created-at post))]]
+           [:tr.postLinkSpace]))))])
 
 (defpage "/channel/:id" {:keys [id]}
   (let [id (obj-id id)
@@ -157,21 +158,20 @@
            " " (link-to "/channel/list" "Elenco canali") " "
            (link-to "/user/following" "Canali seguiti")]
           [:br]
-          (let [posts (fetch :posts :where {:channel id :type {:$ne "answer"}}
+          (let [posts (fetch :posts :where {:channel id :type {:$ne "answer"}
+                                            :removed {:$ne true}}
                         :sort {:created-at -1})
                 news (filter #(= (:type %) "normal") posts)
                 questions (filter #(= (:type %) "question") posts)]
             (html
               [:div.news
                [:h2.section "Ultime notizie:"]
-               (take 5 (map post-link news))
-               [:p (link-to (str (channel-path ch) "/news") "Mostra tutte le notizie")]
-               [:br]]
+               (post-links (take 5 news))
+               [:p (link-to (str (channel-path ch) "/news") "Mostra tutte le notizie")]]
               [:div.questions
                [:h2.section "Ultime domande: "]
-               (take 5 (map post-link questions))
-               [:p (link-to (str (channel-path ch) "/questions") "Mostra tutte le domande")]
-               [:br]])))))))
+               (post-links (take 5 questions))
+               [:p (link-to (str (channel-path ch) "/questions") "Mostra tutte le domande")]])))))))
             
 (defpage "/channel/:id/:show" {:keys [id show]}
   (let [id (obj-id id)
@@ -200,10 +200,10 @@
             (cond (= show "news")
               [:div.news
                [:h2.section "Tutte le notizie:"]
-               (map post-link (fetch :posts :where {:channel id :type "normal"}
-                                :sort {:created-at -1}))]
+               (post-links (fetch :posts :where {:channel id :type "normal"}
+                             :sort {:created-at -1}))]
               (= show "questions")
               [:div.questions
                [:h2.section "Tutte le domande: "]
-               (map post-link (fetch :posts :where {:channel id :type "question"}
-                                :sort {:created-at -1}))])))))))
+               (post-links (fetch :posts :where {:channel id :type "question"}
+                             :sort {:created-at -1}))])))))))

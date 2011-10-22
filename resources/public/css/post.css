@@ -169,30 +169,67 @@ td.postSettings {
     vertical-align: middle;
 }
 
+div.postLink {
+    
+    padding: 3px;
+}
+
 table.postLink {
-    margin-bottom: 10px;
     width: 100%;
 }
 
-tr.postLinkTitle {
-    border-bottom: 1px dotted #86D5FD;
+td.postLinkSpace {
+    width: 3px;
+    padding: 0px;
+}
+
+tr.postLinkSpace {
+    height: 6px;
 }
 
 td.postLinkTitle {
     color: #3366CC;
+    background-color: #f8f8f8;
+    border-radius: 5px 0px 0px 5px;
     font-size: 11pt;
     font-weight: bold;
     margin: 8px;
     text-decoration: none;
-    vertical-align: bottom;
+    vertical-align: middle;
 }
 
 td.postLinkVote {
+    width: 20px;
+    height: 20px;
+    vertical-align: middle;
     color: #3366CC;
+    font-size: 12pt;
+    font-weight: bold;
+    text-align: center;
+    border-radius: 5px;
+    background-color: #d3effd;
+    margin-right: 10px;
+}
+
+td.postLinkAnswers {
+    width: 20px;
+    height: 20px;
+    vertical-align: middle;
+    color: #3366CC;
+    font-size: 12pt;
+    font-weight: bold;
+    text-align: center;
+    border-radius: 5px;
+    background-color: #fdd3d3;
+}
+
+td.postLinkDate {
+    background-color: #f8f8f8;
+    border-radius: 0px 5px 5px 0px;
     text-align: right;
-    vertical-align: bottom;
-    white-space: nowrap;
-    width: 30px;
+    color: teal;
+    font-style: normal;
+    font-size: 8pt;
 }
 
 textarea.postContent, textarea.postComment{

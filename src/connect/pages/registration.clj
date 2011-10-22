@@ -141,7 +141,8 @@
 (defpage [:post "/register"] {:as reg-data}
   (if (valid? reg-data)
     (let [email (new-pending-user
-                  (merge reg-data {:pwd (crypt/encrypt (:pwd reg-data))}))]
+                  (merge (dissoc reg-data :pwd2)
+                    {:pwd (crypt/encrypt (:pwd reg-data))}))]
       (layout "Registrazione"
         [:p "Un'email è stata inviata a " email]
         [:p "Controlla la tua casella di posta elettronica."]))

@@ -204,6 +204,12 @@ div.register {
     text-align: center;
 }
 
+div.registrationForm {
+    background-color: #f8f8f8;
+    border-radius: 5px;
+    padding: 5px;
+}
+
 td.sideBar {
     width: 20%;
     padding-left: 10px;
@@ -222,6 +228,15 @@ input:hover {
     border: 1px solid #aaa;
 }
 
+.errorMsg {
+    vertical-align: middle;
+    font-weight: bold;
+}
+
+img.errorMsg {
+    margin-bottom: 4px;
+}
+
 /*
 input.submit {
    margin: 6px;
@@ -238,9 +253,6 @@ td.head {
     font-weight: bold;
 }
 
-td.errImg {
-    vertical-align: middle;
-}
 /*
  * Errore
  * 

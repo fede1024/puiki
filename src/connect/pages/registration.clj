@@ -56,42 +56,43 @@
 (defpartial registration-form [& [data]]
   (if (current-id)
     [:p "Sei già registrato, username: " (current-id)]
-    [:div.registrationForm
-     [:h2.section "Completa i campi seguenti:"]
-     recaptcha-config
-     (form-to {:accept-charset "utf-8" } [:post "/register"]
-       [:table.registerForm
-        [:tr [:td.head "Matricola:"]
-         [:td (text-field {:size 15} :id (or (:id data) "")) " Esempio: s12345"]
-         (error-cell :id)]
-        [:tr [:td {:colspan 3} "Per verificare la matricola verrà inviata una email a &lt;matricola&gt;@studenti.polito.it"]]
-        [:tr [:td.head "Password:"]
-         [:td (password-field {:size 15} :pwd)]
-         (error-cell :pwd) [:td]]
-        [:tr [:td.head "Conf. password:"]
-         [:td (password-field {:size 15} :pwd2)]
-         (error-cell :pwd2) [:td]]
-        [:tr [:td.head "Nome:"]
-         [:td {:colspan 2} 
-          (text-field {:size 30} :firstname (or (:firstname data) ""))]
-         (error-cell :firstname)]
-        [:tr [:td.head "Cognome:"]
-         [:td {:colspan 2} 
-          (text-field {:size 30} :lastname (or (:lastname data) ""))]
-         (error-cell :lastname)]
-        [:tr [:td.head "Ruolo:"]
-         [:td [:input (merge {:type :radio :name "job" :value "student"}
-                        ;(if (= (:job data) "student") {:checked "true"} {})
-                        {:checked "true"}) 
-               "Studente"]
-          [:input (merge {:type :radio :name "job" :value "professor" :disabled "true"}
-                    (if (= (:job data) "professor") {:checked "true"} {}))
-           "Docente"]]
-         (error-cell :job)]
-        [:tr [:td {:colspan 3} (recaptcha)]]
-        [:tr (when-let [err (first (vali/get-errors :captcha))]
-               [:td [:img {:src "/images/error.png"}] " " err])
-         [:td {:colspan 2} (submit-button "Registrati")]]])]))
+    (html
+      [:h1.section "Registrazione"]
+      recaptcha-config
+      [:div.registrationForm
+       (form-to {:accept-charset "utf-8" } [:post "/register"]
+         [:table
+          [:tr [:td.head "Matricola:"]
+           [:td (text-field {:size 15} :id (or (:id data) "")) " Esempio: s12345"]
+           (error-cell :id)]
+          [:tr [:td {:colspan 3} "Per verificare la matricola verrà inviata una email a &lt;matricola&gt;@studenti.polito.it"]]
+          [:tr [:td.head "Password:"]
+           [:td (password-field {:size 15} :pwd)]
+           (error-cell :pwd) [:td]]
+          [:tr [:td.head "Conf. password:"]
+           [:td (password-field {:size 15} :pwd2)]
+           (error-cell :pwd2) [:td]]
+          [:tr [:td.head "Nome:"]
+           [:td {:colspan 2} 
+            (text-field {:size 30} :firstname (or (:firstname data) ""))]
+           (error-cell :firstname)]
+          [:tr [:td.head "Cognome:"]
+           [:td {:colspan 2} 
+            (text-field {:size 30} :lastname (or (:lastname data) ""))]
+           (error-cell :lastname)]
+          [:tr [:td.head "Ruolo:"]
+           [:td [:input (merge {:type :radio :name "job" :value "student"}
+                          ;(if (= (:job data) "student") {:checked "true"} {})
+                          {:checked "true"}) 
+                 "Studente"]
+            [:input (merge {:type :radio :name "job" :value "professor" :disabled "true"}
+                      (if (= (:job data) "professor") {:checked "true"} {}))
+             "Docente"]]
+           (error-cell :job)]
+          [:tr [:td {:colspan 3} (recaptcha)]]
+          [:tr (when-let [err (first (vali/get-errors :captcha))]
+                 [:td.errorMsg [:img.errorMsg {:src "/images/error.png"}] " " err])
+           [:td {:colspan 2} (submit-button "Registrati")]]])])))
 
 (defpage "/register" {:as user}
   (layout "Registrazione"
@@ -121,8 +122,11 @@
 (defn send-registration-mail [address code]
   (send-mail address "Registrazione PoliConnect"
     (html [:h1 "Benvenuto"]
-      [:p "Completa la tua iscrizione cliccando su "
-       (link-to (str "http://fede.dyndns-ip.com/register/" code) "questo link") "."])))
+      [:p "Grazie per esserti registrato."]
+      [:p "Conferma il tuo account cliccando su "
+       (link-to (str "http://fede.dyndns-ip.com/register/" code) "questo link") "."]
+      [:p "Se hai ricevuto questa email per errore è sufficiente eliminarla e "
+       "non verrai più contattato da PoliConnect."])))
 
 (defn new-pending-user [reg-data]
   (let [address (get-email-address reg-data)
@@ -156,7 +160,8 @@
         (destroy! :people-pending {:code code})
         (follow-channel (:_id (fetch-one :channels :where {:name "Poli Connect"}))
           (:_id data))
-        (connect.pages.login/login! {:username (:_id data) :password (:pwd data)})
+        (connect.pages.login/login! {:username (:_id data) :password (:pwd data)}
+          :already-encrypted)
         (session/flash-put! :new-user) 
         (resp/redirect (user-edit-path (:_id data))))
       (render "/not-found"))))

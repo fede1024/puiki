@@ -19,18 +19,22 @@
       (form-to [:post "/login"]
         (when redirect
           [:input {:type :hidden :name :redirect :value redirect}])
-        [:h2.section "Effettua il login:"]
+        [:h1.section "Login"]
         (vali/on-error :username error-text)
         [:table
          [:tr [:td.head "Matricola: "]
-          [:td (text-field {:placeholder "Username"} :username username)] [:td]]
+          [:td (text-field {:placeholder "Username"} :username username)]]
          [:tr [:td.head "Password: "]
-          [:td (password-field {:placeholder "Password"} :password)] [:td]]
-         [:tr [:td {:colspan 2}] [:td (submit-button "Login")]]]))))
+          [:td (password-field {:placeholder "Password"} :password)]
+          [:td (submit-button "Login")]]]
+        [:h1.section "Registrazione"]
+        [:p "Se non sei ancora registrato clicca " (link-to "/register" "qui") "!"]))))
 
-(defn login! [{:keys [username password] :as user}]
+(defn login! [{:keys [username password]} & [already-encrypted]]
   (let [stored-pass (:pwd (fetch-one :people :where {:_id username}))]
-    (if (and stored-pass (crypt/compare password stored-pass))
+    (if (and stored-pass (if already-encrypted
+                           (= password stored-pass)
+                           (crypt/compare password stored-pass)))
       (session/put! :username username)
       (vali/set-error :username "Password o nome utente non valido."))))
 

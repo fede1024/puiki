@@ -46,7 +46,8 @@
   [:table.lastPosts
    (for [post (fetch :posts :sort {:created-at -1} :limit 5)]
      [:tr.lastPost [:td.lastPostTitle (link-to (post-path post) (:title post))]
-      [:td.lastPostDate (format-timestamp (:created-at post))]])])
+      ;[:td.lastPostDate (format-timestamp (:created-at post))]
+      ])])
 
 (defpartial last-registrations []
   [:h2.section "Ultimi utenti registrati:"]
@@ -141,11 +142,11 @@
      sh-autoloader]))
     
 (defpartial error-text [errors]
-  (map #(html [:p [:img {:src "/images/error.png"}] " " %]) errors))
+  (map #(html [:p.errorMsg [:img.errorMsg {:src "/images/error.png"}] " " %]) errors))
 
 (defn error-cell [field]
-  [:td.errImg (when-let [err (first (vali/get-errors field))]
-                [:span [:img {:src "/images/error.png"}] " " err])])
+  [:td.errorMsg (when-let [err (first (vali/get-errors field))]
+                (html [:img.errorMsg {:src "/images/error.png"}] " " err))])
 
 (defn error-table [title]
   (when (not (empty? @vali/*errors*))

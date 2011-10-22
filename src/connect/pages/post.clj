@@ -65,7 +65,7 @@
 
 (defpartial user-description [p & {:keys [field] :or {field true}}]
   (cond (= (:job p) "student")
-    (str (:firstname p) " " (:lastname p)
+    (str (:firstname p) (when (current-id) (str " " (:lastname p)))
       (when (and field (:field p))
         (str " (" (:field p) " " (- 2012 (:year p)) "°anno)")))
     (= (:job p) "professor") " (Docente)"
@@ -413,7 +413,6 @@
                     (for [[name value] reply]
                       [:input {:type :hidden :name name :value value}])
                     [:input {:type :hidden :name :qid :value qid}])]
-      (println (pr-str reply))
       (layout "Anteprima"
         (post-div (merge reply {:author (current-id) :channel (:channel-id reply)
                                 :type   "answer" :created-at (java.util.Date.)})

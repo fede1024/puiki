@@ -272,7 +272,7 @@
                 [:br]
                 [:input {:type :radio :name "type" :value "question"
                          :checked (when (= type "question") "true")}
-                 "Domanda - gli utenti possono anche risopndere con nuovi post"]]]
+                 "Domanda - gli utenti possono anche rispondere con nuovi post"]]]
               [:tr.postBottom
                [:td.postSettings "Canale: "
                 [:input {:type :hidden :name :channel-id :value channel-id}]
@@ -305,7 +305,7 @@
            (when (= (:type post) "normal")
              "Messaggio - gli utenti possono solo commentare, non sono permessi post di risposta.")
            (when (= (:type post) "question")
-             "Domanda - gli utenti possono solo commentare e aggiungere post di risposta.")]
+             "Domanda - gli utenti possono commentare e aggiungere post di risposta.")]
           (form-to {:accept-charset "utf-8" } [:get "/edit/new-post"]
             hiddens
             (submit-button {:class "postSubmit"} "Modifica post"))

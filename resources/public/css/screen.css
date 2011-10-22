@@ -130,15 +130,6 @@ div.section {
     margin-bottom: 20px;
 }
 
-span.newsCount{
-    position: absolute;
-    width: 38px;
-    text-align: center;
-    text-decoration: none;
-    padding-top: 2px;
-    padding-left: 1px;
-}
-
 /*
 p:first-letter {
     font-size: medium;

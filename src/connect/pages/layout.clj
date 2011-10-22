@@ -110,7 +110,7 @@
         " Caricamento..." [:img.loader {:src "/images/loading.gif"}]]
      [:table.home
       [:tr.header
-       [:td.header title]
+       [:td.header [:img.logo {:src "/images/polito.png"}] "PoliConnect"]
        [:td.links
         [:a.header {:href "/" :title "Home"}
          [:img.header {:src "/images/home.png"}]]

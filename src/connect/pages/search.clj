@@ -19,7 +19,7 @@
   (let [channel (when channel-id
                   (fetch-one :channels :where {:_id (obj-id channel-id)}))]
     (layout "Cerca"
-      [:h2.section "Cerca: "]
+      [:h1.section "Cerca:"]
       (form-to {:accept-charset "utf-8" } [:get "/search"]
         [:input {:type :hidden :name "channel-id" :value (:_id channel)}]
         [:table.search
@@ -33,12 +33,15 @@
              [:p "Cerca nel canale " (link-to (channel-path channel) (:name channel))]
              [:p "Cerca in tutti i canali"])]]])
       (when (not (clojure.string/blank? text))
-        (let [[posts exec-time] (exec-time (search-by-text text (:_id channel)))]
+        (let [keywords (get-keywords text)
+              [posts exec-time] (exec-time (search-by-text text (:_id channel)))]
           (html
-            [:h2.section "Risultati: " (count posts)]
-            [:p "Tempo di elaborazione: " (int exec-time) " millisecondi"]
+            [:h1.section "Risultati: " (count posts)]
+            [:p "Tempo di elaborazione: " (int exec-time) " millisecondi."]
+            (when (empty? keywords)
+              [:p "Stringa inserita non sufficiente per una ricerca."])
             (when (empty? posts)
-              [:p "Nessun risultato"])
+              [:p "Nessun risultato."])
             [:table
              (for [post posts]
                (let [channel (fetch-one :channels :where {:_id (:channel post)})]

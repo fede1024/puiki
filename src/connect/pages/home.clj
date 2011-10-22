@@ -13,13 +13,11 @@
 
 (defpage "/" []
   (layout "Poli Connect"
-    [:h1.section "Poli Connect"]
-    [:div
-     [:h2.section "Link:"]
-     [:p (link-to "/user/" "Pagina utenti")]
-     [:p (link-to "/search" "Cerca")]
-     [:p (link-to "/admin/" "Pagina amministratore")]
-     [:p (link-to "/channel/list" "Elenco canali")]]
+    [:h1.section "Home"]
+    [:p (link-to "/user/" "Pagina utenti")]
+    [:p (link-to "/search" "Cerca")]
+    [:p (link-to "/admin/" "Pagina amministratore")]
+    [:p (link-to "/channel/list" "Elenco canali")]
     [:h2.section "Post più recenti:"]
     (let [posts (fetch :posts :where {:removed {:$ne true}}
                   :sort {:created-at -1} :limit 10)]

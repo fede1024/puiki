@@ -108,7 +108,7 @@
     (link-to (post-path post)
       (when (= (:type post) "question")
         (str "Risposte: " (or (:answers post) 0))))
-    (str " Commenti: " (or (:comments-num post) 0))]
+    (str " Commenti: " (count (:comments post)))]
    [:td.postActions
     (when (= (:type post) "question")
       (form-to [:get (user-reply-path post)]

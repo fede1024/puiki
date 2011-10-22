@@ -56,16 +56,16 @@ img.notFound {
     height: 60px;
 }
 
+img.logo {
+    vertical-align: middle;
+    margin-right: 10px;
+}
+
 td.header {
-    height: 50px;
     border-top: 1px solid #00a9fd;
     border-bottom: 1px solid #00a9fd;
     background-color: #d3effd;
-    padding-left: 10px;
-    font-weight: normal; 
-    font-size: 22px; 
-    line-height: 50px;
-    text-decoration: underline;
+    font-size: 18pt;
     vertical-align: middle;
 }
 

@@ -141,7 +141,7 @@
 (defpage [:post "/register"] {:as reg-data}
   (if (valid? reg-data)
     (let [email (new-pending-user
-                  (merge (dissoc reg-data :pwd2)
+                  (merge (dissoc reg-data :pwd2 :recaptcha_challenge_field :recaptcha_response_field)
                     {:pwd (crypt/encrypt (:pwd reg-data))}))]
       (layout "Registrazione"
         [:p "Un'email è stata inviata a " email]

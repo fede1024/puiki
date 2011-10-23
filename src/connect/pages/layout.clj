@@ -37,7 +37,7 @@
         name (when lastname (str " " lname))
         (when (or (admin? (current-id)) (= matr (current-id)))
           [:span " - " (link-to (user-edit-path matr) "Modifica")])]
-      (when date [:td.personDate (format-timestamp d)])]
+      (when date [:td.personDate (format-timestamp-relative d)])]
       (when info [:tr [:td.personId {:colspan "2"} (translate-job job) " "
                        (when id matr)]])])])
 
@@ -46,7 +46,7 @@
   [:table.lastPosts
    (for [post (fetch :posts :sort {:created-at -1} :limit 5)]
      [:tr.lastPost [:td.lastPostTitle (link-to (post-path post) (:title post))]
-      ;[:td.lastPostDate (format-timestamp (:created-at post))]
+      ;[:td.lastPostDate (format-timestamp-relative (:created-at post))]
       ])])
 
 (defpartial last-registrations []

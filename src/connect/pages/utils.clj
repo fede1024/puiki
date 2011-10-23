@@ -2,7 +2,9 @@
   (:use hiccup.core
     somnium.congomongo)
   (:require [clojure.contrib.string :as str]
-    [noir.session :as session]))
+    [noir.session :as session])
+  (:import [java.util Locale Date Calendar GregorianCalendar]
+    [java.text SimpleDateFormat DateFormatSymbols]))
 
 (defn current-id []
   (session/get :username))
@@ -49,8 +51,47 @@
 
 (defn format-timestamp [ts]
   (if ts
-    (.format (java.text.SimpleDateFormat. "dd-MM-yyyy HH:mm") ts)
+    (.format (SimpleDateFormat. "dd-MM-yyyy HH:mm") ts)
     "???"))
+
+;(def dates (map :created-at (fetch :posts)))
+
+(def month-names 
+  (.getMonths (DateFormatSymbols. (Locale/ITALIAN))))
+
+(def days-names 
+  (.getWeekdays (DateFormatSymbols. (Locale/ITALIAN))))
+
+(defn format-timestamp-relative [date]
+  (let [diff (int (/ (- (.getTime (Date.))
+                       (.getTime date))
+                    1000))]
+    (cond (< diff 60)
+      "Pochi secondi fa"
+      (< diff 3600)
+      (let [n (int (/ diff 60))]
+        (if (= n 1)
+          "Un minuto fa"
+          (str n " minuti fa")))
+      (< diff 86400) ;; Giorno
+      (let [n (int (/ diff 3660))]
+        (if (= n 1)
+          "Un ora fa"
+          (str n " ore fa")))
+      (< diff 604800) ;; Settimana
+      (let [cal (Calendar/getInstance)]
+        (.setTime cal date)
+        (nth days-names (.get cal Calendar/DAY_OF_WEEK)))
+      :else
+      (let [cal (Calendar/getInstance)]
+        (.setTime cal date)
+        (str (.get cal Calendar/DAY_OF_MONTH)
+          " " (nth month-names (.get cal Calendar/MONTH))
+          " " (.get cal Calendar/YEAR))))))
+
+;(dorun
+;  (map (fn [date] (println (format-timestamp date) " - " (format-timestamp-relative date)))
+;    (sort dates)))
 
 (defn get-request-uri [req]
   (if (str/blank? (:query-string req))

@@ -125,7 +125,7 @@
      [:tr.comment
       (let [p (fetch-one :people :where {:_id author})]
         [:td.comment
-         [:span.commentInfo {:title (str (user-description p) " " (format-timestamp date))}
+         [:span.commentInfo {:title (str (user-description p) " " (format-timestamp-relative date))}
           (user-description p :field false)]
          body])])])
 
@@ -154,7 +154,7 @@
          (when (not preview)
            [:span {:id (str "votes" (:_id post))}
             (vote-section post)])]]
-       [:tr [:td.postDate (format-timestamp (:created-at post))]]
+       [:tr [:td.postDate (format-timestamp-relative (:created-at post))]]
        [:tr [:td.postContent {:colspan 2}
              [:div.postContent (:content post)]]]
        (when (not preview)
@@ -258,7 +258,7 @@
                 (text-field {:class :postTitle :placeholder "Titolo post"} :title
                   title)]]
               [:tr [:td.postAuthor (user-description person)]]
-              [:tr [:td.postDate (format-timestamp (java.util.Date.))]]
+              [:tr [:td.postDate (format-timestamp-relative (java.util.Date.))]]
               [:tr.postContent
                [:td.postContent {:colspan 2}
                 (text-area {:class :ckeditor :rows 15
@@ -375,7 +375,7 @@
        (let [p (fetch-one :people :where {:_id (current-id)})]
          [:td.postAuthor (user-description p)])]
       [:tr
-       [:td.postDate (format-timestamp (java.util.Date.))]]
+       [:td.postDate (format-timestamp-relative (java.util.Date.))]]
       [:tr.postContent
        [:td.postContent {:colspan 2}
         (text-area {:class :ckeditor :rows 15 :placeholder "Contenuto del post"}

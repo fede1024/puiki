@@ -132,7 +132,7 @@
             [:td.postLinkSpace]
             [:td.postLinkTitle 
              (link-to {:class :postTitle} (post-path post) (:title post))]
-            [:td.postLinkDate (format-timestamp (:created-at post))]]
+            [:td.postLinkDate (format-timestamp-relative (:created-at post))]]
            [:tr.postLinkSpace]))))])
 
 (defpage "/channel/:id" {:keys [id]}
@@ -148,7 +148,7 @@
           [:h1.channelName "Canale: " (link-to (channel-path ch) (:name ch))]
           [:p (:description ch)]
           [:p (channel-info ch)]
-          [:p "Canale creato il: " (format-timestamp (:created-at ch))]
+          [:p "Canale creato il: " (format-timestamp-relative (:created-at ch))]
           [:p
            (when (current-id)
             [:span {:id id}
@@ -186,7 +186,7 @@
           [:h1.channelName "Canale: " (link-to (channel-path ch) (:name ch))]
           [:p (:description ch)]
           [:p (channel-info ch)]
-          [:p "Canale creato il: " (format-timestamp (:created-at ch))]
+          [:p "Canale creato il: " (format-timestamp-relative (:created-at ch))]
           [:p
            (when (current-id)
             [:span {:id id}

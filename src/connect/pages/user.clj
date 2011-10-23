@@ -1,14 +1,14 @@
 (ns connect.pages.user
   (:use connect.pages.layout
         connect.pages.utils
-        connect.pages.channel
         connect.db
         noir.core   
         hiccup.core
         hiccup.page-helpers
         hiccup.form-helpers
         somnium.congomongo)
- (:require [clojure.contrib.string :as str]
+ (:require [connect.pages.channel :as channel]
+           [clojure.contrib.string :as str]
            [noir.server :as server]
            [noir.validation :as vali]
            [noir.session :as session]
@@ -147,9 +147,6 @@
 
 (defpage "/user/following" []
   (layout "Canali seguiti"
-;    (map channel-table
-;      (map #(fetch-one :channels :where {:_id %})
-;        (:follows (fetch-one :people :where {:_id (current-id)}))))
     (let [user (fetch-one :people :where {:_id (current-id)})
           channels (map #(fetch-one :channels :where {:_id %})
                      (:follows user))
@@ -160,14 +157,15 @@
           new-answers (filter #(= (:action %) "new-answer") (:news user))
           new-comments (filter #(= (:action %) "new-comment") (:news user))]
       (html
-        [:h1.section "Notifiche: " (count (:news user))]
+        ;[:h1.section "Notifiche: " (count (:news user))]
         [:div.section
          [:p (link-to "/channel/list" "Modifica canali seguiti")]
-         [:p "Nuovi post: " (count new-posts)]
-         (for [n new-posts]
-           [:p [:img {:src "/images/dot.png" :height 10}] " "
-            (link-to (str "/post/" (:post n)) (:title n))
-            " - "  (:channel-name n)])
+         [:h1.section "Nuovi post: " (count new-posts)]
+         (let [groups (group-by :channel new-posts)]
+           (for [[channel group] groups]
+             (html [:h2.section (:name (fetch-one :channels :where {:_id channel}))]
+             (channel/post-links
+               (map #(fetch-one :posts :where {:_id (:post %)}) group)))))
          [:p "Nuove risposte ai tuoi post: " (count new-answers)]
          (for [n new-answers]
            [:p [:img {:src "/images/dot.png" :height 10}] " "
@@ -184,19 +182,19 @@
           (for [c fields]
             [:li.channel [:img {:src "/images/dot.png" :height 10}] " "
              (link-to (channel-path c) (:name c))
-             [:p.channelInfo (channel-info c)]])]
+             [:p.channelInfo (channel/channel-info c)]])]
          [:h2.section "Corsi: " (count courses)]
          [:ul.channels
           (for [c courses]
             [:li.channel [:img {:src "/images/dot.png" :height 10}] " "
              (link-to (channel-path c) (:name c))
-             [:p.channelInfo (channel-info c)]])]
+             [:p.channelInfo (channel/channel-info c)]])]
          [:h2.section "Gruppi: " (count groups)]
          [:ul.channels
           (for [c groups]
             [:li.channel [:img {:src "/images/dot.png" :height 10}] " "
              (link-to (channel-path c) (:name c))
-             [:p.channelInfo (channel-info c)]
+             [:p.channelInfo (channel/channel-info c)]
              [:p.channelDescription (:description c)]])]]))))
 
 (defpage "/user/new-course" {:keys [field name]:as data}

@@ -32,6 +32,8 @@
      " Log degli errori."]
     [:p (link-to "/admin/logs" "/admin/logs")
      " Log deglle pagine."]
+    [:p (link-to "/admin/feedbacks" "/admin/feedbacks")
+     " Feedback degli utenti."]
     [:p (link-to "/admin/recur3" "/admin/recur3") 
      " Mostra ricorsivamente il layout."]))
 
@@ -145,11 +147,26 @@
       (layout "Logs"
         (session-logs-table num session))
       (layout "Logs"
-        [:table.logs
-         [:caption "Active sessions"]
-         [:tr.logs [:th "Identifier"] [:th.logs "data"]]
-         (for [[id data] @noir.session/mem]
-           [:tr.logs
-            [:td.logs (link-to (str "/admin/logs?session=" id "&n=" n) id)]
-            [:td.logsB (pr-str data)]])]
+;        [:table.logs
+;         [:caption "Active sessions"]
+;         [:tr.logs [:th "Identifier"] [:th.logs "data"]]
+;         (for [[id data] @noir.session/mem]
+;           [:tr.logs
+;            [:td.logs (link-to (str "/admin/logs?session=" id "&n=" n) id)]
+;            [:td.logsB (pr-str data)]])]
         (logs-table num)))))
+
+(defpage "/admin/feedbacks" {:keys [n] :or {n "20"}}
+  (let [feeds (if (= n "all")
+                (fetch :feedbacks)
+                (fetch :feedbacks :limit (Integer/parseInt n)))]
+    (layout ""
+      [:h1.section "Feedbacks: "]
+      [:h2.section "Visualizzati " (count feeds) ", limite: " n]
+      (for [feed feeds]
+        (let [person (fetch-one :people :where {:_id (:person feed)})]
+          [:p (:firstname person) " " (:lastname person) " (" (:_id person) ") scrive:"
+           [:br] (:text feed) [:br] (format-timestamp-relative (:created-at feed))]))
+      [:p "Mostra: "
+       [:a {:href "/admin/feedbacks?n=100"} "100"] " "
+       [:a {:href "/admin/feedbacks?n=all"} "tutti"]])))

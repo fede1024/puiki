@@ -249,3 +249,24 @@
         (resp/redirect (channel-path channel)))
       (render "/user/new-course" data))
     (render "/permission-denied")))
+
+(defpage "/user/feedback" []
+  (layout ""
+    [:h1.section "Feedback"]
+    [:p "Se vuoi riportare un errore, un malfunzionamento, un suggerimento qualsiasi "
+     "scrivi nella casella sottostante."]
+    [:p "Grazie per il tuo aiuto!"]
+    (form-to {:accept-charset "utf-8" } [:post "/user/feedback"]
+      (text-area {:class :postComment :rows 10 :placeholder "Vorrei che..."} :text)
+      (submit-button "Invia!"))))
+
+(defpage [:post "/user/feedback"] {:keys [text]}
+  (if (current-id)
+    (do
+      (insert! :feedbacks
+        {:person (current-id) :text text :created-at (java.util.Date.)})
+      (layout ""
+        [:h1.section "Grazie!"]
+        [:p "Il tuo suggerimento è stato memorizzato."]
+        [:p (link-to "/" "Home")]))
+    (render "/permission-denied")))

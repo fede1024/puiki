@@ -154,6 +154,7 @@ td.sideBar {
 }
 
 td.footer {
+    width: 100%;
     border-top: 1px solid lightblue;
     text-align: center;
 }
@@ -161,6 +162,22 @@ td.footer {
 img.footer {
     vertical-align: middle;
     margin: 5px;
+}
+
+a.feedback {
+    position: fixed;
+    right: 20px;
+    bottom: -3px;
+    background-color: #d3effd;
+    border: 1px solid lightblue;
+    border-radius: 8px 8px 0px 0px;
+    vertical-align: middle;
+    margin: 0px;
+    padding: 3px;
+}
+
+a.feedback:hover {
+    border: 1px solid #86d5fd;
 }
 
 /*

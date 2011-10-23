@@ -107,10 +107,14 @@
      [:title title]]
     [:body
      [:span.loader {:id "loader" :style "display: none;"}
-        " Caricamento..." [:img.loader {:src "/images/loading.gif"}]]
+      " Caricamento..." [:img.loader {:src "/images/loading.gif"}]]
+     [:a.feedback {:href "/user/feedback"}
+      [:img {:src "/images/feedback.png"}]]
      [:table.home
       [:tr.header
-       [:td.header [:img.logo {:src "/images/polito.png"}] "PoliConnect"]
+       [:td.header 
+        [:img.logo {:src "/images/polito.png"}] "PoliConnect "
+        [:img {:src "/images/beta.png"}]]
        [:td.links
         [:a.header {:href "/" :title "Home"}
          [:img.header {:src "/images/home.png"}]]

@@ -22,16 +22,27 @@
 
 (defpage "/user/" []
   (layout "Pagina utente"
+    [:h1.section "Pagina utente"]
     [:h2.section "Informazioni personali:"]
-    [:p (link-to (user-info-path (current-id)) "Vedi")]
-    [:p (link-to (user-edit-path (current-id)) "Modifica")]
+    [:div.section
+     [:p (link-to (user-info-path (current-id)) "Vedi")]
+     [:p (link-to (user-edit-path (current-id)) "Modifica")]]
     [:h2.section "Canali:"]
-    [:p (link-to "/user/following" "Seguiti")]
-    [:p (link-to "/channel/list" "Tutti")]
+    [:div.section
+     [:p (link-to "/user/following" "Notifiche")]
+     [:p (link-to "/channel/list" "Modifica i canali seguiti")]]
     [:h2.section "Utenti:"]
-    [:p (link-to "/user/list" "Elenco utenti")]))
+    [:div.section
+     [:p (link-to "/user/list" "Elenco utenti")]]))
 
 (defpartial student-info [person]
+  [:h2.section "Account:"]
+  [:table
+   [:tr [:td.head "Nome:"]    [:td (:firstname person)]]
+   [:tr [:td.head "Cognome:"] [:td (:lastname person)]]
+   [:tr [:td.head "Data iscrizione: "]
+    [:td (format-timestamp (:created-at person))]]]
+  [:h2.section "Indirizzo di studio:"]
   (let [channel (fetch-one :channels :where {:field (:field person) :year (:year person)})]
     [:table
      [:tr [:td.head "Indirizzo:"]
@@ -46,7 +57,7 @@
   (layout "Informazioni utente"
     (if (= (session/flash-get) :done) 
       [:p "I dati sono stati modificati"])
-    [:h2.section (str "Informazioni utente " id)]
+    [:h1.section "Informazioni utente"]
     (let [person (fetch-one :people :where {:_id id})]
       (if person
         [:span
@@ -56,7 +67,7 @@
            [:p "TODO info docente"]
            (= (:job person) "admin")
            [:p "TODO info admin"])
-         [:p (link-to (user-edit-path (current-id)) "Modifica")]]
+         [:h2.section (link-to (user-edit-path (current-id)) "Modifica")]]
         "Utente non esistente."))))
 
 (defpage "/user/list" []
@@ -73,35 +84,50 @@
         (catch Exception e 0)))
     0))
 
+(defpartial account-edit-form [person & [data]] ;; TODO: fix data
+  [:h2.section "Account:"]
+  [:table
+   [:tr [:td.head "Nome: "]
+    [:td (text-field :firstname (or (:firstname data)
+                                  (:firstname person)))]
+    (error-cell :firstname)]
+   [:tr [:td.head "Cognome: "]
+    [:td (text-field :lastname (or (:lastname data)
+                                  (:lastname person)))]
+    (error-cell :lastname)]])
+
+(defpartial field-edit-form [person & [data]] ;; TODO: fix data
+  [:h2.section "Indirizzo di studio:"]
+  [:table
+   [:tr [:td.head "Indirizzo: "]
+    [:td (drop-down :field (map :name (fetch :fields))
+           (or (:field data) (:field person)))]
+    (error-cell :field)]
+   [:tr [:td.head "Anno immatr.: "]
+    [:td (drop-down :year (range 2007 2012)
+           (to-integer (or (:year data) (:year person))))]
+    (error-cell :year)]])
+
 (defpartial student-edit-form [person & [data]] ;; TODO: fix data
+  [:h1.section "Modifica dati utente"]
   (form-to {:accept-charset "utf-8"} [:post (user-edit-path (:_id person))]
-    [:table
-     [:tr [:td.head "Indirizzo: "]
-      [:td (drop-down :field (map :name (fetch :fields))
-             (if data (:field data) (:field person)))]
-      (error-cell :field)]
-     [:tr [:td.head "Anno immatr.: "]
-      [:td (drop-down :year (range 2007 2012)
-             (to-integer (if data
-                           (:year data)
-                           (:year person))))]
-      (error-cell :year)]
-     [:tr [:td] [:td (submit-button "Salva")]]]))
+    (account-edit-form person data)
+    (field-edit-form person data)
+    (submit-button "Salva dati")))
 
 (defpartial professor-edit-form [id & [data vd]]
   [:p "TODO: da fare"])
 
-(defpage "/user/:id/edit" {:keys [id]}
+(defpage "/user/:id/edit" {:keys [id] :as data}
   (layout "Modifica utente"
     (if (= (session/flash-get) :new-user) 
       [:p "Nuovo utente registrato"])
-    [:h2.section "Modifica i dati di " id ":"]
     (let [person (fetch-one :people :where {:_id id})]
       (if person
         (if (or (admin? (current-id)) (= id (current-id)))
           (if (= (:job person) "student")
-            (student-edit-form person)
-            (professor-edit-form person))
+            (student-edit-form person data)
+            (professor-edit-form person data))
           "Non hai l'autorizzazione per modificare i dati.")
         "Utente non esistente."))))
 
@@ -123,24 +149,29 @@
          :type :field   :field field-name
          :year year     :created-at (java.util.Date.)}))))
 
-(defn valid? [{:keys [id field year]}]
+(defn valid? [{:keys [id field year firstname lastname]}]
   (vali/rule (vali/has-value? field)
      [:name "Il campo non deve essere vuoto."])
   (vali/rule (fetch-one :fields :where {:name field})
      [:name "Indirizzo non esistente."])
   (vali/rule (fetch-one :people :where {:_id id})
      [:id "Matricola non valida."]) ;; Non visualizzato
+  (vali/rule (vali/has-value? firstname)
+     [:firstname "Il campo non deve essere vuoto."])
+  (vali/rule (vali/has-value? lastname)
+     [:lastname "Il campo non deve essere vuoto."])
   (vali/rule (let [y (Integer/parseInt year)]
                (and (>= y 2007) (<= y 2012)))
      [:year "Anno di immatricolazione non valido."])
-  (not (vali/errors? :field :year :id)))
+  (not (vali/errors? :field :year :firstname :lastname :id)))
 
-(defpage [:post "/user/:id/edit"] {:keys [id year field] :as person}
+(defpage [:post "/user/:id/edit"] {:keys [id year field firstname lastname] :as person}
+  (println (pr-str id field year firstname lastname (valid? person)))
   (if (not (valid? person))
-    (render (user-edit-path id))
+    (render "/user/:id/edit" person)
     (let [y (Integer/parseInt year)]
       (update! :people {:_id id}
-        {:$set {:year y :field field}})
+        {:$set {:year y :field field :firstname firstname :lastname lastname}})
       (follow-channel (:_id (create-field-channel field y)) id)
       (session/flash-put! :done)
       (resp/redirect (user-info-path id)))))

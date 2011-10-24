@@ -24,3 +24,4 @@ SyntaxHighlighter.autoloader(
   'vb vbnet               /syntaxhighlighter/scripts/shBrushVb.js',
   'xml xhtml xslt html    /syntaxhighlighter/scripts/shBrushXml.js'
 );
+SyntaxHighlighter.all();

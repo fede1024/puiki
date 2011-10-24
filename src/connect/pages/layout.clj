@@ -75,13 +75,11 @@
   (html
     [:script {:type "text/javascript" :src "/syntaxhighlighter/scripts/shCore.js"}]
     [:script {:type "text/javascript" :src "/syntaxhighlighter/scripts/shAutoloader.js"}]
-    [:link {:type "text/css" :rel "stylesheet" :href "/syntaxhighlighter/styles/shCoreDefault.css"}]
-    [:script {:type "text/javascript"}
-     "SyntaxHighlighter.all();"]))
+    [:link {:type "text/css" :rel "stylesheet" :href "/syntaxhighlighter/styles/shCoreDefault.css"}]))
 
-(def sh-autoloader
+(def sh-highlight
   (html
-    [:script {:type "text/javascript" :src "/sh-autoloader.js"}]))
+    [:script {:type "text/javascript" :src "/sh-highlight.js"}]))
 
 (def *sidebar* default-sidebar)
 (def *custom-header* nil)
@@ -133,7 +131,7 @@
          [:img.header {:src "/images/admin.png"}]]]
        [:td.status (status-section)]]
       [:tr.sideBar
-       [:td.content {:colspan 2} content]
+       [:td.content {:colspan 2} content sh-highlight]
        [:td.sideBar (if (fn? *sidebar*)
                       (*sidebar*)
                       (str *sidebar*))]]
@@ -142,8 +140,7 @@
         "Powered by: "
         (link-to "http://www.clojure.org" [:img.footer {:height 25 :src "/images/Clojure.png"}])
         (link-to "http://www.mongodb.org" [:img.footer {:height 25 :src "/images/mongodb.png"}])
-        (link-to "http://aws.amazon.com/" [:img.footer {:height 25 :src "/images/aws.png"}])]]]
-     sh-autoloader]))
+        (link-to "http://aws.amazon.com/" [:img.footer {:height 25 :src "/images/aws.png"}])]]]]))
     
 (defpartial error-text [errors]
   (map #(html [:p.errorMsg [:img.errorMsg {:src "/images/error.png"}] " " %]) errors))

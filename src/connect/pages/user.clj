@@ -158,9 +158,9 @@
           new-comments (filter #(= (:action %) "new-comment") (:news user))]
       (html
         ;[:h1.section "Notifiche: " (count (:news user))]
+        [:h1.section "Nuovi post: " (count new-posts)]
         [:div.section
          [:p (link-to "/channel/list" "Modifica canali seguiti")]
-         [:h1.section "Nuovi post: " (count new-posts)]
          (let [groups (group-by :channel new-posts)]
            (for [[channel group] groups]
              (html [:h2.section (:name (fetch-one :channels :where {:_id channel}))]
@@ -254,7 +254,8 @@
   (layout ""
     [:h1.section "Feedback"]
     [:p "Se vuoi riportare un errore, un malfunzionamento, un suggerimento qualsiasi "
-     "scrivi nella casella sottostante."]
+     "scrivi nella casella sottostante, oppure mandami un "
+     (link-to "mailto:giraud.federico@gmail.com" "email") "."]
     [:p "Grazie per il tuo aiuto!"]
     (form-to {:accept-charset "utf-8" } [:post "/user/feedback"]
       (text-area {:class :postComment :rows 10 :placeholder "Vorrei che..."} :text)

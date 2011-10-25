@@ -116,10 +116,6 @@
        [:td.links
         [:a.header {:href "/" :title "Home"}
          [:img.header {:src "/images/home.png"}]]
-        [:a.header {:href "/search" :title "Ricerca"}
-         [:img.header {:src "/images/search.png"}]]
-        [:a.header {:href "/user/" :title "Info utente"}
-         [:img.header {:src "/images/user.png"}]]
         [:a.header {:href "/user/following" :title "Canali seguiti e notifiche"}
          (if (current-id)
            (let [news (count (:news (fetch-one :people :where {:_id (current-id)})))]
@@ -127,6 +123,12 @@
                [:img.header {:src (str "/images/stars/" news ".png")}]
                [:img.header {:src "/images/stars/5more.png"}]))
            [:img.header {:src "/images/stars/0.png"}])]
+        [:a.header {:href "/channel/list" :title "Tutti i canali"}
+         [:img.header {:src "/images/channels.png"}]]
+        [:a.header {:href "/search" :title "Ricerca"}
+         [:img.header {:src "/images/search.png"}]]
+        [:a.header {:href "/user/" :title "Info utente"}
+         [:img.header {:src "/images/user.png"}]]
         [:a.header {:href "/admin/" :title "Amministratore"}
          [:img.header {:src "/images/admin.png"}]]]
        [:td.status (status-section)]]

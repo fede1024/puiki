@@ -24,7 +24,7 @@
        ", ognuno riguardante un corso di studi (ad esempio Ingegneri Informatici iscritti al "
        "terzo anno";(link-to "" "terzo anno")
        ") oppure una " (link-to "/channel/4ea2844fe4b0b301111bb1f3" "materia di studio")
-       ". Ogni studente iscritto può aggiungere le sue domande (" (link-to "" "un esercizio")
+       ". Ogni studente iscritto può aggiungere le sue domande (" (link-to "/post/4ea28778e4b0b301111bb242" "un esercizio")
        ", un dubbio su un argomento della lezione...) nel canale adeguato e una notifica arriverà a tutti gli studenti che seguono il canale, i quali potranno rispondere."
        " Le varie risposte vengono poi ordinate in base ai giudizi degli studenti stessi, così che la risposta ritenuta migliore sia visualizzata per prima. Ad ogni nuova risposta alle domande che hai effettuato ti arriverà una notifica."]
       [:p "Il contenuto delle domande e delle risposte viene indicizzato per permettere una "

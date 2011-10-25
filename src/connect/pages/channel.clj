@@ -148,7 +148,7 @@
           [:h1.channelName "Canale: " (link-to (channel-path ch) (:name ch))]
           [:p (:description ch)]
           [:p (channel-info ch)]
-          [:p "Canale creato il: " (format-timestamp-relative (:created-at ch))]
+          [:p "Canale creato il: " (format-timestamp (:created-at ch))]
           [:p
            (when (current-id)
             [:span {:id id}

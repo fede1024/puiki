@@ -54,8 +54,8 @@
      [mongo-port "Specify the mongodb post" "27017"]
      [mongo-host "Specify the mongodb host" "localhost"]
      [mongo-db   "Specify the mongodb database" "connect"]
-     [mongo-user "Specify the mongodb user" ""]
-     [mongo-pwd  "Specify the mongodb password" ""]
+     [mongo-user "Specify the mongodb user" "fede"]
+     [mongo-pwd  "Specify the mongodb password" "ciao"]
      remaining]
     (let [p (Integer/parseInt port)]
       (reset! noir.server/*middleware* #{})

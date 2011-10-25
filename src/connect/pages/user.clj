@@ -166,7 +166,6 @@
   (not (vali/errors? :field :year :firstname :lastname :id)))
 
 (defpage [:post "/user/:id/edit"] {:keys [id year field firstname lastname] :as person}
-  (println (pr-str id field year firstname lastname (valid? person)))
   (if (not (valid? person))
     (render "/user/:id/edit" person)
     (let [y (Integer/parseInt year)]

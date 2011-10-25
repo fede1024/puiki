@@ -7,4 +7,5 @@
                  [congomongo "0.1.7"]
                  [commons-lang "2.5"]
                  [javax.mail/mail "1.4.3"]
-                 [clj-http "0.1.3"]])
+                 [clj-http "0.1.3"]]
+  :dev-dependencies [[lein-eclipse "1.0.0"]])

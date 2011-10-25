@@ -5,5 +5,6 @@ pom.xml
 /lib/
 /classes/
 /resources/public/logs/*
+.settings/
 .lein-failures
 .lein-deps-sum

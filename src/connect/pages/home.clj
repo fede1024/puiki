@@ -43,7 +43,7 @@
        "	Ora è disponibile solo un funzionamento di base ma molto sarà aggiunto, seguici!"]]]))
 
 (defpage "/" []
-  (layout "Poli Connect"
+  (layout "PoliConnect"
     (info-section)
     [:h2.section "Post più recenti:"]
     (let [posts (fetch :posts :where {:removed {:$ne true}}

@@ -11,16 +11,40 @@
            [noir.response :as resp]
    [noir.util.test :as test]))
 
+(def sh-header
+  (html
+    [:script {:type "text/javascript" :src "/syntaxhighlighter/scripts/shCore.js"}]
+    [:script {:type "text/javascript" :src "/syntaxhighlighter/scripts/shAutoloader.js"}]
+    [:link {:type "text/css" :rel "stylesheet" :href "/syntaxhighlighter/styles/shCoreDefault.css"}]))
+
+(def sh-highlight
+  (html
+    [:script {:type "text/javascript" :src "/sh-highlight.js"}]))
+
+(def google-analytics
+  (html
+    [:script {:type "text/javascript"}
+     "  var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-26576839-1']);
+        _gaq.push(['_trackPageview']);
+
+        (function() {
+          var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+          ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+          var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();"]))
+
 (defpartial status-section []
   (if (current-id)
     (let [id (current-id)
           person (fetch-one :people :where {:_id id})]
-      [:table.status
-       [:tr.statusWelcome
-        [:td.statusInfo "Loggato come " id " ("
-         (translate-job (:job person)) ") "]
-        [:td.statusLogout (link-to "/logout" "Logout")]]])
-    [:div.register "Effettua il " 
+      [:div.status
+       [:table.status
+        [:tr.statusWelcome
+         [:td.statusInfo "Loggato come " id " ("
+          (translate-job (:job person)) ") "]
+         [:td.statusLogout (link-to "/logout" "Logout")]]]])
+    [:div.status "Effettua il " 
      [:a {:href "/login" :id :loginLink} "login"]
      ;[:script "document.write('<a href = \"/login?redirect=' + document.URL + '\">login</a>')"]
      [:script "$('#loginLink').attr('href', '/login?redirect=' + document.URL);"]
@@ -71,31 +95,52 @@
         (when (admin? id) (admin-sidebar))
         (when (user? id)  (user-sidebar))))))
 
-(def sh-header
-  (html
-    [:script {:type "text/javascript" :src "/syntaxhighlighter/scripts/shCore.js"}]
-    [:script {:type "text/javascript" :src "/syntaxhighlighter/scripts/shAutoloader.js"}]
-    [:link {:type "text/css" :rel "stylesheet" :href "/syntaxhighlighter/styles/shCoreDefault.css"}]))
-
-(def sh-highlight
-  (html
-    [:script {:type "text/javascript" :src "/sh-highlight.js"}]))
-
-(def google-analytics
-  (html
-    [:script {:type "text/javascript"}
-     "  var _gaq = _gaq || [];
-        _gaq.push(['_setAccount', 'UA-26576839-1']);
-        _gaq.push(['_trackPageview']);
-
-        (function() {
-          var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-          ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-          var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-        })();"]))
-
 (def *sidebar* default-sidebar)
 (def *custom-header* nil)
+
+(defpartial layout-header []
+  [:div.headerContainer
+   [:div.header
+    [:a.name {:href "/"}
+     [:img.logo {:src "/images/polito.png"}] "PoliConnect"]
+    [:div.rfloat
+     [:a.header {:href "/" :title "Home"}
+     [:img.header {:src "/images/home.png"}]]
+     [:a.header {:href "/user/following" :title "Canali seguiti e notifiche"}
+      (if (current-id)
+        (let [news (count (:news (fetch-one :people :where {:_id (current-id)})))]
+          (if (<= news 5)
+            [:img.header {:src (str "/images/stars/" news ".png")}]
+            [:img.header {:src "/images/stars/5more.png"}]))
+        [:img.header {:src "/images/stars/0.png"}])]
+     [:a.header {:href "/channel/list" :title "Tutti i canali"}
+      [:img.header {:src "/images/channels.png"}]]
+     [:a.header {:href "/search" :title "Ricerca"}
+      [:img.header {:src "/images/search.png"}]]
+     [:a.header {:href "/user/" :title "Info utente"}
+      [:img.header {:src "/images/user.png"}]]
+     (if (admin? (current-id))
+       [:a.header {:href "/admin/" :title "Amministratore"}
+        [:img.header {:src "/images/admin.png"}]]
+       [:a.header {:href "/user/feedback" :title "Feedback"}
+      [:img.header {:src "/images/feedback.png"}]])]]])
+
+(defpartial layout-body [content]
+  [:div.body
+   [:div.sideBar
+    (status-section)
+    [:div.sideBarSection
+     (if (fn? *sidebar*)
+       (*sidebar*)
+       (str *sidebar*))]]
+   [:div.content content sh-highlight]])
+
+(defpartial layout-footer []
+  [:div.footer
+   "Powered by: "
+   (link-to "http://www.clojure.org" [:img.footer {:height 25 :src "/images/Clojure.png"}])
+   (link-to "http://www.mongodb.org" [:img.footer {:height 25 :src "/images/mongodb.png"}])
+   (link-to "http://aws.amazon.com/" [:img.footer {:height 25 :src "/images/aws.png"}])])
 
 (defpartial layout [title & content]
   (html5
@@ -106,7 +151,6 @@
      [:meta {:name "viewport" :content "width=device-width, initial-scale=1, maximum-scale=1"}]
      [:link {:rel "shortcut icon" :href "/images/favicon.gif"}]
      [:script {:type "text/javascript" :src "/jquery-1.6.4.min.js"}]
-     google-analytics
      (include-css "/css/reset.css")
      (include-css "/css/screen.css")
      (include-css "/css/search.css")
@@ -116,47 +160,14 @@
      (include-css "/css/post.css")
      sh-header
      *custom-header*
-     [:title title]]
+     [:title title]
+     google-analytics]
     [:body
      [:span.loader {:id "loader" :style "display: none;"}
       " Caricamento..." [:img.loader {:src "/images/loading.gif"}]]
-     [:a.feedback {:href "/user/feedback"}
-      [:img {:src "/images/feedback.png"}]]
-     [:table.home
-      [:tr.header
-       [:td.header 
-        [:img.logo {:src "/images/polito.png"}] "PoliConnect "
-        [:img {:src "/images/beta.png"}]]
-       [:td.links
-        [:a.header {:href "/" :title "Home"}
-         [:img.header {:src "/images/home.png"}]]
-        [:a.header {:href "/user/following" :title "Canali seguiti e notifiche"}
-         (if (current-id)
-           (let [news (count (:news (fetch-one :people :where {:_id (current-id)})))]
-             (if (<= news 5)
-               [:img.header {:src (str "/images/stars/" news ".png")}]
-               [:img.header {:src "/images/stars/5more.png"}]))
-           [:img.header {:src "/images/stars/0.png"}])]
-        [:a.header {:href "/channel/list" :title "Tutti i canali"}
-         [:img.header {:src "/images/channels.png"}]]
-        [:a.header {:href "/search" :title "Ricerca"}
-         [:img.header {:src "/images/search.png"}]]
-        [:a.header {:href "/user/" :title "Info utente"}
-         [:img.header {:src "/images/user.png"}]]
-        [:a.header {:href "/admin/" :title "Amministratore"}
-         [:img.header {:src "/images/admin.png"}]]]
-       [:td.status (status-section)]]
-      [:tr.sideBar
-       [:td.content {:colspan 2} content sh-highlight]
-       [:td.sideBar (if (fn? *sidebar*)
-                      (*sidebar*)
-                      (str *sidebar*))]]
-      [:tr.footer
-       [:td.footer {:colspan 3}
-        "Powered by: "
-        (link-to "http://www.clojure.org" [:img.footer {:height 25 :src "/images/Clojure.png"}])
-        (link-to "http://www.mongodb.org" [:img.footer {:height 25 :src "/images/mongodb.png"}])
-        (link-to "http://aws.amazon.com/" [:img.footer {:height 25 :src "/images/aws.png"}])]]]]))
+     (layout-header)
+     (layout-body content)
+     (layout-footer)]))
     
 (defpartial error-text [errors]
   (map #(html [:p.errorMsg [:img.errorMsg {:src "/images/error.png"}] " " %]) errors))

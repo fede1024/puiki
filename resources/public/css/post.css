@@ -123,6 +123,7 @@ td.postVote {
 }
 
 td.comment {
+	padding-top: 3px;
     padding-left: 20px;
     padding-right: 20px;
     margin: 5px;
@@ -159,6 +160,7 @@ td.postActions {
     white-space: nowrap;
     text-align: right;
     vertical-align: middle;
+    padding-top: 5px;
 }
 
 td.postSettings {
@@ -170,7 +172,6 @@ td.postSettings {
 }
 
 div.postLink {
-    
     padding: 3px;
 }
 
@@ -189,6 +190,7 @@ tr.postLinkSpace {
 
 td.postLinkTitle {
     color: #3366CC;
+    padding: 3px;
     background-color: #f8f8f8;
     border-radius: 5px 0px 0px 5px;
     font-size: 11pt;
@@ -201,6 +203,7 @@ td.postLinkTitle {
 td.postLinkVote {
     width: 20px;
     height: 20px;
+    padding: 3px;
     vertical-align: middle;
     color: #3366CC;
     font-size: 12pt;
@@ -214,6 +217,7 @@ td.postLinkVote {
 td.postLinkAnswers {
     width: 20px;
     height: 20px;
+    padding: 3px;
     vertical-align: middle;
     color: #3366CC;
     font-size: 12pt;
@@ -224,6 +228,7 @@ td.postLinkAnswers {
 }
 
 td.postLinkDate {
+	padding: 3px;
     background-color: #f8f8f8;
     border-radius: 0px 5px 5px 0px;
     text-align: right;

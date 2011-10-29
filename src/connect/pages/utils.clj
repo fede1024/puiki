@@ -61,11 +61,6 @@
 
 (def days-names 
   (.getWeekdays (DateFormatSymbols. (Locale/ITALIAN))))
-
-(defn format-timestamp-relative [date]
-  (if date
-    (timestamp-relative-to-string date)
-    "???"))
   
 (defn timestamp-relative-to-string [date]
   (let [diff (int (/ (- (.getTime (Date.))
@@ -93,6 +88,11 @@
         (str (.get cal Calendar/DAY_OF_MONTH)
           " " (nth month-names (.get cal Calendar/MONTH))
           " " (.get cal Calendar/YEAR))))))
+
+(defn format-timestamp-relative [date]
+  (if date
+    (timestamp-relative-to-string date)
+    "???"))
 
 ;(dorun
 ;  (map (fn [date] (println (format-timestamp date) " - " (format-timestamp-relative date)))

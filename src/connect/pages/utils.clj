@@ -63,6 +63,11 @@
   (.getWeekdays (DateFormatSymbols. (Locale/ITALIAN))))
 
 (defn format-timestamp-relative [date]
+  (if date
+    (timestamp-relative-to-string date)
+    "???"))
+  
+(defn timestamp-relative-to-string [date]
   (let [diff (int (/ (- (.getTime (Date.))
                        (.getTime date))
                     1000))]
@@ -78,7 +83,7 @@
         (if (= n 1)
           "Un ora fa"
           (str n " ore fa")))
-      (< diff 604800) ;; Settimana
+      (< diff 518400) ;; sei giorni
       (let [cal (Calendar/getInstance)]
         (.setTime cal date)
         (nth days-names (.get cal Calendar/DAY_OF_WEEK)))

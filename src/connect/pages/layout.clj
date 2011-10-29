@@ -58,23 +58,23 @@
      [:script "$('#loginLink').attr('href', '/login?redirect=' + document.URL);"]
      " oppure " [:a {:href "/register"} "registrati"] "."]))
 
-(defpartial people-table [people & {:keys [img edit id info date lastname]}]
+(defpartial people-table [people & {:keys [img field edit id info date lastname]}]
   [:table.people
-   (for [{matr :_id name :firstname lname :lastname
-          job :job d :created-at} people]
+   (for [person people]
      (html
        [:tr.person
         [:td.personName
          (when img [:img {:src "/images/user-small.png" :height 13}]) " "
-         name (when lastname (str " " lname))
-         (when (and edit (or (admin? (current-id)) (= matr (current-id))))
-           [:span " - " (link-to (user-edit-path matr) "Modifica")])]
-        [:td.personDate (when date (format-timestamp-relative d))]]
+         (:firstname person) (when lastname (str " " (:lastname person)))
+         (when (and edit (or (admin? (current-id)) (= (:_id person) (current-id))))
+           [:span " - " (link-to (user-edit-path (:_id person)) "Modifica")])]
+        (when field [:td.personId (:field person)])
+        [:td.personDate (when date (format-timestamp-relative (:created-at person)))]]
        (when (or info id)
          [:tr 
           [:td.personId {:colspan "2"}
-           (when info (str (translate-job job) " "))
-           (when id matr)]])))])
+           (when info (str (translate-job (:job person)) " "))
+           (when id (:_id person))]])))])
 
 ;(defpartial last-posts []
 ;  [:h2.section "Ultimi post"]
@@ -87,7 +87,8 @@
   [:h2.section "Ultimi utenti registrati:"]
   (people-table (fetch :people :limit 5 :sort {:created-at -1})
     :date true ;:lastname (not (nil? (current-id)))
-    :id (admin? (current-id))))
+    :id (admin? (current-id))) [:br]
+  "Totale " (link-to "/user/list" (fetch-count :people) " utenti") ".")
 
 (defpartial user-sidebar []
   ;(last-posts)

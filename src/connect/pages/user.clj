@@ -71,10 +71,10 @@
         "Utente non esistente."))))
 
 (defpage "/user/list" []
-  (layout "Elenco utenti"
-    [:h2.section "Elenco utenti"]
-    (people-table (fetch :people :sort {:lastname 1 :firstname 1})
-      :lastname true :info true)))
+  (let [users (fetch :people :sort {:lastname 1 :firstname 1})]
+    (layout "Elenco utenti"
+      [:h2.section "Utenti registrati: (" (count users)")"]
+      (people-table users :lastname true :date true))))
 
 (defn to-integer [value]
   (if value 

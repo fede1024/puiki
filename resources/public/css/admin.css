@@ -9,14 +9,17 @@ tr.logs {
 }
 
 th.logs {
+	padding: 2px;
     border-left: 1px dotted #aaa;
 }
 
 td.logs {
+	padding: 2px;
     font-size: 7pt;
 }
 
 td.logsB {
+	padding: 2px;
     border-left: 1px dotted #aaa;
     font-size: 7pt;
 }

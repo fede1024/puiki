@@ -34,6 +34,13 @@
           var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
         })();"]))
 
+(def fb-like-box
+  (html
+    [:iframe
+     {:src "//www.facebook.com/plugins/likebox.php?href=http%3A%2F%2Fwww.facebook.com%2Fpages%2FPoliConnect%2F182526581833051&amp;width=180&amp;colorscheme=light&amp;show_faces=false&amp;border_color&amp;stream=false&amp;header=false&amp;height=62&amp;appId=220725871327778"
+      :scrolling "no" :frameborder "0" :style "border:none; overflow:hidden; width:180px; height:62px;"
+      :allowTransparency "true"}]))
+
 (defpartial status-section []
   (if (current-id)
     (let [id (current-id)
@@ -132,7 +139,9 @@
     [:div.sideBarSection
      (if (fn? *sidebar*)
        (*sidebar*)
-       (str *sidebar*))]]
+       (str *sidebar*))]
+    [:div.sideBarSection
+     fb-like-box]]
    [:div.content content sh-highlight]])
 
 (defpartial layout-footer []

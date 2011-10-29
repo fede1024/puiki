@@ -133,8 +133,8 @@ div.body {
 }
 
 div.content {
-	width: 780px;
-	margin-left: 10px;
+	width: 770px;
+	padding-left: 10px;
 }
 
 div.sideBar {

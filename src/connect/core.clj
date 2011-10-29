@@ -13,7 +13,7 @@
        [noir.validation :as vali]
        [noir.session :as session]
        [noir.response :as resp]
-   [noir.util.test :as test])
+       [noir.util.test :as test])
  (:gen-class))
 
 (test/with-noir
@@ -58,7 +58,6 @@
      [mongo-pwd  "Specify the mongodb password" "ciao"]
      remaining]
     (let [p (Integer/parseInt port)]
-      (reset! noir.server/*middleware* #{})
       (server/add-middleware connect.errors/wrap-error-check)
       (server/add-middleware connect.logs/wrap-logging)
       (noir.statuses/set-page! 404
@@ -68,7 +67,9 @@
       (when (not (str/blank? mongo-user))
         (authenticate mongo-user mongo-pwd))
       (swap! servers assoc p
-        (server/start p {:mode :dev :ns 'connect})))))
+        (server/start p
+          {:ns 'connect
+           :session-cookie-attrs {:expires "Wed, 09 Jun 2021 10:18:14 GMT"}})))))
 
 (defn stop-server [port]
   (when (@servers port)

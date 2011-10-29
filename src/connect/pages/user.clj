@@ -2,7 +2,7 @@
   (:use connect.pages.layout
         connect.pages.utils
         connect.db
-        noir.core   
+        noir.core
         hiccup.core
         hiccup.page-helpers
         hiccup.form-helpers

@@ -12,7 +12,7 @@
 (defn get-email []
   (fetch-one :admin :where {:_id "email"}))
 
-(declare *session*)
+(declare ^:dynamic *session*)
 
 (def rTO (Message$RecipientType/TO))
 (def rCC (Message$RecipientType/CC))

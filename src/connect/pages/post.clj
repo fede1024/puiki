@@ -9,7 +9,7 @@
         hiccup.form-helpers
         somnium.congomongo)
  (:require [clojure.contrib.string :as str]
-           [clojure.contrib.json :as json]
+           [clj-json.core :as json]
            [noir.server :as server]
            [noir.validation :as vali]
            [noir.session :as session]
@@ -32,12 +32,12 @@
 
 (defn js-get [path id opts]
   (str "$('#loader').css('display', 'inline');"
-    "$.get('" path "', " (clojure.contrib.json/json-str opts) ", function(content) {$('#" id "').html(content);"
+    "$.get('" path "', " (json/generate-string opts) ", function(content) {$('#" id "').html(content);"
     "$('#loader').css('display', 'none');});"))
 
 (defn js-post [path id opts]
   (str "$('#loader').css('display', 'inline');"
-    "$.post('" path "', " (clojure.contrib.json/json-str opts) ", function(content) {$('#" id "').html(content);"
+    "$.post('" path "', " (json/generate-string opts) ", function(content) {$('#" id "').html(content);"
     "$('#loader').css('display', 'none');});"))
 
 (defn js-vote [post dir]

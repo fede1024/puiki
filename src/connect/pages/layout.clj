@@ -108,8 +108,8 @@
         (when (admin? id) (admin-sidebar))
         (when (user? id)  (user-sidebar))))))
 
-(def *sidebar* default-sidebar)
-(def *custom-header* nil)
+(def ^:dynamic *sidebar* default-sidebar)
+(def ^:dynamic *custom-header* nil)
 
 (defpartial layout-header []
   [:div.headerContainer

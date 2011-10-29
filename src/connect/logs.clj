@@ -6,7 +6,7 @@
 
 ;db.createCollection("mycoll", {capped:true, size:10000000})
 
-(def *ip* nil)
+(def ^:dynamic *ip* nil)
 
 (defn wrap-logging [handler]
   (fn [req]

@@ -45,7 +45,7 @@ h1.section {
     font-size: 18pt;
     font-weight: bold;
     color: #3366CC;
-    text-shadow: -1px 1px 1px #808080;
+    text-shadow: -1px 1px 1px #a0a0a0;
 }
 
 h2.section {
@@ -199,18 +199,22 @@ div.status {
 	box-shadow: -1px 1px 2px rgba(0, 0, 0, 0.15);
 }
 
-td.statusLogout {
-    text-align: left;
-    font-size: 10pt;
-    vertical-align: middle;
+table.status {
+	width: 100%;
 }
 
-td.statusInfo {
-    padding-left: 10px;
-    padding-right: 10px;
+td.statusWelcome {
+	text-align: center;
+    font-size: 12pt;
+    padding-bottom: 5px;
+    font-weight: bold;
+    color: #3366CC;
+    text-shadow: -1px 1px 1px #d0d0d0;
+}
+
+td.statusInfo, td.statusLogout {
     text-align: center;
     font-size: 9pt;
-    vertical-align: middle;
 }
 
 div.register {

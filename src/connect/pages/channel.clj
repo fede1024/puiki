@@ -114,10 +114,10 @@
     (text-field {:class :channelSearchText :placeholder "Testo ricerca"} :text)
     (submit-button {:class "channelSearch"} "Cerca")))
 
-(defpartial post-links [posts]
+(defpartial post-links [posts & [show-removed]]
   [:table.postLink
    (for [post posts]
-     (when (not (:removed post))
+     (when (or show-removed (not (:removed post)))
        (let [vote (or (:vtotal post) 0)]
          (html
            [:tr

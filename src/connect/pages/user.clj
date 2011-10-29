@@ -195,7 +195,7 @@
            (for [[channel group] groups]
              (html [:h2.section (:name (fetch-one :channels :where {:_id channel}))]
              (channel/post-links
-               (map #(fetch-one :posts :where {:_id (:post %)}) group)))))
+               (map #(fetch-one :posts :where {:_id (:post %)}) group) :show-removed))))
          [:p "Nuove risposte ai tuoi post: " (count new-answers)]
          (for [n new-answers]
            [:p [:img {:src "/images/dot.png" :height 10}] " "

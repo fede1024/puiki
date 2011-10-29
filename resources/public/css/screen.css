@@ -392,8 +392,9 @@ ol {
 button.continue, button.abort {
     margin: 3px;
     background-color: #d3effd;
-    border: 1px solid #86d5fd;
+    border: none;
     text-decoration: none;
     border-radius: 3px;
     padding: 3px;
+    cursor: pointer;
 }

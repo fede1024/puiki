@@ -251,7 +251,7 @@ input.postTitle {
 }
 
 input.postReply, button.postComment, input.postSubmit {
-    margin-top: 0px;
+    margin-top: 5px;
     margin-left: 3px;
     background-color: #d3effd;
     border: 1px solid #86d5fd;

@@ -16,7 +16,7 @@
     [:span
      [:h1.section "Benvenuto!"]
      [:div.section div-prop
-      [:p "Benvenuto su PoliConnect, un sito creato per gli studenti del Politecnico di Torino, "
+      [:p "Benvenuto su PoliConnect, il sito creato per gli studenti del Politecnico di Torino, "
        "dove fare domande e trovare informazioni riguardanti i corsi e non solo."]]
      [:h2.section "Come funziona:"]
      [:div.section div-prop

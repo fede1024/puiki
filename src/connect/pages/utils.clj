@@ -107,6 +107,11 @@
                 :content (str wait ";url=" url)}]))
 
 (defn js-redirect [url]
+  (str "$(document).ready(function() {"
+       "$('body').load('" url "');"
+       "});"))
+
+(defn js-redirect-page [url]
   (html
     [:html
      [:head

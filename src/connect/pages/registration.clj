@@ -156,7 +156,7 @@
   (let [data (fetch-one :people-pending :where {:code code})]
     (if data
       (do
-        (insert! :people (dissoc data :code))
+        (insert! :people (dissoc data :code)) ;; FIXME: data di registrazione = data conferma email
         (destroy! :people-pending {:code code})
         (follow-channel (:_id (fetch-one :channels :where {:name "Poli Connect"}))
           (:_id data))

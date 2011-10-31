@@ -61,7 +61,7 @@
       (server/add-middleware connect.errors/wrap-error-check)
       (server/add-middleware connect.logs/wrap-logging)
       (noir.statuses/set-page! 404
-        (connect.pages.utils/js-redirect "/not-found"))
+        (connect.pages.utils/js-redirect-page "/not-found"))
       ;(mongo! :db "connect")
       (mongo! :host mongo-host :port (Integer/parseInt mongo-port) :db mongo-db)
       (when (not (str/blank? mongo-user))

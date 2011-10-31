@@ -124,7 +124,7 @@
     (html [:h1 "Benvenuto"]
       [:p "Grazie per esserti registrato."]
       [:p "Conferma il tuo account cliccando su "
-       (link-to (str "http://fede.dyndns-ip.com/register/" code) "questo link") "."]
+       (link-to (str "http://www.policonnect.it/register/" code) "questo link") "."]
       [:p "Se hai ricevuto questa email per errore è sufficiente eliminarla e "
        "non verrai più contattato da PoliConnect."])))
 

@@ -49,3 +49,7 @@
     (let [posts (fetch :posts :where {:removed {:$ne true}}
                   :sort {:created-at -1} :limit 10)]
       (channel/post-links posts))))
+
+(defpage [:post "/"] {:as data}
+  (println (pr-str data))
+  (render "/"))

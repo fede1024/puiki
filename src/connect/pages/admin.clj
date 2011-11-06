@@ -19,6 +19,12 @@
     (if (not (admin? (current-id)))
       (render "/permission-denied"))
     (render "/login" {:redirect (get-request-uri request)})))
+                                                      
+(defn get-all-emails []
+  (let [students (filter #(let [id (:_id %)]
+                            (and (string? id) (re-matches #"s[0-9]+" id)))
+                         (fetch :people))]
+    (apply str (interpose " ," (map #(str (:_id %) "@studenti.polito.it") students)))))
 
 (defpage "/admin/" {}
   (layout "PoliConnect"
@@ -35,7 +41,10 @@
     [:p (link-to "/admin/feedbacks" "/admin/feedbacks")
      " Feedback degli utenti."]
     [:p (link-to "/admin/recur3" "/admin/recur3") 
-     " Mostra ricorsivamente il layout."]))
+     " Mostra ricorsivamente il layout."]
+    [:p (link-to "cio" "Email") 
+     " Invia un email a tutti gli utenti."]
+   [:a {:href (str "mailto:" (get-all-emails))} "Email"]))
 
 (defpage "/admin/zero" []
   (layout "Zero"

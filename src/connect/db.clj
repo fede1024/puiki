@@ -90,3 +90,7 @@
 (defn- reset-all-news! []
   (update! :people {} ;; Cancella tutte le notifiche
     {:$unset {:news 1}} :multiple true))
+
+
+
+

@@ -35,7 +35,11 @@
     (if (and stored-pass (if already-encrypted
                            (= password stored-pass)
                            (crypt/compare password stored-pass)))
-      (session/put! :username username)
+      (do
+        (session/put! :username username)
+        (when (session/get :fb-id) ;; Memorizza l'id di facebook
+          (update! :people {:_id username}
+            {:$set {:fb-id (session/get :fb-id)}})))
       (vali/set-error :username "Password o nome utente non valido."))))
 
 (defpage [:post "/login"] {:keys [redirect] :as data}

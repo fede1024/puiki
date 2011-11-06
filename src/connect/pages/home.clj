@@ -1,17 +1,19 @@
 (ns connect.pages.home
   (:use connect.pages.layout
         connect.pages.utils
+        connect.fb
         noir.core   
         hiccup.core
         hiccup.page-helpers
         hiccup.form-helpers
         somnium.congomongo)
  (:require [connect.pages.channel :as channel]
+           [noir.session :as session]
            [noir.validation :as vali]
            [noir.response :as resp]
    [noir.util.test :as test]))
 
-(defpartial info-section []
+ (defpartial info-section []
   (let [div-prop {:style "text-align: justify; margin-right: 20px;"}]
     [:span
      [:h1.section "Benvenuto!"]
@@ -36,7 +38,7 @@
        (link-to "/register" "qui") " e in un attimo sarai in grado di aggiungere le tue domande o provare a rispondere ai quesiti già presenti."]
       [:p "Per ogni informazione/suggerimento scrivi a "
        (link-to "mailto:giraud.federico@gmail.com" "giraud.federico@gmail.com")
-       " o utilizza il pulsante Feedback in basso."]]
+       " o utilizza il pulsante Feedback in alto."]]
      [:h2.section "Versione beta:"]
      [:div.section div-prop
       [:p "Il sito è in fase di test, abbiamo quindi bisogno di studenti che abbiano voglia di provare ad utilizzarlo inserendo nuovi contenuti."
@@ -50,6 +52,12 @@
                   :sort {:created-at -1} :limit 10)]
       (channel/post-links posts))))
 
-(defpage [:post "/"] {:as data}
-  (println (pr-str data))
+(defpage [:post "/"] {:keys [signed_request ref fb_source] :as data}
+  ;(println (pr-str signed_request ref fb_source))
+  (let [fb-user-id (get (decode-string-request signed_request) "user_id")]
+    (when fb-user-id
+      (session/put! :fb-id fb-user-id)
+      (when (current-id)  ;; Memorizza l'id di facebook
+        (update! :people {:_id (current-id)}
+          {:$set {:fb-id fb-user-id}}))))      
   (render "/"))

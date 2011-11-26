@@ -217,7 +217,7 @@
           (update! :people {:_id (current-id)} ;; Toglie il post dalle notifiche
             {:$pull {:news {:post id}}}
             :multiple true))
-        (layout "Post"
+        (layout (:title post)
           (let [ch (fetch-one :channels :where {:_id (:channel post)})]
             [:h1.channelName (link-to {:class "channelName"} (channel-path ch) (:name ch))])
           (post-div post)

@@ -30,11 +30,11 @@
       (second (str/split #"=" (:body resp)))
       (println "FB Access Token:" (get-in (json/parse-string (:body resp)) ["error" "message"])))))
 
-(def acc (get-access-token app-id app-secret))
+;(def acc (get-access-token app-id app-secret))
 
-(let [resp (client/post (str "https://graph.facebook.com/" "fgtech" "/apprequests")
-                          {:query-params {:message "Ciao :)"                                          :access_token acc}
-                           :throw-exceptions false})]
-  (if (= (:status resp) 200)
-      (:body resp)
-      (println "FB App Request:" (get-in (json/parse-string (:body resp)) ["error" "message"]))))
+;(let [resp (client/post (str "https://graph.facebook.com/" "fgtech" "/apprequests")
+;                          {:query-params {:message "Ciao :)"                                          :access_token acc}
+;                           :throw-exceptions false})]
+;  (if (= (:status resp) 200)
+;      (:body resp)
+;      (println "FB App Request:" (get-in (json/parse-string (:body resp)) ["error" "message"]))))

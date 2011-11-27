@@ -7,6 +7,7 @@
 
 (def *log-errors* true)
 (def *errors-dir* "resources/public/logs/errors/")
+;(def *errors-dir* "/home/federico/connect/resources/public/logs/errors/")
 (def *max-error-files* 20)
 
 (defn exception-causes [#^Throwable t]

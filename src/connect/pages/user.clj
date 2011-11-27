@@ -227,38 +227,44 @@
              [:p.channelInfo (channel/channel-info c)]
              [:p.channelDescription (:description c)]])]]))))
 
-(defpage "/user/new-course" {:keys [field name]:as data}
+(defpage "/user/new-course" {:keys [field name code year] :as data}
   (layout "Nuovo corso di studi"
+    [:h1.section "Nuovo corso di studi"]
     (form-to {:accept-charset "utf-8"} [:post "/user/new-course"]
       [:table
        [:tr [:td.head "Indirizzo: "]
-        [:td (drop-down :field (map :name (fetch :fields))
-               field)]
+        [:td (drop-down :field (map :name (fetch :fields)) field)]
         (error-cell :field)]
+       [:tr [:td.head "Anno: "]
+        [:td (drop-down :year (range 1 6) (Integer/parseInt year))]
+        (error-cell :year)]
+       [:tr [:td.head "Codice corso: "]
+        [:td (text-field {:placeholder "Codice corso"} :code (or code ""))]
+        (error-cell :code)]
        [:tr [:td.head "Nome corso: "]
-        [:td (text-field {:placeholder "Nome corso"} :name
-                (or (:name data) ""))]
+        [:td (text-field {:placeholder "Nome corso"} :name (or name ""))]
         (error-cell :name)]
        [:tr [:td] [:td (submit-button "Aggiungi")]]])))
 
-(defn course-channel-description [field name]
-  (str name " (" field ")"))
+;(defn course-channel-description [field name]
+;  (str name " (" field ")"))
 
-(defn create-course-channel! [field name]
+(defn create-course-channel! [name code]
   (insert! :channels
     {:name name :privacy :public
-     :description (course-channel-description field name)
-     :type :course :created-at (java.util.Date.)}))
+     ;:description (course-channel-description field name)
+     :type :course :code code :created-at (java.util.Date.)}))
 
-(defn create-course! [field name channel]
+(defn create-course! [field name year code]
   (insert! :courses
     {:name name
-     :channel channel
      :field field
+     :year year
+     :code code
      :created-by (current-id)
      :created-at (java.util.Date.)}))
 
-(defn valid-course? [{:keys [field name]}]
+(defn valid-course? [{:keys [field name code year]}]
   (vali/rule (vali/has-value? field)
     [:field "Il campo non deve essere vuoto."])
   (vali/rule (fetch-one :fields :where {:name field})
@@ -267,21 +273,45 @@
     [:name "Corso già esistente."])
   (vali/rule (not (str/blank? name))
     [:name "Nome corso non valido"])
-  (not (vali/errors? :field :name)))
+  (vali/rule (not (str/blank? code))
+    [:code "Codice non valido"])
+  (vali/rule (not (fetch-one :courses :where {:field field :code code}))
+    [:code "Corso già esistente."])
+  (vali/rule (let [y (Integer/parseInt year)]
+               (and (>= y 1) (<= y 5)))
+    [:year "Anno non valido"])
+  (not (vali/errors? :field :name :code :year)))
 
-(defpage [:post "/user/new-course"] {:keys [field name] :as data}
-  (if (current-id)
-    (if (valid-course? data)
-      (let [channel (create-course-channel! field name)]
-        (create-course! field name ;; Crea il nuovo canale comunque
-          (:_id channel))
-        (session/flash-put! :new)
-        (resp/redirect (channel-path channel)))
-      (render "/user/new-course" data))
-    (render "/permission-denied")))
+(defpage [:post "/user/new-course"] {:keys [field name code year confirm] :as data}
+         (if (current-id)
+           (if (valid-course? data)
+             (let [old-channel (fetch-one :channels :where {:type :course :code code})]
+               (if (and old-channel (not confirm))
+                 (layout "Conferma nuovo corso"
+                         [:h1.section "Conferma corso " code " - " name]
+                         [:p "Esiste già un corso di codice " code ", ed è associato ai seguenti indirizzi di studio:"]
+                         [:ul
+                          (for [course (fetch :courses :where {:code code})]
+                            [:li (:field course) " " (:year course) "°anno - " (:name course)])]
+                         [:p "Vuoi associare anche \"" field " " year "° anno\" a questo corso?"]
+                         (form-to {:accept-charset "utf-8" } [:get "/user/new-course"]
+                                  (html (for [[k v] data]
+                                          [:input {:type :hidden :name k :value v}]))
+                                  (submit-button "Annulla"))
+                         (form-to {:accept-charset "utf-8" } [:post "/user/new-course"]
+                                  (html (for [[k v] data]
+                                          [:input {:type :hidden :name k :value v}]))
+                                  [:input {:type :hidden :name :confirm :value :true}]
+                                  (submit-button "Conferma")))
+                 (let [channel (or old-channel (create-course-channel! name code))]
+                   (create-course! field name year code)
+                   (session/flash-put! (if old-channel :new-course :new-channel))
+                   (resp/redirect (channel-path channel)))))
+             (render "/user/new-course" data))
+           (render "/permission-denied")))
 
 (defpage "/user/feedback" []
-  (layout ""
+  (layout "Feedbacks"
     [:h1.section "Feedback"]
     [:p "Se vuoi riportare un errore, un malfunzionamento, un suggerimento qualsiasi "
      "scrivi nella casella sottostante, oppure mandami un "

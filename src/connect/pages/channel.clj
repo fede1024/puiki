@@ -38,11 +38,11 @@
                          {:channel-id (str (:_id c)) :action "remove" :only-button only-button})}
      "Non seguire più"]))
 
-(defpartial channel-data [c & {:keys [follows]}]
+(defpartial channel-data [c & {:keys [follows name]}]
   (if (get follows (:_id c))
     [:img.channel {:src "/images/red-dot.png"}]
     [:img.channel {:src "/images/dot.png"}])
-  (link-to (channel-path c) (:name c))
+  (link-to (channel-path c) (or name (:name c)))
   (when (current-id)
     (channel-follow-buttons c
       (if (get follows (:_id c)) 'remove 'add)))
@@ -62,16 +62,16 @@
            (let [channels (fetch :channels :where {:field (:name f)})
                  years (sort-by :year > (filter #(= (:type %) "field") channels))
                  courses (sort-by :name (fetch :courses :where {:field (:name f)}))]
-               (if (empty? years)
+               (if (and (empty? years) (empty? courses))
                  [:p "Nessun canale per " (:name f)]
                  [:ul.channels
                   (for [c years]  ;; Canali per l'indirizzo
                     [:li.channel {:id (:_id c)}
                      (channel-data c :follows follows)])
                   (for [course courses] ;; Corsi
-                    (let [ch (fetch-one :channels :where {:_id (:channel course)})]
+                    (if-let [ch (fetch-one :channels :where {:code (:code course)})]
                       [:li.channel {:id (:_id ch)}
-                       (channel-data ch :follows follows)]))]))))]
+                       (channel-data ch :follows follows :name (:name course))]))]))))]
       [:h1.section "Elenco Gruppi:"]
       [:ul.channels
        (for [c (fetch :channels :where {:type "group"} :sort {:name 1})]
@@ -135,6 +135,14 @@
             [:td.postLinkDate (format-timestamp-relative (:created-at post))]]
            [:tr.postLinkSpace]))))])
 
+(defpartial channel-description [ch]
+  [:p "Il corso si applica agli studenti di:"]
+  (if (= (:type ch) "course")
+    [:ul
+    (for [course (fetch :courses :where {:code (:code ch)})]
+      [:li (:field course) " " (:year course) "°anno"])]
+    [:p (:description ch)]))
+
 (defpage "/channel/:id" {:keys [id]}
   (let [id (obj-id id)
         ch (fetch-one :channels :where {:_id id})]
@@ -143,10 +151,12 @@
       (binding [*sidebar* (html (add-post ch)
                             (followers ch))]
         (layout (:name ch)
-          (if (= (session/flash-get) :new) 
+          (when (= (session/flash-get) :new-channel) 
             [:p "Nuovo canale creato."])
+          (when (= (session/flash-get) :new-course) 
+            [:p "Nuovo corso creato."])
           [:h1.channelName "Canale: " (link-to (channel-path ch) (:name ch))]
-          [:p (:description ch)]
+          (channel-description ch)
           [:p (channel-info ch)]
           [:p "Canale creato il: " (format-timestamp (:created-at ch))]
           [:p
@@ -184,9 +194,9 @@
           (if (= (session/flash-get) :new) 
             [:p "Nuovo canale creato."])
           [:h1.channelName "Canale: " (link-to (channel-path ch) (:name ch))]
-          [:p (:description ch)]
+          (channel-description ch)
           [:p (channel-info ch)]
-          [:p "Canale creato il: " (format-timestamp-relative (:created-at ch))]
+          [:p "Canale creato il: " (format-timestamp (:created-at ch))]
           [:p
            (when (current-id)
             [:span {:id id}

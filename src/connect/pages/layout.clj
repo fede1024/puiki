@@ -65,7 +65,7 @@
        [:tr.person
         [:td.personName
          (when img [:img {:src "/images/user-small.png" :height 13}]) " "
-         (:firstname person) (when lastname (str " " (:lastname person)))
+         (when lastname (str (:lastname person) " ")) (:firstname person)
          (when (and edit (or (admin? (current-id)) (= (:_id person) (current-id))))
            [:span " - " (link-to (user-edit-path (:_id person)) "Modifica")])]
         (when field [:td.personId (:field person)])

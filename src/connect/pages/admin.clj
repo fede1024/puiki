@@ -42,9 +42,8 @@
      " Feedback degli utenti."]
     [:p (link-to "/admin/recur3" "/admin/recur3") 
      " Mostra ricorsivamente il layout."]
-    [:p (link-to "cio" "Email") 
-     " Invia un email a tutti gli utenti."]
-   [:a {:href (str "mailto:" (get-all-emails))} "Email"]))
+    [:p [:a {:href (str "mailto:" (get-all-emails))} "Email"]
+     " Invia un email a tutti gli utenti."]))
 
 (defpage "/admin/zero" []
   (layout "Zero"

@@ -342,7 +342,7 @@
         (update! :people {:follows c-id :_id {:$ne (current-id)}} ;; Update a tutti i followers
           {:$push {:news {:action :new-post :post (:_id new-post)
                           :channel c-id :time (java.util.Date.)}}}
-          :multiple true)
+          :multiple true :upsert false)
         (resp/redirect (post-path new-post)))
       (render "/edit/new-post" post))
     (resp/redirect "/login")))

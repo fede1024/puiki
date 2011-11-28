@@ -71,7 +71,9 @@
         "Utente non esistente."))))
 
 (defpage "/user/list" []
-  (let [users (fetch :people :sort {:lastname 1 :firstname 1})]
+  (let [users (sort-by #(.toLowerCase (or (:lastname %) ""))
+                 (sort-by #(.toLowerCase (or (:firstname %) ""))
+                   (fetch :people)))]
     (layout "Elenco utenti"
       [:h2.section "Utenti registrati: (" (count users)")"]
       (people-table users :lastname true :date true))))
@@ -236,7 +238,7 @@
         [:td (drop-down :field (map :name (fetch :fields)) field)]
         (error-cell :field)]
        [:tr [:td.head "Anno: "]
-        [:td (drop-down :year (range 1 6) (Integer/parseInt year))]
+        [:td (drop-down :year (range 1 6) (to-integer year))]
         (error-cell :year)]
        [:tr [:td.head "Codice corso: "]
         [:td (text-field {:placeholder "Codice corso"} :code (or code ""))]
@@ -265,27 +267,33 @@
      :created-at (java.util.Date.)}))
 
 (defn valid-course? [{:keys [field name code year]}]
-  (vali/rule (vali/has-value? field)
-    [:field "Il campo non deve essere vuoto."])
-  (vali/rule (fetch-one :fields :where {:name field})
-    [:field "Indirizzo non esistente."])
-  (vali/rule (not (fetch-one :courses :where {:field field :name name}))
-    [:name "Corso già esistente."])
-  (vali/rule (not (str/blank? name))
-    [:name "Nome corso non valido"])
-  (vali/rule (not (str/blank? code))
-    [:code "Codice non valido"])
-  (vali/rule (not (fetch-one :courses :where {:field field :code code}))
-    [:code "Corso già esistente."])
-  (vali/rule (let [y (Integer/parseInt year)]
-               (and (>= y 1) (<= y 5)))
-    [:year "Anno non valido"])
-  (not (vali/errors? :field :name :code :year)))
+  (let [field (.trim field)
+        name (.trim name)
+        code (.trim code)]
+    (vali/rule (vali/has-value? field)
+      [:field "Il campo non deve essere vuoto."])
+    (vali/rule (fetch-one :fields :where {:name field})
+      [:field "Indirizzo non esistente."])
+    (vali/rule (not (fetch-one :courses :where {:field field :name name}))
+      [:name "Corso già esistente."])
+    (vali/rule (not (str/blank? name))
+      [:name "Nome corso non valido"])
+    (vali/rule (re-matches #"[a-zA-Z0-9]+" code)
+      [:code "Codice non valido"])
+    (vali/rule (not (fetch-one :courses :where {:field field :code code}))
+      [:code "Corso già esistente."])
+    (vali/rule (let [y (Integer/parseInt year)]
+                 (and (>= y 1) (<= y 5)))
+      [:year "Anno non valido"])
+    (not (vali/errors? :field :name :code :year))))
 
 (defpage [:post "/user/new-course"] {:keys [field name code year confirm] :as data}
          (if (current-id)
            (if (valid-course? data)
-             (let [old-channel (fetch-one :channels :where {:type :course :code code})]
+             (let [field (.trim field)
+                   name (.trim name)
+                   code (.trim code)
+                   old-channel (fetch-one :channels :where {:type :course :code code})]
                (if (and old-channel (not confirm))
                  (layout "Conferma nuovo corso"
                          [:h1.section "Conferma corso " code " - " name]
@@ -293,7 +301,7 @@
                          [:ul
                           (for [course (fetch :courses :where {:code code})]
                             [:li (:field course) " " (:year course) "°anno - " (:name course)])]
-                         [:p "Vuoi associare anche \"" field " " year "° anno\" a questo corso?"]
+                         [:p "Vuoi associare anche \"" field " " year "°anno\" a questo corso?"]
                          (form-to {:accept-charset "utf-8" } [:get "/user/new-course"]
                                   (html (for [[k v] data]
                                           [:input {:type :hidden :name k :value v}]))

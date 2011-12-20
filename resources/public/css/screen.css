@@ -55,7 +55,7 @@ h2.section {
     font-weight: normal;
     margin-top: 10px;
     margin-bottom: 8px;
-    text-shadow: -1px 1px 1px #d0d0d0;
+    /*text-shadow: -1px 1px 1px #d0d0d0;*/
 }
 
 a {
@@ -401,4 +401,18 @@ button.continue, button.abort {
     border-radius: 3px;
     padding: 3px;
     cursor: pointer;
+}
+
+div.wide {
+	border: 1px solid black;
+	width: 100%;
+}
+
+.link {
+    cursor: pointer;
+}
+
+.icon {
+	vertical-align: middle;
+	margin-right: 5px;
 }

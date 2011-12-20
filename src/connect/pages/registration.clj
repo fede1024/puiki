@@ -80,15 +80,15 @@
            [:td {:colspan 2} 
             (text-field {:size 30} :lastname (or (:lastname data) ""))]
            (error-cell :lastname)]
-          [:tr [:td.head "Ruolo:"]
-           [:td [:input (merge {:type :radio :name "job" :value "student"}
-                          ;(if (= (:job data) "student") {:checked "true"} {})
-                          {:checked "true"}) 
-                 "Studente"]
-            [:input (merge {:type :radio :name "job" :value "professor" :disabled "true"}
-                      (if (= (:job data) "professor") {:checked "true"} {}))
-             "Docente"]]
-           (error-cell :job)]
+          ;[:tr [:td.head "Ruolo:"]
+          ; [:td [:input (merge {:type :radio :name "job" :value "student"}
+          ;                ;(if (= (:job data) "student") {:checked "true"} {})
+          ;                {:checked "true"}) 
+          ;       "Studente"]
+          ;  [:input (merge {:type :radio :name "job" :value "professor" :disabled "true"}
+          ;            (if (= (:job data) "professor") {:checked "true"} {}))
+          ;   "Docente"]]
+          ; (error-cell :job)]
           [:tr [:td {:colspan 3} (recaptcha)]]
           [:tr (when-let [err (first (vali/get-errors :captcha))]
                  [:td.errorMsg [:img.errorMsg {:src "/images/error.png"}] " " err])

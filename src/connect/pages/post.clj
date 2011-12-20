@@ -9,7 +9,6 @@
         hiccup.form-helpers
         somnium.congomongo)
  (:require [clojure.contrib.string :as str]
-           [clj-json.core :as json]
            [noir.server :as server]
            [noir.validation :as vali]
            [noir.session :as session]
@@ -20,25 +19,6 @@
     (if (not (user? (current-id)))
       (render "/permission-denied"))
     (render "/login" {:redirect (get-request-uri request)})))
-
-(defn js-do [& objs]
-  (apply str objs))
-
-(defn js-show [& objs]
-  (str "$('" (apply str objs) "').css('display', '');"))
-
-(defn js-hide [& objs]
-  (str "$('" (apply str objs) "').css('display', 'none');"))
-
-(defn js-get [path id opts]
-  (str "$('#loader').css('display', 'inline');"
-    "$.get('" path "', " (json/generate-string opts) ", function(content) {$('#" id "').html(content);"
-    "$('#loader').css('display', 'none');});"))
-
-(defn js-post [path id opts]
-  (str "$('#loader').css('display', 'inline');"
-    "$.post('" path "', " (json/generate-string opts) ", function(content) {$('#" id "').html(content);"
-    "$('#loader').css('display', 'none');});"))
 
 (defn js-vote [post dir]
   (js-get (post-vote-path post) (str "votes" (:_id post)) {:dir dir}))

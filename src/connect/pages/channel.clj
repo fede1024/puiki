@@ -27,70 +27,50 @@
   "contiene " (or (:posts ch) 0) " post ed è seguito da "
   (or (count-followers (:_id ch)) 0) " persone.")
 
-(defpartial channel-follow-buttons [c action & {:keys [only-button]}]
-  (if (= action 'add)
-    [:button {:class "follow"
-              :onClick (js-post "/channel/follow" (:_id c)
-                         {:channel-id (str (:_id c)) :action "add" :only-button only-button})}
-     "Segui"]
-    [:button {:class "follow"
-              :onClick (js-post "/channel/follow" (:_id c)
-                         {:channel-id (str (:_id c)) :action "remove" :only-button only-button})}
-     "Non seguire più"]))
+(defpartial channel-list-link [c & {:keys [name info description]}]
+  [:li.channel
+   (link-to (channel-path c) (or name (:name c)))
+   (when info [:p.channelInfo (channel-info c)])
+   (when description
+     [:p.channelDescription (:description c)])])
 
-(defpartial channel-data [c & {:keys [follows name]}]
-  (if (get follows (:_id c))
-    [:img.channel {:src "/images/red-dot.png"}]
-    [:img.channel {:src "/images/dot.png"}])
-  (link-to (channel-path c) (or name (:name c)))
-  (when (current-id)
-    (channel-follow-buttons c
-      (if (get follows (:_id c)) 'remove 'add)))
-  [:p.channelInfo (channel-info c)]
-  (when (= (:type c) "group")
-    [:p.channelDescription (:description c)]))
+(def cardinali 
+  {1 "Primo"  2 "Secondo"  3 "Terzo"  4 "Quarto"  5 "Quinto"})
+
+(defpartial field-channels [f]
+  (let [channels (fetch :channels :where {:type :field :field (:name f)}
+                        :sort {:year 1})]
+     (if (not (empty? channels))
+       [:ul.years
+        (for [c channels]
+          [:li.year
+           [:h3.section
+            [:a {:href "#" :onClick (js-toggle-anim "#channels_" (:year c) "_" (:_id f))}
+              [:img.year {:src "/images/users.png"}] (cardinali (:year c)) " anno"]]
+           [:div.section {:id (str "channels_" (:year c) "_" (:_id f)) :style "display: none"}
+            [:p (link-to (channel-path c) "Canale dedicato a " (:name c))]
+            (for [course (fetch :courses :where {:field (:name f) :year (:year c)}
+                                :sort {:name 1})]
+              (if-let [ch (fetch-one :channels :where {:code (:code course)})]
+                [:p (link-to (channel-path ch) (:name ch))]))]])]
+       "Nessun canale presente.")))
 
 (defpage "/channel/list" []
   (let [follows (when (current-id)
                   (into #{} (:follows (fetch-one :people :where {:_id (current-id)}))))]
     (layout "Tutti i canali"
-      (link-to "/user/new-course" "Crea nuovo corso")
-      [:h1.section "Elenco Indirizzi di studio:"]
+      [:h1.section "Indirizzi di studio:"]
       [:ul.fields
        (for [f (fetch :fields :sort {:name 1})]
-         (html [:li.field [:h2.section (:name f) ":"]]
-           (let [channels (fetch :channels :where {:field (:name f)})
-                 years (sort-by :year > (filter #(= (:type %) "field") channels))
-                 courses (sort-by :name (fetch :courses :where {:field (:name f)}))]
-               (if (and (empty? years) (empty? courses))
-                 [:p "Nessun canale per " (:name f)]
-                 [:ul.channels
-                  (for [c years]  ;; Canali per l'indirizzo
-                    [:li.channel {:id (:_id c)}
-                     (channel-data c :follows follows)])
-                  (for [course courses] ;; Corsi
-                    (if-let [ch (fetch-one :channels :where {:code (:code course)})]
-                      [:li.channel {:id (:_id ch)}
-                       (channel-data ch :follows follows :name (:name course))]))]))))]
-      [:h1.section "Elenco Gruppi:"]
+         [:li.field 
+          [:h2.section.link {:onClick (js-toggle-anim "#descr_" (:_id f))}
+           [:img.icon {:src "/images/phd.png"}] (:name f)]
+          [:div {:id (str "descr_" (:_id f)) :style "display: none"}
+           (field-channels f)]])]
+      [:h1.section "Gruppi:"]
       [:ul.channels
        (for [c (fetch :channels :where {:type "group"} :sort {:name 1})]
-        [:li.channel {:id (:_id c)}
-         (channel-data c :follows follows)])])))
-
-(defpage [:post "/channel/follow"] {:keys [channel-id action only-button]}
-  (let [id (obj-id channel-id)]
-    (when (current-id)
-      (if (= action "add")
-        (update! :people {:_id (current-id)}
-          {:$push {:follows id}})
-        (update! :people {:_id (current-id)}
-          {:$pull {:follows id}})))
-    (let [c (fetch-one :channels :where {:_id id})
-          follows (into #{} (:follows (fetch-one :people :where {:_id (current-id)})))]
-      (if (= only-button "true")
-        (channel-follow-buttons c (if (get follows id) 'remove 'add) :only-button true)
-        (channel-data c :follows follows)))))
+        (channel-list-link c :description true))])))
 
 (defpartial followers [channel]
   (let [limit 10
@@ -135,17 +115,59 @@
             [:td.postLinkDate (format-timestamp-relative (:created-at post))]]
            [:tr.postLinkSpace]))))])
 
+;; TODO: solo i link agli indirizzi? Dividere la funzione in due?
 (defpartial channel-description [ch]
-  [:p "Il corso si applica agli studenti di:"]
   (if (= (:type ch) "course")
-    [:ul
-    (for [course (fetch :courses :where {:code (:code ch)})]
-      [:li (:field course) " " (:year course) "°anno"])]
+    [:p "Il corso si applica agli studenti di:"
+     [:ul.channels
+      (for [course (fetch :courses :where {:code (:code ch)})]
+        (if-let [channel (fetch-one :channels :where {:type :field :field (:field course) :year (:year course)})]
+          [:li.channel (link-to (channel-path channel) (:field course) " " (:year course) "°anno")]
+          [:li.channel (:field course) " " (:year course) "°anno"]))]]
     [:p (:description ch)]))
+
+(defpartial channel-follow-buttons [c action & {:keys [only-button]}]
+  (if (= action 'add)
+    [:div.follow_button
+     [:img.follow_button {:src "/images/buttons/segui.png"
+                          :style "opacity: 0.7"
+                          :onClick (js-post "/channel/follow" (:_id c)
+                                            {:channel-id (str (:_id c)) :action "add" :only-button only-button})}]
+     [:br] [:p.follow_descr {:style "opacity: 0"} "Clicca per ricevere gli aggiornamenti."]]
+    [:div.follow_button 
+     [:img.follow_button {:src "/images/buttons/following.png"
+                          :style "opacity: 0.7"
+                          :onClick (js-post "/channel/follow" (:_id c)
+                                            {:channel-id (str (:_id c)) :action "remove" :only-button only-button})}]
+      [:br] [:p.follow_descr {:style "opacity: 0"} "Clicca per non ricevere più gli aggiornamenti."]])
+  [:script {:type "text/javascript"}
+   "$('img.follow_button').hover(
+       function() { $(this).stop().animate({ 'opacity': 1 }, 'fast');
+                    $('p.follow_descr').stop().animate({ 'opacity': 1 }, 'fast');},
+       function() { $(this).stop().animate({ 'opacity': 0.7 }, 'fast');
+                    $('p.follow_descr').stop().animate({ 'opacity': 0 }, 'fast');}
+);"])
+
+;; TODO: togliere only-button? Semplificare?
+(defpage [:post "/channel/follow"] {:keys [channel-id action only-button]}
+  (let [id (obj-id channel-id)]
+    (when (current-id)
+      (if (= action "add")
+        (update! :people {:_id (current-id)}
+          {:$push {:follows id}})
+        (update! :people {:_id (current-id)}
+          {:$pull {:follows id}})))
+    (let [c (fetch-one :channels :where {:_id id})
+          follows (into #{} (:follows (fetch-one :people :where {:_id (current-id)})))]
+      (if (= only-button "true")
+        (channel-follow-buttons c (if (get follows id) 'remove 'add) :only-button true)
+        (channel-list-link c :follows follows)))))
 
 (defpage "/channel/:id" {:keys [id]}
   (let [id (obj-id id)
-        ch (fetch-one :channels :where {:_id id})]
+        ch (fetch-one :channels :where {:_id id})
+        follows (when (current-id)
+                  (into #{} (:follows (fetch-one :people :where {:_id (current-id)}))))]
     (if (not ch)
       (render "/not-found")
       (binding [*sidebar* (html (add-post ch)
@@ -155,18 +177,24 @@
             [:p "Nuovo canale creato."])
           (when (= (session/flash-get) :new-course) 
             [:p "Nuovo corso creato."])
-          [:h1.channelName "Canale: " (link-to (channel-path ch) (:name ch))]
-          (channel-description ch)
-          [:p (channel-info ch)]
-          [:p "Canale creato il: " (format-timestamp (:created-at ch))]
-          [:p
-           (when (current-id)
+          (when (current-id)
             [:span {:id id}
-             (let [follows (into #{} (:follows (fetch-one :people :where {:_id (current-id)})))]
-               (channel-follow-buttons ch
-                 (if (get follows id) 'remove 'add) :only-button true))])
-           " " (link-to "/channel/list" "Elenco canali") " "
-           (link-to "/user/following" "Canali seguiti")]
+             (channel-follow-buttons ch (if (get follows id) 'remove 'add) :only-button true)])
+          [:h1.section (link-to (channel-path ch) (:name ch))]
+          (channel-description ch)
+          ;[:p (channel-info ch)]
+          ;[:p "Canale creato il: " (format-timestamp (:created-at ch))]
+          (when (= (:type ch) "field")
+            (html [:h2.section "Corsi:"]
+              [:ul.channels 
+               (for [course (fetch :courses :where {:field (:field ch) :year (:year ch)}
+                                   :sort {:name 1})]
+                 (if-let [c (fetch-one :channels :where {:code (:code course)})]
+                   [:li.channel
+                    (link-to (channel-path c) (:name c))]))]
+              (link-to (encode-url "/user/new-course?" {:field (:field ch) :year (:year ch)})
+                       "Crea nuovo corso")))
+          ;[:p (link-to "/user/following" "Canali seguiti")]
           [:br]
           (let [posts (fetch :posts :where {:channel id :type {:$ne "answer"}
                                             :removed {:$ne true}}
@@ -193,18 +221,11 @@
         (layout (:name ch)
           (if (= (session/flash-get) :new) 
             [:p "Nuovo canale creato."])
-          [:h1.channelName "Canale: " (link-to (channel-path ch) (:name ch))]
+          [:h1.section (link-to (channel-path ch) (:name ch))]
           (channel-description ch)
-          [:p (channel-info ch)]
-          [:p "Canale creato il: " (format-timestamp (:created-at ch))]
-          [:p
-           (when (current-id)
-            [:span {:id id}
-             (let [follows (into #{} (:follows (fetch-one :people :where {:_id (current-id)})))]
-               (channel-follow-buttons ch
-                 (if (get follows id) 'remove 'add) :only-button true))])
-           " " (link-to "/channel/list" "Elenco canali") " "
-           (link-to "/user/following" "Canali seguiti")]
+          ;[:p (channel-info ch)]
+          ;[:p "Canale creato il: " (format-timestamp (:created-at ch))]
+          [:p (link-to "/user/following" "Canali seguiti")]
           [:br]
           (html
             (cond (= show "news")

@@ -78,3 +78,5 @@
 
 ;(stop-server 8080)
 ;(-main)
+
+;(-main "--mongo-db" "connect-copy" "--mongo-user" "fede" "--mongo-pwd" "47a59b7")

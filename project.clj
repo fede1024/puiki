@@ -10,4 +10,6 @@
                  [clj-http "0.2.2"]
                  [clj-json "0.4.3"]
                  [commons-codec "1.5"]]
-  :dev-dependencies [[com.github.robertrolandorg/lein-eclipse "1.1.0"]])
+  :dev-dependencies [[com.github.robertrolandorg/lein-eclipse "1.1.0"]]
+  :keep-non-project-classes true)
+

@@ -1,8 +1,11 @@
 (ns connect.pages.utils
-  (:use hiccup.core
+  (:use noir.core
+        hiccup.core
+        hiccup.page-helpers
     somnium.congomongo)
-  (:require [clojure.contrib.string :as str]
-    [noir.session :as session])
+  (:require [clj-json.core :as json]
+            [clojure.contrib.string :as str]
+            [noir.session :as session])
   (:import [java.util Locale Date Calendar GregorianCalendar]
     [java.text SimpleDateFormat DateFormatSymbols]))
 
@@ -94,6 +97,14 @@
     (timestamp-relative-to-string date)
     "???"))
 
+(defn to-integer [value & [alt]]
+  (if value 
+    (if (integer? value)
+      value
+      (try (Integer/parseInt value)
+        (catch Exception e (or alt 0))))
+    (or alt 0)))
+
 ;(dorun
 ;  (map (fn [date] (println (format-timestamp date) " - " (format-timestamp-relative date)))
 ;    (sort dates)))
@@ -126,3 +137,35 @@
        (str "$('body').load('" url "');")
        "});"]]
      [:body ]]))
+
+(defn encode-url [url params]
+  (str url (encode-params params)))
+
+(defn js-do [& objs]
+  (apply str objs))
+
+(defn js-show [& objs]
+  (str "$('" (apply str objs) "').css('display', '');"))
+
+(defn js-show-anim [& objs]
+  (str "$('" (apply str objs) "').show('clip');"))
+
+(defn js-toggle-anim [& objs]
+  (str "$('" (apply str objs) "').toggle('medium');"))
+
+(defn js-hide [& objs]
+  (str "$('" (apply str objs) "').css('display', 'none');"))
+
+(defn js-get [path id opts]
+  (str "$('#loader').css('display', 'inline');"
+    "$.get('" path "', " (json/generate-string opts) ", function(content) {$('#" id "').html(content);"
+    "$('#loader').css('display', 'none');});"))
+
+(defn js-post [path id opts]
+  (str "$('#loader').css('display', 'inline');"
+    "$.post('" path "', " (json/generate-string opts) ", function(content) {$('#" id "').html(content);"
+    "$('#loader').css('display', 'none');});"))
+
+(defpartial jquery-accordion [id]
+  [:script {:type "text/javascript"}
+   "$(function() {$( '#" id "' ).accordion();});"])

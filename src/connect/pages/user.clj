@@ -35,6 +35,9 @@
     [:div.section
      [:p (link-to "/user/list" "Elenco utenti")]]))
 
+(defn get-person-study-year [person]
+  (min 5 (- 2012 (:year person))))
+
 (defpartial student-info [person]
   [:h2.section "Account:"]
   [:table
@@ -43,12 +46,13 @@
    [:tr [:td.head "Data iscrizione: "]
     [:td (format-timestamp (:created-at person))]]]
   [:h2.section "Indirizzo di studio:"]
-  (let [channel (fetch-one :channels :where {:field (:field person) :year (:year person)})]
+  (let [channel (fetch-one :channels :where {:field (:field person)
+                                             :year (get-person-study-year person)})]
     [:table
      [:tr [:td.head "Indirizzo:"]
       [:td (:field person)]]
-     [:tr [:td.head "Anno immatr.:"] [:td (:year person)]]
-     [:tr [:td.head "Canale associato: "] ;; TODO: Non mettere qui
+     [:tr [:td.head "Anno immatr.:"] [:td (:year person) " (" (get-person-study-year person) "° anno)"]]
+     [:tr [:td.head "Canale associato: "]
       [:td (if (and (:field person) channel)
              (link-to (channel-path channel) (:name channel))
              "Nessuno.")]]]))
@@ -77,14 +81,6 @@
     (layout "Elenco utenti"
       [:h2.section "Utenti registrati: (" (count users)")"]
       (people-table users :lastname true :date true))))
-
-(defn to-integer [value]
-  (if value 
-    (if (integer? value)
-      value
-      (try (Integer/parseInt value)
-        (catch Exception e 0)))
-    0))
 
 (defpartial account-edit-form [person & [data]] ;; TODO: fix data
   [:h2.section "Account:"]
@@ -133,24 +129,6 @@
           "Non hai l'autorizzazione per modificare i dati.")
         "Utente non esistente."))))
 
-(defn get-course-year [year]
-  (- 2012 year))
-
-(defn field-channel-name [field-name year]
-  (str field-name " " (get-course-year year) "°anno"))
-
-(defn field-channel-description [field-name year]
-  (str "Canale di " field-name " " (get-course-year year) "°anno."))
-
-(defn create-field-channel [field-name year]
-  (let [channel (fetch-one :channels :where {:field field-name :year year})]
-    (or channel
-      (insert! :channels
-        {:name (field-channel-name field-name year) :privacy :public
-         :description (field-channel-description field-name year)
-         :type :field   :field field-name
-         :year year     :created-at (java.util.Date.)}))))
-
 (defn valid? [{:keys [id field year firstname lastname]}]
   (vali/rule (vali/has-value? field)
      [:name "Il campo non deve essere vuoto."])
@@ -170,64 +148,59 @@
 (defpage [:post "/user/:id/edit"] {:keys [id year field firstname lastname] :as person}
   (if (not (valid? person))
     (render "/user/:id/edit" person)
-    (let [y (Integer/parseInt year)]
+    (let [y (Integer/parseInt year)
+          channel (fetch-one :channels :where {:field field :year y})]
       (update! :people {:_id id}
         {:$set {:year y :field field :firstname firstname :lastname lastname}})
-      (follow-channel (:_id (create-field-channel field y)) id)
+      (when channel (follow-channel (:_id channel) id))
       (session/flash-put! :done)
       (resp/redirect (user-info-path id)))))
 
 (defpage "/user/following" []
-  (layout "Canali seguiti"
-    (let [user (fetch-one :people :where {:_id (current-id)})
-          channels (map #(fetch-one :channels :where {:_id %})
-                     (:follows user))
-          fields (filter #(= (:type %) "field") channels)
-          groups (filter #(= (:type %) "group") channels)
-          courses (filter #(= (:type %) "course") channels)
-          new-posts (filter #(= (:action %) "new-post") (:news user))
-          new-answers (filter #(= (:action %) "new-answer") (:news user))
-          new-comments (filter #(= (:action %) "new-comment") (:news user))]
-      (html
-        ;[:h1.section "Notifiche: " (count (:news user))]
-        [:h1.section "Nuovi post: " (count new-posts)]
-        [:div.section
-         [:p (link-to "/channel/list" "Modifica canali seguiti")]
-         (let [groups (group-by :channel new-posts)]
-           (for [[channel group] groups]
-             (html [:h2.section (:name (fetch-one :channels :where {:_id channel}))]
-             (channel/post-links
-               (map #(fetch-one :posts :where {:_id (:post %)}) group) :show-removed))))
-         [:p "Nuove risposte ai tuoi post: " (count new-answers)]
-         (for [n new-answers]
-           [:p [:img {:src "/images/dot.png" :height 10}] " "
-            (link-to (str "/post/" (:post n)) (:title n))
-            " - "  (:question-title n)])
-         [:p "Nuovi commenti ai tuoi post: " (count new-comments)]
-         (for [n new-comments]
-           [:p [:img {:src "/images/dot.png" :height 10}] " "
-            (link-to (str "/post/" (:post n)) (:title n))])]
-        [:h1.section "Canali seguiti:"]
-        [:div.section
-         [:h2.section "Indirizzi di studio: " (count fields)]
-         [:ul.channels
-          (for [c fields]
-            [:li.channel [:img {:src "/images/dot.png" :height 10}] " "
-             (link-to (channel-path c) (:name c))
-             [:p.channelInfo (channel/channel-info c)]])]
-         [:h2.section "Corsi: " (count courses)]
-         [:ul.channels
-          (for [c courses]
-            [:li.channel [:img {:src "/images/dot.png" :height 10}] " "
-             (link-to (channel-path c) (:name c))
-             [:p.channelInfo (channel/channel-info c)]])]
-         [:h2.section "Gruppi: " (count groups)]
-         [:ul.channels
-          (for [c groups]
-            [:li.channel [:img {:src "/images/dot.png" :height 10}] " "
-             (link-to (channel-path c) (:name c))
-             [:p.channelInfo (channel/channel-info c)]
-             [:p.channelDescription (:description c)]])]]))))
+  (let [user (fetch-one :people :where {:_id (current-id)})
+        channels (map #(fetch-one :channels :where {:_id %})
+                      (:follows user))
+        fields (filter #(= (:type %) "field") channels)
+        groups (filter #(= (:type %) "group") channels)
+        courses (filter #(= (:type %) "course") channels)
+        new-posts (filter #(= (:action %) "new-post") (:news user))
+        new-answers (filter #(= (:action %) "new-answer") (:news user))
+        new-comments (filter #(= (:action %) "new-comment") (:news user))]
+    (layout "Canali seguiti"
+      [:h1.section "Nuovi post: " (count new-posts)]
+      [:div.section
+       (let [groups (group-by :channel new-posts)]
+         (for [[channel group] groups]
+           (html [:h2.section (:name (fetch-one :channels :where {:_id channel}))]
+                 (channel/post-links
+                   (map #(fetch-one :posts :where {:_id (:post %)}) group) :show-removed))))
+       [:p "Nuove risposte ai tuoi post: " (count new-answers)]
+       (for [n new-answers]
+         [:p (link-to (str "/post/" (:post n)) (:title n))
+          " - "  (:question-title n)])
+       [:p "Nuovi commenti ai tuoi post: " (count new-comments)]
+       (for [n new-comments]
+         [:p (link-to (str "/post/" (:post n)) (:title n))])]
+      [:h1.section "Canali seguiti:"]
+      [:div.section
+       [:h2.section "Indirizzi di studio: " (count fields)]
+       [:ul.channels
+        (for [c fields]
+          [:li.channel (link-to (channel-path c) (:name c))
+           ;[:p.channelInfo (channel/channel-info c)]
+           ])]
+       [:h2.section "Corsi: " (count courses)]
+       [:ul.channels
+        (for [c courses]
+          [:li.channel (link-to (channel-path c) (:name c))
+           ;[:p.channelInfo (channel/channel-info c)]
+           ])]
+       [:h2.section "Gruppi: " (count groups)]
+       [:ul.channels
+        (for [c groups]
+          [:li.channel (link-to (channel-path c) (:name c))
+           [:p.channelInfo (channel/channel-info c)]
+           [:p.channelDescription (:description c)]])]])))
 
 (defpage "/user/new-course" {:keys [field name code year] :as data}
   (layout "Nuovo corso di studi"
@@ -288,35 +261,35 @@
     (not (vali/errors? :field :name :code :year))))
 
 (defpage [:post "/user/new-course"] {:keys [field name code year confirm] :as data}
-         (if (current-id)
-           (if (valid-course? data)
-             (let [field (.trim field)
-                   name (.trim name)
-                   code (.trim code)
-                   old-channel (fetch-one :channels :where {:type :course :code code})]
-               (if (and old-channel (not confirm))
-                 (layout "Conferma nuovo corso"
-                         [:h1.section "Conferma corso " code " - " name]
-                         [:p "Esiste già un corso di codice " code ", ed è associato ai seguenti indirizzi di studio:"]
-                         [:ul
-                          (for [course (fetch :courses :where {:code code})]
-                            [:li (:field course) " " (:year course) "°anno - " (:name course)])]
-                         [:p "Vuoi associare anche \"" field " " year "°anno\" a questo corso?"]
-                         (form-to {:accept-charset "utf-8" } [:get "/user/new-course"]
-                                  (html (for [[k v] data]
-                                          [:input {:type :hidden :name k :value v}]))
-                                  (submit-button "Annulla"))
-                         (form-to {:accept-charset "utf-8" } [:post "/user/new-course"]
-                                  (html (for [[k v] data]
-                                          [:input {:type :hidden :name k :value v}]))
-                                  [:input {:type :hidden :name :confirm :value :true}]
-                                  (submit-button "Conferma")))
-                 (let [channel (or old-channel (create-course-channel! name code))]
-                   (create-course! field name year code)
-                   (session/flash-put! (if old-channel :new-course :new-channel))
-                   (resp/redirect (channel-path channel)))))
-             (render "/user/new-course" data))
-           (render "/permission-denied")))
+  (if (current-id)
+    (if (valid-course? data)
+      (let [field (.trim field)
+            name (.trim name)
+            code (.trim code)
+            old-channel (fetch-one :channels :where {:type :course :code code})]
+        (if (and old-channel (not confirm))
+          (layout "Conferma nuovo corso"
+            [:h1.section "Conferma corso " code " - " name]
+            [:p "Esiste già un corso di codice " code ", ed è associato ai seguenti indirizzi di studio:"]
+            [:ul
+             (for [course (fetch :courses :where {:code code})]
+               [:li (:field course) " " (:year course) "°anno - " (:name course)])]
+            [:p "Vuoi associare anche \"" field " " year "°anno\" a questo corso?"]
+            (form-to {:accept-charset "utf-8" } [:get "/user/new-course"]
+              (html (for [[k v] data]
+                      [:input {:type :hidden :name k :value v}]))
+              (submit-button "Annulla"))
+            (form-to {:accept-charset "utf-8" } [:post "/user/new-course"]
+              (html (for [[k v] data]
+                      [:input {:type :hidden :name k :value v}]))
+              [:input {:type :hidden :name :confirm :value :true}]
+              (submit-button "Conferma")))
+          (let [channel (or old-channel (create-course-channel! name code))]
+            (create-course! field name (Integer/parseInt year) code)
+            (session/flash-put! (if old-channel :new-course :new-channel))
+            (resp/redirect (channel-path channel)))))
+      (render "/user/new-course" data))
+    (render "/permission-denied")))
 
 (defpage "/user/feedback" []
   (layout "Feedbacks"

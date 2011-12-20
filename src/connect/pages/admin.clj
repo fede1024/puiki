@@ -49,35 +49,71 @@
   (layout "Zero"
     [:h2.section "Divido per zero: " (/ 1 0)]))
 
-(defpage "/admin/fields" [& [field]]
-  (layout "Amministrazione"
-    (vali/on-error :name error-text)
+(defpage "/admin/fields" {:keys [field]}
+  (layout "Gestione indirizzi di studio"
+    [:h1.section "Gestione indirizzi di studio"]
     [:h2.section "Aggiungi indirizzo di studio:"]
+    (vali/on-error :name error-text)
+    (vali/on-error :year-start error-text)
+    (vali/on-error :year-end error-text)
     (form-to {:accept-charset "utf-8"} [:post "/admin/add-field"]
-      (text-field {:size 25} :name
-        (if (vali/errors? :name) (or (:name field) "")))
-      (submit-button "Aggiungi"))
+      [:p (text-field {:size 25} :name
+                      (or (:name field) ""))]
+      [:p "Genera canali dall'anno"
+       (drop-down :year-start (range 1 5)
+                  (to-integer (:year-start field)))
+       "all'anno"
+       (drop-down :year-end (range 2 6)
+                  (or (to-integer (:year-end field) nil) 5))]
+      [:p (submit-button "Aggiungi")])
     [:h2.section "Cancella indirizzo di studio:"]
     [:table
-     (for [field (fetch :fields)]
-       [:tr [:td (:name field)]
+     (for [field (fetch :fields :sort {:name 1})]
+       [:tr [:td (:name field) " (" (:year-start field) " -> " (:year-end field) ")"]
         [:td (form-to [:post "/admin/rem-field"]
                (hidden-field :name (:name field))
                (submit-button "Rimuovi"))]])]))
 
-(defn valid? [{:keys [name]}]
-  (vali/rule (vali/has-value? name)
-     [:name "Il campo non deve essere vuoto."])
-  (vali/rule (not (fetch-one :fields :where {:name name}))
-     [:name "Esiste già."])
-  (not (vali/errors? :name)))
+(defn field-channel-name [field-name year]
+  (str field-name " " year "°anno"))
 
-(defpage [:post "/admin/add-field"] {:as field}
+(defn field-channel-description [field-name year]
+  (str "Canale di " field-name " " year "°anno."))
+
+(defn create-field-channel [field-name year]
+  (insert! :channels
+     {:name (field-channel-name field-name year) :privacy :public
+      :description (field-channel-description field-name year)
+      :type :field   :field field-name
+      :year year     :created-at (java.util.Date.)}))
+
+(defn valid? [{:keys [name year-start year-end]}]
+  (let [ys (to-integer year-start -1)
+        ye (to-integer year-end 6)]
+    (vali/rule (vali/has-value? name)
+      [:name "Il campo non deve essere vuoto."])
+    ;(vali/rule (not (fetch-one :fields :where {:name name}))
+    ;  [:name "Esiste già."])
+    (vali/rule (and (>= ys 1) (< ys ye))
+      [:year-start "Anno di partenza non valido."])
+    (vali/rule (<= ye 5)
+      [:year-end "Anno di fine non valido."])
+    (not (vali/errors? :name :year-start :year-end))))
+
+(defpage [:post "/admin/add-field"] {:keys [name year-start year-end] :as field}
   (if (valid? field)
-    (do
-      (insert! :fields (merge field {:created-at (java.util.Date.)}))
+    (let [ys (Integer/parseInt year-start)
+          ye (Integer/parseInt year-end)]
+      (if (fetch-one :fields :where {:name name})
+        (update! :fields {:name name}
+           {:$set {:year-start year-start :year-end year-end}})
+        (insert! :fields (merge field {:created-at (java.util.Date.)})))
+      (doall
+        (for [year (range ys (+ ye 1))]
+          (when (not (fetch-one :channels :where {:field name :year year}))
+            (create-field-channel name year))))
       (resp/redirect "/admin/fields"))
-    (render "/admin/fields" field)))
+    (render "/admin/fields" {:field field})))
 
 (defpage [:post "/admin/rem-field"] {:as field}
   (destroy! :fields {:name (:name field)})

@@ -157,7 +157,7 @@
          (post-bottom post))])))
 
 (defpartial post-div [post & {:keys [preview]}]
-  [:div.post
+  [:div.post.anchor {:id (str "post" (:_id post))}
    (post-table post :preview preview)])
 
 (defpartial post-summary [post]

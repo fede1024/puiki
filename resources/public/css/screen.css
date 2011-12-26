@@ -416,3 +416,8 @@ div.wide {
 	vertical-align: middle;
 	margin-right: 5px;
 }
+
+.anchor {
+    padding-top: 50px;
+    margin-top: -50px;
+}

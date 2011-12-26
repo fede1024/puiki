@@ -34,7 +34,9 @@
   (str "/edit/comment/" (:_id post)))
 
 (defn post-path [post]
-  (str "/post/" (:_id post)))
+  (if (= (:type post) "answer")
+    (str "/post/" (:answers-to post) "#post" (:_id post))
+    (str "/post/" (:_id post))))
 
 (defn post-vote-path [post]
   (str "/edit/vote/" (:_id post)))

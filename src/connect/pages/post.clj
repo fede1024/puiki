@@ -81,14 +81,7 @@
     [:button {:class "postComment" :onClick (js-comment post)} "Commenta"]]]
   [:tr.postBottom {:id (str "actions" (:_id post))}    ;; Rispondi/Commenta
    [:td.postInfo
-    (link-to (post-path post) "Link") " "
-    (when (= (:type post) "answer")
-      (html (link-to (post-path (fetch-one :posts :where {:_id (:answers-to post)}))
-              "Domanda") " "))
-    (link-to (post-path post)
-      (when (= (:type post) "question")
-        (str "Risposte: " (or (:answers post) 0))))
-    (str " Commenti: " (count (:comments post)))]
+    ]
    [:td.postActions
     (when (= (:type post) "question")
       (form-to [:get (user-reply-path post)]
@@ -139,7 +132,9 @@
        [:tr
         (let [p (fetch-one :people :where {:_id (:author post)})]
           [:td.postAuthor (user-description p)])
-        [:td.postVote {:rowspan 2}
+        [:td.postEdit {:rowspan 2}
+         [:a {:href (post-path post)}
+          [:img.edit {:src "/images/link.png" :alt "Link" :title "Link permanente"}]]
          (when (and (not preview) (current-id) 
                  (or (admin? (current-id)) (= (current-id) (:author post))))
            [:span {:id (str "remove" (:_id post))}

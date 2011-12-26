@@ -34,6 +34,8 @@ h2.answers {
 }
 
 span.vote {
+	color: #3366CC;
+    font-size: 10pt;
     margin-left: 10px;
     white-space:nowrap;
     height: 100%;
@@ -43,6 +45,11 @@ span.vote {
 img.vote, img.remove{
     vertical-align: middle;
     cursor: pointer;
+}
+
+img.edit {
+    vertical-align: middle;
+    padding-right: 3px;
 }
 
 span.voteValue{
@@ -112,9 +119,7 @@ td.postDate, td.lastPostDate{
     font-size: 8pt;
 }
 
-td.postVote {
-    color: #3366CC;
-    font-size: 10pt;
+td.postEdit {
     text-align: right;
     text-decoration: none;
     vertical-align: middle;

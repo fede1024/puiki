@@ -76,23 +76,26 @@
   (let [limit 10
         flw (shuffle (fetch :people :where {:follows (:_id channel)}))
         count (count flw)]
-    (html [:h2.section "Followers: ("
-           (min limit count) (when (> count limit) (str " di " count)) ")"]
-      (people-table (sort-by :lastname (sort-by :firstname (take limit flw)))
-        :lastname (current-id))
-      (when (> count limit)
-        [:p "..."]))))
+    [:div.sideBarSection
+     [:h2.section "Followers: ("
+      (min limit count) (when (> count limit) (str " di " count)) ")"]
+     (people-table (sort-by :lastname (sort-by :firstname (take limit flw)))
+                   :lastname (current-id))
+     (when (> count limit)
+       [:p "..."])]))
 
 (defpartial add-post [channel]
-  [:h2.section "Modifica: "]
-  (form-to [:get "/edit/new-post"]
-    [:input {:type :hidden :name "channel-id" :value (:_id channel)}]
-    (submit-button {:class "postNew"} "Crea nuovo post"))
-  [:h2.section "Cerca: "]
-  (form-to [:get "/search"]
-    [:input {:type :hidden :name "channel-id" :value (:_id channel)}]
-    (text-field {:class :channelSearchText :placeholder "Testo ricerca"} :text)
-    (submit-button {:class "channelSearch"} "Cerca")))
+  [:div.sideBarSection
+   [:h2.section "Modifica: "]
+   (form-to [:get "/edit/new-post"]
+     [:input {:type :hidden :name "channel-id" :value (:_id channel)}]
+     (submit-button {:class "postNew"} "Crea nuovo post"))]
+  [:div.sideBarSection
+   [:h2.section "Cerca: "]
+   (form-to [:get "/search"]
+     [:input {:type :hidden :name "channel-id" :value (:_id channel)}]
+     (text-field {:class :channelSearchText :placeholder "Testo ricerca"} :text)
+     (submit-button {:class "channelSearch"} "Cerca"))])
 
 (defpartial post-links [posts & [show-removed]]
   [:table.postLink

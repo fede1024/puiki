@@ -86,16 +86,16 @@
 (defpartial last-registrations []
   [:h2.section "Ultimi utenti registrati:"]
   (people-table (fetch :people :limit 5 :sort {:created-at -1})
-    :date true ;:lastname (not (nil? (current-id)))
-    :id (admin? (current-id))) [:br]
+     :date true ;:lastname (not (nil? (current-id)))
+     :id (admin? (current-id))) [:br]
   "Totale " (link-to "/user/list" (fetch-count :people) " utenti") ".")
 
 (defpartial user-sidebar []
   ;(last-posts)
-  (last-registrations ))
+   [:div.sideBarSection (last-registrations)])
 
 (defpartial admin-sidebar []
-  [:div.adminSidebar
+  [:div.sideBarSection
    [:h2.section "Strumenti di amministrazione"]
    [:p (link-to "/admin/" "Pagina amministratore")]
    [:p (link-to "/logs/errors/" "Log degli errori.")]])
@@ -103,7 +103,7 @@
 (defpartial default-sidebar []
   (let [id (current-id)]
     (if (not id)
-      (html (last-registrations))
+      [:div.sideBarSection (last-registrations)]
       (html
         (when (admin? id) (admin-sidebar))
         (when (user? id)  (user-sidebar))))))
@@ -142,10 +142,9 @@
   [:div.body
    [:div.sideBar
     (status-section)
-    [:div.sideBarSection
-     (if (fn? *sidebar*)
-       (*sidebar*)
-       (str *sidebar*))]
+    (if (fn? *sidebar*)
+      (*sidebar*)
+      (str *sidebar*))
     [:div.sideBarSection
      fb-like-box]]
    [:div.content content sh-highlight]])

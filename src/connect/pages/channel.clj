@@ -207,11 +207,17 @@
                                  :sort {:created-at -1} :limit 5)]
             (html
               [:h2.lastQuestions [:img.middle {:src "/images/question-big.png"}] " Ultime domande: "]
-              (post-links questions)
-              [:p.right (link-to (str (channel-path ch) "/questions") "Mostra tutte le domande")]
+              (if (empty? questions)
+                [:p "Non ci sono ancora domande in questo canale."]
+                (html 
+                  (post-links questions)
+                  [:p.right (link-to (str (channel-path ch) "/questions") "Mostra tutto")]))
               [:h2.lastPages [:img.middle {:src "/images/page-big.png"}] " Ultime pagine create:"]
-              (post-links pages)
-              [:p.right (link-to (str (channel-path ch) "/news") "Mostra tutte le pagine")])))))))
+              (if (empty? pages)
+                [:p "Non ci sono ancora pagine in questo canale."]
+                (html
+                  (post-links pages)
+                  [:p.right (link-to (str (channel-path ch) "/news") "Mostra tutto")])))))))))
             
 (defpage "/channel/:id/:show" {:keys [id show]}
   (let [id (obj-id id)
@@ -221,22 +227,18 @@
       (binding [*sidebar* (html (add-post ch)
                             (followers ch))]
         (layout (:name ch)
-          (if (= (session/flash-get) :new) 
-            [:p "Nuovo canale creato."])
           [:h1.section (link-to (channel-path ch) (:name ch))]
           (channel-description ch)
           ;[:p (channel-info ch)]
           ;[:p "Canale creato il: " (format-timestamp (:created-at ch))]
           ;[:p (link-to "/user/following" "Canali seguiti")]
           [:br]
-          (html
-            (cond (= show "news")
-              [:div.news
-               [:h2.section [:img.middle {:src "/images/page.png"}] "Tutte le pagine:"]
-               (post-links (fetch :posts :where {:channel id :type "normal"}
-                             :sort {:created-at -1}))]
-              (= show "questions")
-              [:div.questions
-               [:h2.section [:img.middle {:src "/images/question.png"}] "Tutte le domande: "]
-               (post-links (fetch :posts :where {:channel id :type "question"}
-                             :sort {:created-at -1}))])))))))
+          (cond (= show "news")
+            (html
+             [:h2.lastPages [:img.middle {:src "/images/page-big.png"}] "Tutte le pagine:"]
+             (post-links (fetch :posts :where {:channel id :type "normal"}
+                                :sort {:created-at -1})))
+            (= show "questions")
+            (html [:h2.lastQuestions [:img.middle {:src "/images/question-big.png"}] "Tutte le domande: "]
+             (post-links (fetch :posts :where {:channel id :type "question"}
+                                :sort {:created-at -1})))))))))

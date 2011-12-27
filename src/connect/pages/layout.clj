@@ -114,29 +114,34 @@
 (defpartial layout-header []
   [:div.headerContainer
    [:div.header
-    [:a.name {:href "/"}
-     [:img.logo {:src "/images/polito.png"}] "PoliConnect"]
+    [:a.logo {:href "/"}
+     [:img.logo {:src "/images/policonnect.png"}]]
     [:div.rfloat
-     [:a.header {:href "/" :title "Home"}
+     [:a {:href "/" :title "Home"}
      [:img.header {:src "/images/home.png"}]]
-     [:a.header {:href "/user/following" :title "Canali seguiti e notifiche"}
+     [:a {:href "/user/following" :title "Canali seguiti e notifiche"}
       (if (current-id)
         (let [news (count (:news (fetch-one :people :where {:_id (current-id)})))]
           (if (<= news 5)
-            [:img.header {:src (str "/images/stars/" news ".png")}]
-            [:img.header {:src "/images/stars/5more.png"}]))
-        [:img.header {:src "/images/stars/0.png"}])]
-     [:a.header {:href "/channel/list" :title "Tutti i canali"}
-      [:img.header {:src "/images/channels.png"}]]
-     [:a.header {:href "/search" :title "Ricerca"}
-      [:img.header {:src "/images/search.png"}]]
-     [:a.header {:href "/user/" :title "Info utente"}
-      [:img.header {:src "/images/user.png"}]]
+            [:img.header.border {:src (str "/images/stars/" news ".png")}]
+            [:img.header.border {:src "/images/stars/5more.png"}]))
+        [:img.header.border {:src "/images/stars/0.png"}])]
+     [:a {:href "/channel/list" :title "Tutti i canali"}
+      [:img.header.border {:src "/images/channels.png"}]]
+     [:a {:href "/search" :title "Ricerca"}
+      [:img.header.border {:src "/images/search.png"}]]
+     [:a {:href "/user/" :title "Info utente"}
+      [:img.header.border {:src "/images/user.png"}]]
      (if (admin? (current-id))
-       [:a.header {:href "/admin/" :title "Amministratore"}
-        [:img.header {:src "/images/admin.png"}]]
-       [:a.header {:href "/user/feedback" :title "Feedback"}
-      [:img.header {:src "/images/feedback.png"}]])]]])
+       [:a {:href "/admin/" :title "Amministratore"}
+        [:img.header.border {:src "/images/admin.png"}]]
+       [:a {:href "/user/feedback" :title "Feedback"}
+      [:img.header.border {:src "/images/feedback.png"}]])
+     [:script {:type "text/javascript"}
+   "$('img.header').hover(
+       function() { $(this).css({ 'background-color': '#c2ddfd' })},
+       function() { $(this).css({ 'background-color': '#AAD0FF' })}
+);"]]]])
 
 (defpartial layout-body [content]
   [:div.body
@@ -164,7 +169,7 @@
      [:meta {:name "viewport" :content "width=device-width, initial-scale=1, maximum-scale=1"}]
      [:link {:rel "shortcut icon" :href "/images/favicon.ico"}]
      [:script {:type "text/javascript" :src "/jquery-1.7.1.min.js"}]
-     [:script {:type "text/javascript" :src "https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.min.js"}]
+     ;[:script {:type "text/javascript" :src "https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.min.js"}]
      ;[:script {:type "text/javascript" :src "/test.js"}]
      (include-css "/css/reset.css")
      (include-css "/css/screen.css")

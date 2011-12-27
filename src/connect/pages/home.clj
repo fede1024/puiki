@@ -47,11 +47,11 @@
 (defpage "/" []
   (layout "PoliConnect"
     (info-section)
-    [:h2.section [:img.middle {:src "/images/question.png"}] "Domande più recenti:"]
+    [:h2.lastQuestions [:img.middle {:src "/images/question-big.png"}] " Domande più recenti:"]
     (let [posts (fetch :posts :where {:removed {:$ne true} :type :question}
                        :sort {:created-at -1} :limit 5)]
       (channel/post-links posts))
-    [:h2.section [:img.middle {:src "/images/page.png"}] "Pagine più recenti:"]
+    [:h2.lastPages [:img.middle {:src "/images/page-big.png"}] " Pagine più recenti:"]
     (let [posts (fetch :posts :where {:removed {:$ne true} :type :normal}
                        :sort {:created-at -1} :limit 5)]
       (channel/post-links posts))))

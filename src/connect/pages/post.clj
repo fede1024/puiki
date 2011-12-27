@@ -142,7 +142,9 @@
             (vote-section post)])]]
        [:tr [:td.postDate (format-timestamp-relative (:created-at post))]]
        [:tr [:td.postContent {:colspan 2}
-             [:div.postContent (:content post)]]]
+             (if (= (:type post) "normal")
+               [:div.pageContent (:content post)]
+               [:div.questionContent (:content post)])]]
        (when (not preview)
          [:tr [:td {:id (str "comments" (:_id post))}
                (post-comments post)]])

@@ -13,6 +13,16 @@ h1.channelName {
     color: #3366CC;
 }
 
+h2.lastQuestions, h2.lastPages {
+    font-size: 17pt;
+    font-weight: normal;
+    color: #1144AA;
+    /*border-bottom: 1px dashed #00A9FD;*/
+    padding: 2px;
+    margin-top: 10px;
+    margin-bottom: 0px;
+}
+
 table.channel {
     width:100%;
 }

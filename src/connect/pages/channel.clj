@@ -206,13 +206,12 @@
                 questions (fetch :posts :where {:channel id :type "question" :removed {:$ne true}}
                                  :sort {:created-at -1} :limit 5)]
             (html
-              [:h2.section [:img.middle {:src "/images/question.png"}] "Ultime domande: "]
+              [:h2.lastQuestions [:img.middle {:src "/images/question-big.png"}] " Ultime domande: "]
               (post-links questions)
-              [:p (link-to (str (channel-path ch) "/questions") "Mostra tutte le domande")]
-              [:br]
-              [:h2.section [:img.middle {:src "/images/page.png"}] "Ultime pagine create:"]
+              [:p.right (link-to (str (channel-path ch) "/questions") "Mostra tutte le domande")]
+              [:h2.lastPages [:img.middle {:src "/images/page-big.png"}] " Ultime pagine create:"]
               (post-links pages)
-              [:p (link-to (str (channel-path ch) "/news") "Mostra tutte le pagine")])))))))
+              [:p.right (link-to (str (channel-path ch) "/news") "Mostra tutte le pagine")])))))))
             
 (defpage "/channel/:id/:show" {:keys [id show]}
   (let [id (obj-id id)

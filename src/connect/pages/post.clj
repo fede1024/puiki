@@ -52,8 +52,8 @@
     :else nil))
 
 (def post-images
-  {"normal"   [:img.middle {:src "/images/page.png"}]
-   "question" [:img.middle {:src "/images/question.png"}]
+  {"normal"   [:img.middle {:src "/images/page-big.png"}]
+   "question" [:img.middle {:src "/images/question-big.png"}]
    "answer"   [:img.middle {:src "/images/exclamation.png"}]})
 
 (defn js-comment [post]

@@ -73,16 +73,13 @@ button.vote {
 
 h2.postTitle {
     width: 100%;
-    font-size: 16pt;
+    font-size: 19pt;
     font-weight: normal;
-    border-bottom: 1px dashed #00A9FD;
+    color: #3366CC;
+    /*border-bottom: 1px dashed #00A9FD;*/
     padding: 2px;
     margin-top: 10px;
     margin-bottom: 0px;
-}
-
-a.postTitle {
-    text-decoration: none;
 }
 
 table.post {
@@ -205,6 +202,10 @@ td.postLinkTitle {
     vertical-align: middle;
 }
 
+a.postLinkTitle {
+	text-decoration: none;
+}
+
 td.postLinkVote {
     width: 20px;
     height: 20px;
@@ -240,6 +241,7 @@ td.postLinkDate {
     color: teal;
     font-style: normal;
     font-size: 8pt;
+    vertical-align: middle;
 }
 
 textarea.postContent, textarea.postComment{

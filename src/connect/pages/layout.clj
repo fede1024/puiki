@@ -145,8 +145,7 @@
     (if (fn? *sidebar*)
       (*sidebar*)
       (str *sidebar*))
-    [:div.sideBarSection
-     fb-like-box]]
+     fb-like-box]
    [:div.content content sh-highlight]])
 
 (defpartial layout-footer []

@@ -79,7 +79,7 @@
           "Un minuto fa"
           (str n " minuti fa")))
       (< diff 86400) ;; Giorno
-      (let [n (int (/ diff 3660))]
+      (let [n (int (/ diff 3600))]
         (if (= n 1)
           "Un ora fa"
           (str n " ore fa")))
@@ -141,7 +141,7 @@
      [:body ]]))
 
 (defn encode-url [url params]
-  (str url (encode-params params)))
+  (str url "?" (encode-params params)))
 
 (defn js-do [& objs]
   (apply str objs))

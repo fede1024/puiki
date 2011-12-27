@@ -24,7 +24,7 @@
      [:div.section div-prop
       [:p "Il sito è diviso in " (link-to "/channel/list" "canali")
        ", ognuno riguardante un corso di studi (ad esempio Ingegneri Informatici iscritti al "
-       "terzo anno";(link-to "" "terzo anno")
+       (link-to "/channel/4ea283f4e4b0b301111bb1e2" "terzo anno")
        ") oppure una " (link-to "/channel/4ea2844fe4b0b301111bb1f3" "materia di studio")
        ". Ogni studente iscritto può aggiungere le sue domande (" (link-to "/post/4ea28778e4b0b301111bb242" "un esercizio")
        ", un dubbio su un argomento della lezione...) nel canale adeguato e una notifica arriverà a tutti gli studenti che seguono il canale, i quali potranno rispondere."
@@ -47,9 +47,13 @@
 (defpage "/" []
   (layout "PoliConnect"
     (info-section)
-    [:h2.section "Post più recenti:"]
-    (let [posts (fetch :posts :where {:removed {:$ne true}}
-                  :sort {:created-at -1} :limit 10)]
+    [:h2.section [:img.middle {:src "/images/question.png"}] "Domande più recenti:"]
+    (let [posts (fetch :posts :where {:removed {:$ne true} :type :question}
+                       :sort {:created-at -1} :limit 5)]
+      (channel/post-links posts))
+    [:h2.section [:img.middle {:src "/images/page.png"}] "Pagine più recenti:"]
+    (let [posts (fetch :posts :where {:removed {:$ne true} :type :normal}
+                       :sort {:created-at -1} :limit 5)]
       (channel/post-links posts))))
 
 (defpage [:post "/"] {:keys [signed_request ref fb_source] :as data}

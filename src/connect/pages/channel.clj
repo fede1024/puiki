@@ -45,7 +45,7 @@
         (for [c channels]
           [:li.year
            [:h3.section
-            [:a {:href "#" :onClick (js-toggle-anim "#channels_" (:year c) "_" (:_id f))}
+            [:a.nodecor {:href "#" :onClick (js-toggle-anim "#channels_" (:year c) "_" (:_id f))}
               [:img.year {:src "/images/users.png"}] (cardinali (:year c)) " anno"]]
            [:div.section {:id (str "channels_" (:year c) "_" (:_id f)) :style "display: none"}
             [:p (link-to (channel-path c) "Canale dedicato a " (:name c))]
@@ -87,15 +87,15 @@
 (defpartial add-post [channel]
   [:div.sideBarSection
    [:h2.section "Modifica: "]
-   (form-to [:get "/edit/new-post"]
-     [:input {:type :hidden :name "channel-id" :value (:_id channel)}]
-     (submit-button {:class "postNew"} "Crea nuovo post"))]
-  [:div.sideBarSection
-   [:h2.section "Cerca: "]
-   (form-to [:get "/search"]
-     [:input {:type :hidden :name "channel-id" :value (:_id channel)}]
-     (text-field {:class :channelSearchText :placeholder "Testo ricerca"} :text)
-     (submit-button {:class "channelSearch"} "Cerca"))])
+   [:p [:a {:href (encode-url "/edit/new-question" {:channel-id (:_id channel)})}
+        [:img.middle {:src "/images/question.png"}] "Nuova domanda"]]
+   [:p [:a {:href (encode-url "/edit/new-page" {:channel-id (:_id channel)})}
+        [:img.middle {:src "/images/page.png"}] "Nuova pagina"]]
+  [:h2.section "Cerca: "]
+  (form-to [:get "/search"]
+    [:input {:type :hidden :name "channel-id" :value (:_id channel)}]
+    (text-field {:class :channelSearchText :placeholder "Testo ricerca"} :text)
+    (submit-button {:class "channelSearch"} "Cerca"))])
 
 (defpartial post-links [posts & [show-removed]]
   [:table.postLink
@@ -114,7 +114,7 @@
                (count (:comments post))])
             [:td.postLinkSpace]
             [:td.postLinkTitle 
-             (link-to {:class :postTitle} (post-path post) (:title post))]
+             (link-to {:class :postLinkTitle} (post-path post) (:title post))]
             [:td.postLinkDate (format-timestamp-relative (:created-at post))]]
            [:tr.postLinkSpace]))))])
 
@@ -122,11 +122,13 @@
 (defpartial channel-description [ch]
   (if (= (:type ch) "course")
     [:p "Il corso si applica agli studenti di:"
-     [:ul.channels
+     [:ul.years
       (for [course (fetch :courses :where {:code (:code ch)})]
         (if-let [channel (fetch-one :channels :where {:type :field :field (:field course) :year (:year course)})]
-          [:li.channel (link-to (channel-path channel) (:field course) " " (:year course) "°anno")]
-          [:li.channel (:field course) " " (:year course) "°anno"]))]]
+          [:li.year [:img.year {:src "/images/users.png"}]
+           (link-to (channel-path channel) (:field course) " " (:year course) "°anno")]
+          [:li.year [:img.year {:src "/images/users.png"}]
+           (:field course) " " (:year course) "°anno"]))]]
     [:p (:description ch)]))
 
 (defpartial channel-follow-buttons [c action & {:keys [only-button]}]
@@ -183,7 +185,7 @@
           (when (current-id)
             [:span {:id id}
              (channel-follow-buttons ch (if (get follows id) 'remove 'add) :only-button true)])
-          [:h1.section (link-to (channel-path ch) (:name ch))]
+          [:h1.section (:name ch)]
           (channel-description ch)
           ;[:p (channel-info ch)]
           ;[:p "Canale creato il: " (format-timestamp (:created-at ch))]
@@ -199,20 +201,18 @@
                        "Crea nuovo corso")))
           ;[:p (link-to "/user/following" "Canali seguiti")]
           [:br]
-          (let [posts (fetch :posts :where {:channel id :type {:$ne "answer"}
-                                            :removed {:$ne true}}
-                        :sort {:created-at -1})
-                news (filter #(= (:type %) "normal") posts)
-                questions (filter #(= (:type %) "question") posts)]
+          (let [pages (fetch :posts :where {:channel id :type "normal" :removed {:$ne true}}
+                             :sort {:created-at -1} :limit 5)
+                questions (fetch :posts :where {:channel id :type "question" :removed {:$ne true}}
+                                 :sort {:created-at -1} :limit 5)]
             (html
-              [:div.news
-               [:h2.section "Ultime notizie:"]
-               (post-links (take 5 news))
-               [:p (link-to (str (channel-path ch) "/news") "Mostra tutte le notizie")]]
-              [:div.questions
-               [:h2.section "Ultime domande: "]
-               (post-links (take 5 questions))
-               [:p (link-to (str (channel-path ch) "/questions") "Mostra tutte le domande")]])))))))
+              [:h2.section [:img.middle {:src "/images/question.png"}] "Ultime domande: "]
+              (post-links questions)
+              [:p (link-to (str (channel-path ch) "/questions") "Mostra tutte le domande")]
+              [:br]
+              [:h2.section [:img.middle {:src "/images/page.png"}] "Ultime pagine create:"]
+              (post-links pages)
+              [:p (link-to (str (channel-path ch) "/news") "Mostra tutte le pagine")])))))))
             
 (defpage "/channel/:id/:show" {:keys [id show]}
   (let [id (obj-id id)
@@ -228,16 +228,16 @@
           (channel-description ch)
           ;[:p (channel-info ch)]
           ;[:p "Canale creato il: " (format-timestamp (:created-at ch))]
-          [:p (link-to "/user/following" "Canali seguiti")]
+          ;[:p (link-to "/user/following" "Canali seguiti")]
           [:br]
           (html
             (cond (= show "news")
               [:div.news
-               [:h2.section "Tutte le notizie:"]
+               [:h2.section [:img.middle {:src "/images/page.png"}] "Tutte le pagine:"]
                (post-links (fetch :posts :where {:channel id :type "normal"}
                              :sort {:created-at -1}))]
               (= show "questions")
               [:div.questions
-               [:h2.section "Tutte le domande: "]
+               [:h2.section [:img.middle {:src "/images/question.png"}] "Tutte le domande: "]
                (post-links (fetch :posts :where {:channel id :type "question"}
                              :sort {:created-at -1}))])))))))

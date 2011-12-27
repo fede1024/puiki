@@ -52,9 +52,9 @@
     :else nil))
 
 (def post-images
-  {"normal"   [:img {:src "/images/asterisk-blue-small.png"}]
-   "question" [:img {:src "/images/question.png"}]
-   "answer"   [:img {:src "/images/exclamation.png"}]})
+  {"normal"   [:img.middle {:src "/images/page.png"}]
+   "question" [:img.middle {:src "/images/question.png"}]
+   "answer"   [:img.middle {:src "/images/exclamation.png"}]})
 
 (defn js-comment [post]
   (str "$('#loader').css('display', 'inline');"
@@ -80,8 +80,7 @@
      "Annulla"]
     [:button {:class "postComment" :onClick (js-comment post)} "Commenta"]]]
   [:tr.postBottom {:id (str "actions" (:_id post))}    ;; Rispondi/Commenta
-   [:td.postInfo
-    ]
+   [:td.postInfo]
    [:td.postActions
     (when (= (:type post) "question")
       (form-to [:get (user-reply-path post)]
@@ -126,8 +125,7 @@
       [:div.remMsg "Post rimosso."])
     (html
       (when (not (= (:type post) "answer"))
-        [:h2.postTitle (post-images (:type post)) " "
-         (link-to {:class :postTitle} (post-path post) (:title post))])
+        [:h2.postTitle (post-images (:type post)) " " (:title post)])
       [:table.post
        [:tr
         (let [p (fetch-one :people :where {:_id (:author post)})]
@@ -159,10 +157,7 @@
   [:h2.section "Informazioni post:"]
   [:p "Commenti: " (count (:comments post))] ;; TODO: fix?
   (when (= "question" (:type post))
-    [:p "Risposte: " (fetch-count :posts :where {:answers-to (:_id post)})])
-  (when (= (:type post) "answer")
-    [:p (link-to (post-path (fetch-one :posts :where {:_id (:answers-to post)}))
-          "Domanda")]))
+    [:p "Risposte: " (fetch-count :posts :where {:answers-to (:_id post)})]))
 
 (defpartial channel-link [post]
   (let [ch (fetch-one :channels :where {:_id (:channel post)})]
@@ -186,15 +181,16 @@
   (let [id (obj-id id)
         post (fetch-one :posts :where {:_id id})]
     (if post
-      (binding [*sidebar* (html (post-summary post)
-                            (channel-link post))]
+      (binding [*sidebar* (html [:div.sideBarSection
+                                   (post-summary post)
+                                   (channel-link post)])]
         (when (current-id)
           (update! :people {:_id (current-id)} ;; Toglie il post dalle notifiche
             {:$pull {:news {:post id}}}
             :multiple true))
         (layout (:title post)
           (let [ch (fetch-one :channels :where {:_id (:channel post)})]
-            [:h1.channelName (link-to {:class "channelName"} (channel-path ch) (:name ch))])
+            [:h1.section [:a.nodecor {:href (channel-path ch)} (:name ch) ":"]])
           (post-div post)
           (post-answers post)))
       (render "/not-found"))))
@@ -229,38 +225,28 @@
      [:em "come immagine"] " (usando l'indirizzo che trovi cliccando sulla formula col tasto destro "
      "e successivamente su \"Indirizzo immagine\")."]))
 
-(defpage "/edit/new-post" {:keys [title content channel-id type]}
+(defpage "/edit/new-page" {:keys [title content channel-id]}
   (binding [*custom-header* ckeditor-header]
     (let [person (fetch-one :people :where {:_id (current-id)})
           channel (fetch-one :channels :where {:_id (obj-id channel-id)})]
       (if (not (and person channel))
         (render "/permission-denied")
-        (layout "Nuovo post"
-          [:h1.section "Crea nuovo post"]
-          (form-to {:accept-charset "utf-8" } [:post "/edit/new-post/preview"]
-            (error-table "Errore invio post")
+        (layout "Nuova pagina"
+          [:h1.section "Crea una nuova pagina"]
+          (form-to {:accept-charset "utf-8"} [:post "/edit/new-page/preview"]
+            (error-table "Errore invio pagina")
             [:div.post
              [:table.post
               [:tr
                [:td.newPostTitle {:colspan 2} "Titolo: "
-                (text-field {:class :postTitle :placeholder "Titolo post"} :title
+                (text-field {:class :postTitle :placeholder "Titolo Pagina"} :title
                   title)]]
               [:tr [:td.postAuthor (user-description person)]]
               [:tr [:td.postDate (format-timestamp-relative (java.util.Date.))]]
               [:tr.postContent
                [:td.postContent {:colspan 2}
-                (text-area {:class :ckeditor :rows 15
-                            :placeholder "Contenuto del post"}
+                (text-area {:class :ckeditor :rows 15 :placeholder "Contenuto della pagina"}
                   :content content)]]
-              [:tr.postBottom
-               [:td.postSettings {:colspan 2}
-                [:input {:type :radio :name "type" :value "normal"
-                         :checked (when (= type "normal") "true")} 
-                 "Messaggio - gli utenti possono solo lasciare commenti"]
-                [:br]
-                [:input {:type :radio :name "type" :value "question"
-                         :checked (when (= type "question") "true")}
-                 "Domanda - gli utenti possono anche rispondere con nuovi post"]]]
               [:tr.postBottom
                [:td.postSettings "Canale: "
                 [:input {:type :hidden :name :channel-id :value channel-id}]
@@ -269,41 +255,83 @@
                 (submit-button {:class "postSubmit"} "Anteprima e invio")]]]])
           new-post-help)))))
 
-(defn valid-post? [{:keys [title content channel-id type]}]
+(defpage "/edit/new-question" {:keys [title content channel-id]}
+  (binding [*custom-header* ckeditor-header]
+    (let [person (fetch-one :people :where {:_id (current-id)})
+          channel (fetch-one :channels :where {:_id (obj-id channel-id)})]
+      (if (not (and person channel))
+        (render "/permission-denied")
+        (layout "Nuova domanda"
+          [:h1.section "Crea una nuova domanda"]
+          (form-to {:accept-charset "utf-8"} [:post "/edit/new-question/preview"]
+            (error-table "Errore invio domanda")
+            [:div.post
+             [:table.post
+              [:tr
+               [:td.newPostTitle {:colspan 2} "Titolo: "
+                (text-field {:class :postTitle :placeholder "Titolo domanda"} :title
+                  title)]]
+              [:tr [:td.postAuthor (user-description person)]]
+              [:tr [:td.postDate (format-timestamp-relative (java.util.Date.))]]
+              [:tr.postContent
+               [:td.postContent {:colspan 2}
+                (text-area {:class :ckeditor :rows 15
+                            :placeholder "Descrizione della domanda"}
+                  :content content)]]
+              [:tr.postBottom
+               [:td.postSettings "Canale: "
+                [:input {:type :hidden :name :channel-id :value channel-id}]
+                (link-to (channel-path channel) (:name channel))]
+               [:td.postActions
+                (submit-button {:class "postSubmit"} "Anteprima e invio")]]]])
+          new-post-help)))))
+
+(defn valid-post? [{:keys [title content channel-id]}]
   (vali/rule (not (str/blank? title))
     [:title "Titolo non valido"])
   (vali/rule (not (str/blank? content))
     [:content "Contenuto non valido"])
-  (vali/rule (or (= type "normal") (= type "question"))
-    [:type "Non hai selezionato il tipo di post che vuoi creare"])
   (vali/rule (fetch-one :channels :where {:_id (obj-id channel-id)})
-    [:channel-id "Canale non valido"]) ;;TODO: controllo sul tipo
-  (not (vali/errors? :title :content :channel-id :type)))
+    [:channel-id "Canale non valido"])
+  (not (vali/errors? :title :content :channel-id)))
 
-(defpage [:post "/edit/new-post/preview"] {:as post}
+(defpage [:post "/edit/new-page/preview"] {:as post}
   (if (current-id)
     (if (valid-post? post)
       (let [hiddens (for [[name value] post]
                       [:input {:type :hidden :name name :value value}])]
-        (layout "Anteprima"
+        (layout "Anteprima pagina"
           (post-div (merge post {:author (current-id) :channel (:channel-id post)
                                  :created-at (java.util.Date.)})
             :preview true)
-          [:p "Tipo post: "
-           (when (= (:type post) "normal")
-             "Messaggio - gli utenti possono solo commentare, non sono permessi post di risposta.")
-           (when (= (:type post) "question")
-             "Domanda - gli utenti possono commentare e aggiungere post di risposta.")]
-          (form-to {:accept-charset "utf-8" } [:get "/edit/new-post"]
+          (form-to {:accept-charset "utf-8" } [:get "/edit/new-page"]
             hiddens
-            (submit-button {:class "postSubmit"} "Modifica post"))
-          (form-to {:accept-charset "utf-8" } [:post "/edit/new-post"]
+            (submit-button {:class "postSubmit"} "Modifica pagina"))
+          (form-to {:accept-charset "utf-8" } [:post "/edit/new-page"]
             hiddens
-            (submit-button {:class "postSubmit"} "Invia post"))))
-      (render "/edit/new-post" post))
+            (submit-button {:class "postSubmit"} "Invia pagina"))))
+      (render "/edit/new-page" post))
     (resp/redirect "/login")))
 
-(defpage [:post "/edit/new-post"] {:as post}
+(defpage [:post "/edit/new-question/preview"] {:as post}
+  (if (current-id)
+    (if (valid-post? post)
+      (let [hiddens (for [[name value] post]
+                      [:input {:type :hidden :name name :value value}])]
+        (layout "Anteprima domanda"
+          (post-div (merge post {:author (current-id) :channel (:channel-id post)
+                                 :created-at (java.util.Date.)})
+            :preview true)
+          (form-to {:accept-charset "utf-8" } [:get "/edit/new-question"]
+            hiddens
+            (submit-button {:class "postSubmit"} "Modifica domanda"))
+          (form-to {:accept-charset "utf-8" } [:post "/edit/new-question"]
+            hiddens
+            (submit-button {:class "postSubmit"} "Invia domanda"))))
+      (render "/edit/new-question" post))
+    (resp/redirect "/login")))
+
+(defn new-content! [post type]
   (if (current-id)
     (if (valid-post? post)
       (let [c-id (obj-id (:channel-id post))
@@ -311,7 +339,8 @@
             new-post (insert! :posts
                        (merge post {:author (current-id) :channel c-id
                                     :created-at (java.util.Date.)
-                                    :keywords (post-keywords post)}))]
+                                    :keywords (post-keywords post)
+                                    :type type}))]
         (update! :channels {:_id c-id}
           {:$inc {:posts 1}})
         (update! :people {:follows c-id :_id {:$ne (current-id)}} ;; Update a tutti i followers
@@ -321,6 +350,12 @@
         (resp/redirect (post-path new-post)))
       (render "/edit/new-post" post))
     (resp/redirect "/login")))
+
+(defpage [:post "/edit/new-page"] {:as post}
+  (new-content! post :normal))
+
+(defpage [:post "/edit/new-question"] {:as post}
+  (new-content! post :question))
 
 (defpage [:post "/edit/remove/:pid"] {:keys [pid conf undo] :as data}
   (let [id (obj-id pid)
@@ -394,16 +429,16 @@
                     (for [[name value] reply]
                       [:input {:type :hidden :name name :value value}])
                     [:input {:type :hidden :name :qid :value qid}])]
-      (layout "Anteprima"
+      (layout "Anteprima risposta"
         (post-div (merge reply {:author (current-id) :channel (:channel-id reply)
                                 :type   "answer" :created-at (java.util.Date.)})
           :preview true)
-        (form-to {:accept-charset "utf-8" } [:get (str "/edit/reply/" qid)]
+        (form-to {:accept-charset "utf-8"} [:get (str "/edit/reply/" qid)]
           hiddens
-          (submit-button {:class "postSubmit"} "Modifica post"))
-        (form-to {:accept-charset "utf-8" } [:post (str "/edit/reply/" qid)]
+          (submit-button {:class "postSubmit"} "Modifica risposta"))
+        (form-to {:accept-charset "utf-8"} [:post (str "/edit/reply/" qid)]
           hiddens
-          (submit-button {:class "postSubmit"} "Invia post"))))
+          (submit-button {:class "postSubmit"} "Invia risposta"))))
     (render "/edit/reply/:qid" reply)))
   
 (defpage [:post "/edit/reply/:qid"] {:keys [qid] :as reply}

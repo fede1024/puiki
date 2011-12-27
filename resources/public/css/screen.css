@@ -42,19 +42,20 @@ span.loader {
 
 h1.section {
     margin-bottom: 10px;
-    font-size: 18pt;
+    font-size: 20pt;
     font-weight: bold;
     color: #3366CC;
-    text-shadow: -1px 1px 1px #a0a0a0;
+    /*text-shadow: -1px 1px 1px #a0a0a0;*/
 }
 
 h2.section {
     width: 100%;
-    text-decoration: underline;
+    text-decoration: none;
     font-size: 13pt;
-    font-weight: normal;
+    font-weight: bold;
     margin-top: 10px;
     margin-bottom: 8px;
+    color: #3366CC;
     /*text-shadow: -1px 1px 1px #d0d0d0;*/
 }
 
@@ -420,4 +421,12 @@ div.wide {
 .anchor {
     padding-top: 50px;
     margin-top: -50px;
+}
+
+.middle {
+	vertical-align: middle;
+}
+
+a.nodecor {
+	text-decoration: none;
 }

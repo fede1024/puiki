@@ -2,13 +2,13 @@
  (:use [hiccup core page-helpers]
    noir.core))
 
-(def *render-error* true)
-(def *stacktrace-length* 20)
+(def render-error true)
+(def stacktrace-length 20)
 
-(def *log-errors* true)
-(def *errors-dir* "resources/public/logs/errors/")
-;(def *errors-dir* "/home/federico/connect/resources/public/logs/errors/")
-(def *max-error-files* 20)
+(def log-errors true)
+(def errors-dir "resources/public/logs/errors/")
+;(def errors-dir "/home/federico/connect/resources/public/logs/errors/")
+(def max-error-files 20)
 
 (defn exception-causes [#^Throwable t]
   (lazy-seq
@@ -43,7 +43,7 @@
       [:td.stackElemFile   (escape-html (:file elem))]
       [:td.stackElemLine   (escape-html (:line elem))]])])
 
-(def *description*
+(def description
   (str "Si è verificato un errore. La descrizione dell'errore è stata memorizzata "
     "e verrà investigata al più presto dagli amministratori."))
 
@@ -59,7 +59,7 @@
        [:td.excHead "Messaggio errore:"]
        [:td.excMessage (escape-html (:message err))]]]
      [:h2.stackTraceTitle "Stacktrace:"]
-     (stacktrace-table (take *stacktrace-length* (:stacktrace err)))]))
+     (stacktrace-table (take stacktrace-length (:stacktrace err)))]))
 
 (defn error-page [title e & [request]]
   (html
@@ -73,7 +73,7 @@
     [:body
      [:div.content
       [:h1.title title]
-      [:p.description *description*]
+      [:p.description description]
       [:span (for [cause (reverse (exception-causes e))]
                [:span 
                 [:h2.error "Errore:"]
@@ -89,17 +89,17 @@
 
 (defn- remove-old-errors []
   (let [files (sort-by #(.getName %)
-                (.listFiles (java.io.File. *errors-dir*)))]
-    (map #(.delete %) (take (- (count files) *max-error-files*) files))))
+                (.listFiles (java.io.File. errors-dir)))]
+    (map #(.delete %) (take (- (count files) max-error-files) files))))
 
 (defn remove-all-errors []
-  (doall (map #(.delete %) (.listFiles (java.io.File. *errors-dir*)))))
+  (doall (map #(.delete %) (.listFiles (java.io.File. errors-dir)))))
 
 (defn- store-page [html]
   (.mkdir (java.io.File. "resources/public/logs/")) ;; TODO: fix qui
-  (.mkdir (java.io.File. *errors-dir*))
+  (.mkdir (java.io.File. errors-dir))
   (loop [n 0]
-    (let [path (str *errors-dir* (format-date)
+    (let [path (str errors-dir (format-date)
                  (if (> n 0) (str "(" n ")" ) ""))]
       (if (not (.exists (java.io.File. (str path ".html"))))
         (spit (str path ".html") html)
@@ -107,7 +107,7 @@
 
 (defn log-error-page [title e & [request]]
   (let [html (error-page title e request)]
-    (when *log-errors*
+    (when log-errors
       (store-page html)
       (remove-old-errors))
     html))

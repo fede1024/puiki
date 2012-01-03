@@ -38,7 +38,7 @@
        [:input {:type "hidden" :name "recaptcha_response_field"
                 :value "manual_challenge"}]])))
 
-(def *uri* "http://www.google.com/recaptcha/api/verify")
+(def uri "http://www.google.com/recaptcha/api/verify")
 
 (defn post-request [params]
   (let [{challenge :recaptcha_challenge_field
@@ -46,7 +46,7 @@
         query-params {:privatekey (:private-key (fetch-one :admin :where {:_id "recaptcha"}))
                       :challenge challenge :response response
                       :remoteip connect.logs/*ip*}]
-    (:body (client/post *uri* {:query-params query-params}))))
+    (:body (client/post uri {:query-params query-params}))))
 
 (defn verify-captcha [params]
   (let [result-string (post-request params)

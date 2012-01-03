@@ -128,11 +128,11 @@
 (defpage "/logs/errors/" []
   (layout "Log Errori"
     (let [files (sort-by #(.getName %)
-                  (.listFiles (java.io.File. connect.errors/*errors-dir*)))]
+                  (.listFiles (java.io.File. connect.errors/errors-dir)))]
       [:span 
        [:h2.section "Log errori:"]
-       [:p "Numero massimo: " connect.errors/*max-error-files*]
-       [:p "Directory: " connect.errors/*errors-dir*]
+       [:p "Numero massimo: " connect.errors/max-error-files]
+       [:p "Directory: " connect.errors/errors-dir]
        (for [f (reverse files)]
          [:p (link-to (str "./" (.getName f)) (.getName f))])
        (form-to [:get "/logs/errors/delete"]
@@ -204,7 +204,7 @@
   (let [feeds (if (= n "all")
                 (fetch :feedbacks)
                 (fetch :feedbacks :limit (Integer/parseInt n)))]
-    (layout ""
+    (layout "FeedBacks"
       [:h1.section "Feedbacks: "]
       [:h2.section "Visualizzati " (count feeds) ", limite: " n]
       (for [feed feeds]

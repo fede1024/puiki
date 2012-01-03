@@ -36,7 +36,8 @@
      [:p (link-to "/user/list" "Elenco utenti")]]))
 
 (defn get-person-study-year [person]
-  (min 5 (- 2012 (:year person))))
+  (when (:year person)
+    (min 5 (- 2012 (:year person)))))
 
 (defpartial student-info [person]
   [:h2.section "Account:"]
@@ -51,7 +52,9 @@
     [:table
      [:tr [:td.head "Indirizzo:"]
       [:td (:field person)]]
-     [:tr [:td.head "Anno immatr.:"] [:td (:year person) " (" (get-person-study-year person) "° anno)"]]
+     [:tr [:td.head "Anno immatr.:"]
+      [:td (when (:year person)
+             (str (:year person) " (" (get-person-study-year person) "° anno)"))]]
      [:tr [:td.head "Canale associato: "]
       [:td (if (and (:field person) channel)
              (link-to (channel-path channel) (:name channel))

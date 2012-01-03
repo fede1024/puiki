@@ -44,12 +44,9 @@
       (str (when (> tot 0) "+") (when (= tot 0) " ") tot)]]))
 
 (defpartial user-description [p & {:keys [field] :or {field true}}]
-  (cond (= (:job p) "student")
-    (str (:firstname p) (when (current-id) (str " " (:lastname p)))
-      (when (and field (:field p))
-        (str " (" (:field p) " " (- 2012 (:year p)) "°anno)")))
-    (= (:job p) "professor") " (Docente)"
-    :else nil))
+  (str (:firstname p) (when (current-id) (str " " (:lastname p)))
+    (when (and field (:field p))
+      (str " (" (:field p) " " (- 2012 (:year p)) "°anno)"))))
 
 (def post-images
   {"normal"   [:img.middle {:src "/images/page-big.png"}]

@@ -186,7 +186,13 @@
         (when (current-id)
           (update! :people {:_id (current-id)} ;; Toglie il post dalle notifiche
             {:$pull {:news {:post id}}}
-            :multiple true))
+            :multiple true)
+          (when (= (:type post) "question")
+            (dorun
+              (for [answer (fetch :posts :where {:answers-to id})]
+                (update! :people {:_id (current-id)} ;; tolgo le risposte dalle notifiche
+                  {:$pull {:news {:post (:_id answer)}}}
+                  :multiple true)))))
         (layout (:title post)
           (let [ch (fetch-one :channels :where {:_id (:channel post)})]
             [:h1.section [:a.nodecor {:href (channel-path ch)} (:name ch) ":"]])
@@ -456,8 +462,6 @@
       (when (not (= (:author question) (current-id)))
         (update! :people {:_id (:author question)} ;; Update dell'autore
           {:$push {:news {:action :new-answer :post (:_id new-post)
-                          :title (:title new-post) :question-id qid
-                          :question-title (:title question)
                           :time (java.util.Date.)}}}))
       (resp/redirect (post-path question)))
     (render "/edit/reply/:qid" reply)))

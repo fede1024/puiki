@@ -166,24 +166,24 @@
         fields (filter #(= (:type %) "field") channels)
         groups (filter #(= (:type %) "group") channels)
         courses (filter #(= (:type %) "course") channels)
-        new-posts (filter #(= (:action %) "new-post") (:news user))
-        new-answers (filter #(= (:action %) "new-answer") (:news user))
-        new-comments (filter #(= (:action %) "new-comment") (:news user))]
+        news (reverse (sort-by :created-at (:news user)))
+        new-posts (filter #(= (:action %) "new-post") news)
+        new-answers (filter #(= (:action %) "new-answer") news)
+        new-comments (filter #(= (:action %) "new-comment") news)]
     (layout "Canali seguiti"
       [:h1.section "Nuovi post: " (count new-posts)]
       [:div.section
-       (let [groups (group-by :channel new-posts)]
+       (let [groups (reverse (sort-by first (group-by :channel new-posts)))]
          (for [[channel group] groups]
            (html [:h2.section (:name (fetch-one :channels :where {:_id channel}))]
                  (channel/post-links
                    (map #(fetch-one :posts :where {:_id (:post %)}) group) :show-removed))))
-       [:p "Nuove risposte ai tuoi post: " (count new-answers)]
-       (for [n new-answers]
-         [:p (link-to (str "/post/" (:post n)) (:title n))
-          " - "  (:question-title n)])
-       [:p "Nuovi commenti ai tuoi post: " (count new-comments)]
-       (for [n new-comments]
-         [:p (link-to (str "/post/" (:post n)) (:title n))])]
+       [:h2.section "Nuove risposte ai tuoi post: " (count new-answers)]
+       (channel/post-links
+         (map #(fetch-one :posts :where {:_id (:post %)}) new-answers) :show-removed)
+       [:h2.section "Nuovi commenti ai tuoi post: " (count new-comments)]
+       (channel/post-links
+         (map #(fetch-one :posts :where {:_id (:post %)}) new-comments) :show-removed)]
       [:h1.section "Canali seguiti:"]
       [:div.section
        [:h2.section "Indirizzi di studio: " (count fields)]

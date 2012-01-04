@@ -159,10 +159,14 @@
       (session/flash-put! :done)
       (resp/redirect (user-info-path id)))))
 
-(defpage "/user/following" []
+(defpage "/user/following" {:keys [remove-news]}
+  (when (and (current-id) (= remove-news "true"))
+    (update! :people {:_id (current-id)}
+      {:$set {:news []}}))
   (let [user (fetch-one :people :where {:_id (current-id)})
-        channels (map #(fetch-one :channels :where {:_id %})
-                      (:follows user))
+        channels (sort-by :name
+                   (map #(fetch-one :channels :where {:_id %})
+                        (:follows user)))
         fields (filter #(= (:type %) "field") channels)
         groups (filter #(= (:type %) "group") channels)
         courses (filter #(= (:type %) "course") channels)
@@ -171,19 +175,27 @@
         new-answers (filter #(= (:action %) "new-answer") news)
         new-comments (filter #(= (:action %) "new-comment") news)]
     (layout "Canali seguiti"
-      [:h1.section "Nuovi post: " (count new-posts)]
+      [:h1.section "Notifiche:"]
       [:div.section
+       (if (empty? news)
+         [:p "Nessuna."]
+         [:p.right [:img.middle {:src "/images/remove.png"}] " "
+          [:a {:href (encode-url "/user/following" {:remove-news true})}
+           "Rimuovi tutte le notifiche"]])
        (let [groups (reverse (sort-by first (group-by :channel new-posts)))]
          (for [[channel group] groups]
-           (html [:h2.section (:name (fetch-one :channels :where {:_id channel}))]
+           (html [:h2.section "Nuovi post di " (:name (fetch-one :channels :where {:_id channel}))]
+                 [:div.section
                  (channel/post-links
-                   (map #(fetch-one :posts :where {:_id (:post %)}) group) :show-removed))))
-       [:h2.section "Nuove risposte ai tuoi post: " (count new-answers)]
-       (channel/post-links
-         (map #(fetch-one :posts :where {:_id (:post %)}) new-answers) :show-removed)
-       [:h2.section "Nuovi commenti ai tuoi post: " (count new-comments)]
-       (channel/post-links
-         (map #(fetch-one :posts :where {:_id (:post %)}) new-comments) :show-removed)]
+                   (map #(fetch-one :posts :where {:_id (:post %)}) group) :show-removed)])))
+       (when (not (empty? new-answers))
+         (html [:h2.section "Nuove risposte ai tuoi post:"]
+           (channel/post-links
+             (map #(fetch-one :posts :where {:_id (:post %)}) new-answers) :show-removed)))
+       (when (not (empty? new-comments))
+         (html [:h2.section "Nuovi commenti ai tuoi post:"]
+           (channel/post-links
+             (map #(fetch-one :posts :where {:_id (:post %)}) new-comments) :show-removed)))]
       [:h1.section "Canali seguiti:"]
       [:div.section
        [:h2.section "Indirizzi di studio: " (count fields)]

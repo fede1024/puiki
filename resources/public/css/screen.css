@@ -47,6 +47,7 @@ h1.section {
     font-weight: bold;
     color: #3366CC;
     /*text-shadow: -1px 1px 1px #a0a0a0;*/
+    line-height: 110%;
 }
 
 h2.section {

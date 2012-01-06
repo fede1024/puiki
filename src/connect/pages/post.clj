@@ -230,7 +230,7 @@
      [:em "come immagine"] " (usando l'indirizzo che trovi cliccando sulla formula col tasto destro "
      "e successivamente su \"Indirizzo immagine\")."]))
 
-(defpage "/edit/new-page" {:keys [title content channel-id]}
+(defpage [:post "/edit/new-page"] {:keys [title content channel-id]}
   (binding [*custom-header* ckeditor-header]
     (let [person (fetch-one :people :where {:_id (current-id)})
           channel (fetch-one :channels :where {:_id (obj-id channel-id)})]
@@ -260,7 +260,10 @@
                 (submit-button {:class "postSubmit"} "Anteprima e invio")]]]])
           new-post-help)))))
 
-(defpage "/edit/new-question" {:keys [title content channel-id]}
+(defpage "/edit/new-page" {:keys [channel-id] :as data}
+  (render [:post "/edit/new-page"] data))
+
+(defpage [:post "/edit/new-question"] {:keys [title content channel-id]}
   (binding [*custom-header* ckeditor-header]
     (let [person (fetch-one :people :where {:_id (current-id)})
           channel (fetch-one :channels :where {:_id (obj-id channel-id)})]
@@ -291,6 +294,9 @@
                 (submit-button {:class "postSubmit"} "Anteprima e invio")]]]])
           new-post-help)))))
 
+(defpage "/edit/new-question" {:keys [channel-id] :as data}
+  (render [:post "/edit/new-question"] data))
+
 (defn valid-post? [{:keys [title content channel-id]}]
   (vali/rule (not (str/blank? title))
     [:title "Titolo non valido"])
@@ -309,13 +315,13 @@
           (post-div (merge post {:author (current-id) :channel (:channel-id post)
                                  :created-at (java.util.Date.)})
             :preview true)
-          (form-to {:accept-charset "utf-8" } [:get "/edit/new-page"]
-            hiddens
-            (submit-button {:class "postSubmit"} "Modifica pagina"))
           (form-to {:accept-charset "utf-8" } [:post "/edit/new-page"]
             hiddens
+            (submit-button {:class "postSubmit"} "Modifica pagina"))
+          (form-to {:accept-charset "utf-8" } [:post "/edit/save-page"]
+            hiddens
             (submit-button {:class "postSubmit"} "Invia pagina"))))
-      (render "/edit/new-page" post))
+      (render [:post "/edit/new-page"] post))
     (resp/redirect "/login")))
 
 (defpage [:post "/edit/new-question/preview"] {:as post}
@@ -327,13 +333,13 @@
           (post-div (merge post {:author (current-id) :channel (:channel-id post)
                                  :created-at (java.util.Date.)})
             :preview true)
-          (form-to {:accept-charset "utf-8" } [:get "/edit/new-question"]
-            hiddens
-            (submit-button {:class "postSubmit"} "Modifica domanda"))
           (form-to {:accept-charset "utf-8" } [:post "/edit/new-question"]
             hiddens
+            (submit-button {:class "postSubmit"} "Modifica domanda"))
+          (form-to {:accept-charset "utf-8" } [:post "/edit/save-question"]
+            hiddens
             (submit-button {:class "postSubmit"} "Invia domanda"))))
-      (render "/edit/new-question" post))
+      (render [:post "/edit/new-question"] post))
     (resp/redirect "/login")))
 
 (defn new-content! [post type]
@@ -342,10 +348,12 @@
       (let [c-id (obj-id (:channel-id post))
             ch (fetch-one :channels :where {:_id c-id})
             new-post (insert! :posts
-                       (merge post {:author (current-id) :channel c-id
-                                    :created-at (java.util.Date.)
-                                    :keywords (post-keywords post)
-                                    :type type}))]
+                       (dissoc
+                         (merge post {:author (current-id) :channel c-id
+                                      :created-at (java.util.Date.)
+                                      :keywords (post-keywords post)
+                                      :type type})
+                         :channel-id))]
         (update! :channels {:_id c-id}
           {:$inc {:posts 1}})
         (update! :people {:follows c-id :_id {:$ne (current-id)}} ;; Update a tutti i followers
@@ -353,13 +361,13 @@
                           :channel c-id :time (java.util.Date.)}}}
           :multiple true :upsert false)
         (resp/redirect (post-path new-post)))
-      (render "/edit/new-post" post))
+      (render [:post "/edit/new-post"] post))
     (resp/redirect "/login")))
 
-(defpage [:post "/edit/new-page"] {:as post}
+(defpage [:post "/edit/save-page"] {:as post}
   (new-content! post :normal))
 
-(defpage [:post "/edit/new-question"] {:as post}
+(defpage [:post "/edit/save-question"] {:as post}
   (new-content! post :question))
 
 (defpage [:post "/edit/remove/:pid"] {:keys [pid conf undo] :as data}
@@ -407,7 +415,7 @@
         (submit-button {:class "postReply"} "Anteprima e invio")]]]])
   new-post-help)
 
-(defpage "/edit/reply/:qid" {:keys [qid] :as reply}
+(defpage [:post "/edit/reply/:qid"] {:keys [qid] :as reply}
   (binding [*custom-header* ckeditor-header]
     (let [qid (obj-id qid)
           question (fetch-one :posts :where {:_id qid})
@@ -420,6 +428,9 @@
            (post-div question)
            (post-answers question)]
           [:p "Post non trovato"])))))
+
+(defpage "/edit/reply/:qid" {:keys [qid] :as reply}
+  (render [:post "/edit/reply/:qid"] reply))
 
 (defn valid-reply? [{:keys [qid title content type]}]
   (vali/rule (not (str/blank? content))
@@ -438,15 +449,15 @@
         (post-div (merge reply {:author (current-id) :channel (:channel-id reply)
                                 :type   "answer" :created-at (java.util.Date.)})
           :preview true)
-        (form-to {:accept-charset "utf-8"} [:get (str "/edit/reply/" qid)]
-          hiddens
-          (submit-button {:class "postSubmit"} "Modifica risposta"))
         (form-to {:accept-charset "utf-8"} [:post (str "/edit/reply/" qid)]
           hiddens
+          (submit-button {:class "postSubmit"} "Modifica risposta"))
+        (form-to {:accept-charset "utf-8"} [:post (str "/edit/reply/" qid "/save")]
+          hiddens
           (submit-button {:class "postSubmit"} "Invia risposta"))))
-    (render "/edit/reply/:qid" reply)))
+    (render [:post "/edit/reply/:qid"] reply)))
   
-(defpage [:post "/edit/reply/:qid"] {:keys [qid] :as reply}
+(defpage [:post "/edit/reply/:qid/save"] {:keys [qid] :as reply}
   (if (and (current-id) (valid-reply? reply))
     (let [qid (obj-id qid)
           question (fetch-one :posts :where {:_id qid})
@@ -464,4 +475,4 @@
           {:$push {:news {:action :new-answer :post (:_id new-post)
                           :time (java.util.Date.)}}}))
       (resp/redirect (post-path question)))
-    (render "/edit/reply/:qid" reply)))
+    (render [:post "/edit/reply/:qid"] reply)))

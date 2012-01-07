@@ -63,7 +63,7 @@
     (somnium.congomongo.coerce/coerce (.fetch ^com.mongodb.DBRef db-ref)
       [:mongo :clojure])))
 
-(defn obj-id [str]
+(defn obj-id [str] ;; Controllare se è già un obj-id?
   (try 
     (object-id str)
     (catch Exception _ nil)))

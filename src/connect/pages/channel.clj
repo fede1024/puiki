@@ -87,13 +87,13 @@
 (defpartial add-post [channel]
   [:div.sideBarSection
    [:h2.section "Modifica: "]
-   [:p [:a {:href (encode-url "/edit/new-question" {:channel-id (:_id channel)})}
+   [:p [:a {:href (encode-url "/edit/new-question" {:channel (:_id channel)})}
         [:img.middle {:src "/images/question.png"}] "Nuova domanda"]]
-   [:p [:a {:href (encode-url "/edit/new-page" {:channel-id (:_id channel)})}
+   [:p [:a {:href (encode-url "/edit/new-page" {:channel (:_id channel)})}
         [:img.middle {:src "/images/page.png"}] "Nuova pagina"]]
   [:h2.section "Cerca: "]
   (form-to [:get "/search"]
-    [:input {:type :hidden :name "channel-id" :value (:_id channel)}]
+    [:input {:type :hidden :name :channel :value (:_id channel)}]
     (text-field {:class :channelSearchText :placeholder "Testo ricerca"} :text)
     (submit-button {:class "channelSearch"} "Cerca"))])
 
@@ -115,7 +115,10 @@
             [:td.postLinkSpace]
             [:td.postLinkTitle 
              (link-to {:class :postLinkTitle} (post-path post) (:title post))]
-            [:td.postLinkDate (format-timestamp-relative (:created-at post))]]
+            [:td.postLinkDate (format-timestamp-relative
+                                (if (= (:type post) "normal")
+                                  (or (:modified-at post) (:created-at post))
+                                  (:created-at post)))]]
            [:tr.postLinkSpace]))))])
 
 ;; TODO: solo i link agli indirizzi? Dividere la funzione in due?
@@ -171,7 +174,7 @@
 (defpage "/channel/:id" {:keys [id]}
   (let [id (obj-id id)
         ch (fetch-one :channels :where {:_id id})
-        follows (when (current-id)
+        follows (when (current-id) ;; TODO: serve?
                   (into #{} (:follows (fetch-one :people :where {:_id (current-id)}))))]
     (if (not ch)
       (render "/not-found")
@@ -202,7 +205,7 @@
           ;[:p (link-to "/user/following" "Canali seguiti")]
           [:br]
           (let [pages (fetch :posts :where {:channel id :type "normal" :removed {:$ne true}}
-                             :sort {:created-at -1} :limit 5)
+                             :sort {:title 1})
                 questions (fetch :posts :where {:channel id :type "question" :removed {:$ne true}}
                                  :sort {:created-at -1} :limit 5)]
             (html
@@ -212,9 +215,9 @@
                 (html 
                   (post-links questions)
                   [:p.right (link-to (str (channel-path ch) "/questions") "Mostra tutto")]))
-              [:h2.lastPages [:img.middle {:src "/images/page-big.png"}] " Ultime pagine create:"]
+              [:h2.lastPages [:img.middle {:src "/images/page-big.png"}] " Wiki:"]
               (if (empty? pages)
-                [:p "Non ci sono ancora pagine in questo canale."]
+                [:p "Non ci sono ancora pagine wiki in questo canale."]
                 (html
                   (post-links pages)
                   [:p.right (link-to (str (channel-path ch) "/news") "Mostra tutto")])))))))))

@@ -38,6 +38,12 @@
     (str "/post/" (:answers-to post) "#post" (:_id post))
     (str "/post/" (:_id post))))
 
+(defn edit-path [post]
+  (str "/edit/post/" (:_id post)))
+
+(defn old-pages-path [page]
+  (str "/old-pages/" (:_id page)))
+
 (defn post-vote-path [post]
   (str "/edit/vote/" (:_id post)))
 

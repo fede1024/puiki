@@ -52,8 +52,8 @@
 
 (defn post-keywords [post]
   (distinct
-    (concat (get-keywords (:title post))
-      (get-keywords (extract-html-text (:content post))))))
+    (concat (when (:title post) (get-keywords (:title post)))
+       (when (:content post) (get-keywords (extract-html-text (:content post)))))))
 
 (defn- create-all-posts-keywords! []
   (for [p (fetch :posts)]

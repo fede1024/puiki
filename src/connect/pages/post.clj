@@ -16,7 +16,7 @@
 
 (pre-route "/edit*" request
   (if (current-id)
-    (if (not (user? (current-id)))
+    (when-not (user? (current-id))
       (render "/permission-denied"))
     (render "/login" {:redirect (get-request-uri request)})))
 
@@ -48,11 +48,20 @@
     (when (and field (:field p))
       (str " (" (:field p) " " (- 2012 (:year p)) "°anno)"))))
 
+;; TODO: togliere quelle inutilizzate
 (def post-images
   {"normal"   [:img.middle {:src "/images/page-big.png"}]
    "question" [:img.middle {:src "/images/question-big.png"}]
    "answer"   [:img.middle {:src "/images/exclamation.png"}]})
 
+(defn can-i-edit? [post]
+  (and (current-id)
+       (or (= (:type post) "normal")
+           (and (or (= (:type post) "question")
+                    (= (:type post) "answer"))
+                (or (admin? (current-id))
+                    (= (current-id) (:author post)))))))
+           
 (defn js-comment [post]
   (str "$('#loader').css('display', 'inline');"
     "$.post('" (user-comment-path post) "', {comment: $('#commentText"  (:_id post) "').val()}, function(content) {$('#comments" (:_id post) "').html(content);"
@@ -122,22 +131,28 @@
       [:div.remMsg "Post rimosso."])
     (html
       (when (not (= (:type post) "answer"))
-        [:h2.postTitle (post-images (:type post)) " " (:title post)])
+        [:h2.postTitle (when (= (:type post) "question") (post-images (:type post))) " " (:title post)])
       [:table.post
        [:tr
         (let [p (fetch-one :people :where {:_id (:author post)})]
           [:td.postAuthor (user-description p)])
         [:td.postEdit {:rowspan 2}
-         [:a {:href (post-path post)}
-          [:img.edit {:src "/images/link.png" :alt "Link" :title "Link permanente"}]]
-         (when (and (not preview) (current-id) 
+         (when-not preview
+           [:a {:href (post-path post)}
+            [:img.edit {:src "/images/link.png" :alt "Link" :title "Link permanente"}]])
+         (when (and (not preview) (can-i-edit? post))
+           [:a {:href (str (edit-path post))}
+            [:img.edit {:src "/images/edit.png" :alt "Modifica" :title "Modifica"}]])
+         (when (and (not preview) (current-id) ;; TODO: mettere can-i-remove? o fare un sistema di privilegi
                  (or (admin? (current-id)) (= (current-id) (:author post))))
-           [:span {:id (str "remove" (:_id post))}
-            (remove-button post)])
+             [:span {:id (str "remove" (:_id post))}
+              (remove-button post)])
          (when (not preview)
            [:span {:id (str "votes" (:_id post))}
             (vote-section post)])]]
-       [:tr [:td.postDate (format-timestamp-relative (:created-at post))]]
+       [:tr [:td.postDate (when (= (:type post) "normal")
+                            "Ultima modifica: ")
+             (format-timestamp-relative (or (:modified-at post) (:created-at post)))]]
        [:tr [:td.postContent {:colspan 2}
              (if (= (:type post) "normal")
                [:div.pageContent (:content post)]
@@ -163,18 +178,41 @@
     [:p "Canale: " (link-to (channel-path ch) (:name ch))]))
 
 (defpartial post-answers [post]
-  (when (= "question" (:type post))
-    (let [answers (sort-by #(or (:vtotal %) 0) >
-                    (fetch :posts :where {:answers-to (:_id post)}))
-          n (count answers)]
-      (html
-        [:h2.answers "Risposte: " (if (zero? n) "nessuna" n)]
-        (for [answ (butlast answers)]
-          (html
-            (post-div answ)
-            [:hr.answer]))
-        (when (not (empty? answers))
-          (post-div (last answers)))))))
+  (let [answers (sort-by #(or (:vtotal %) 0) >
+                  (fetch :posts :where {:answers-to (:_id post)}))
+        n (count answers)]
+    (html
+      [:h2.answers "Risposte: " (if (zero? n) "nessuna" n)]
+      (for [answ (butlast answers)]
+        (html
+          (post-div answ)
+          [:hr.answer]))
+      (when (not (empty? answers))
+        (post-div (last answers))))))
+
+(defpartial page-history-item [version page]
+  (let [current? (not (:orig-id version))]
+    [:p (when (= (:_id page) (:_id version)) "-> ")
+     (link-to (if current?
+                (post-path version)
+                (old-pages-path version))
+              (str (:title version)
+                   (when current?
+                     " (versione corrente)"))) [:br]
+     (if (:modified-at version)
+       [:span "Modificata " (format-timestamp-relative (:modified-at version))
+        " da " (user-description (fetch-one :people :where {:_id (:modified-by version)}))]
+       [:span "Creata " (format-timestamp-relative (:created-at version))
+        " da " (user-description (fetch-one :people :where {:_id (:author version)}))])]))
+
+(defpartial page-history [page]
+  [:h2.section "Cronologia pagina:"]
+  (let [orig-id (or (:orig-id page) (:_id page))
+        current (fetch-one :posts :where {:_id orig-id})
+        versions (conj (fetch :old-pages :where {:orig-id orig-id}) current)]
+    [:div.section
+     (for [version (reverse (sort-by :modified-at versions))]
+       (page-history-item version page))]))
 
 (defpage "/post/:id" {:keys [id]}
   (let [id (obj-id id)
@@ -197,7 +235,25 @@
           (let [ch (fetch-one :channels :where {:_id (:channel post)})]
             [:h1.section [:a.nodecor {:href (channel-path ch)} (:name ch) ":"]])
           (post-div post)
-          (post-answers post)))
+          (cond
+            (= "question" (:type post))
+            (post-answers post)
+            (= "normal" (:type post))
+            (page-history post))))
+      (render "/not-found"))))
+
+(defpage "/old-pages/:id" {:keys [id]}
+  (let [id (obj-id id)
+        page (fetch-one :old-pages :where {:_id id})]
+    (if page
+      (binding [*sidebar* (html [:div.sideBarSection
+                                   (post-summary page)
+                                   (channel-link page)])]
+        (layout (:title page)
+          (let [ch (fetch-one :channels :where {:_id (:channel page)})]
+            [:h1.section [:a.nodecor {:href (channel-path ch)} (:name ch) ":"]])
+          (post-div page :preview true)
+          (page-history page)))
       (render "/not-found"))))
 
 (defn update-vote [current dir]
@@ -230,14 +286,18 @@
      [:em "come immagine"] " (usando l'indirizzo che trovi cliccando sulla formula col tasto destro "
      "e successivamente su \"Indirizzo immagine\")."]))
 
-(defpage [:post "/edit/new-page"] {:keys [title content channel-id]}
-  (binding [*custom-header* ckeditor-header]
-    (let [person (fetch-one :people :where {:_id (current-id)})
-          channel (fetch-one :channels :where {:_id (obj-id channel-id)})]
-      (if (not (and person channel))
-        (render "/permission-denied")
+(defpage [:post "/edit/new-page"] {:keys [_id title content channel]}
+  (let [person (fetch-one :people :where {:_id (current-id)})
+        ch (fetch-one :channels :where {:_id (if (string? channel)
+                                               (obj-id channel)
+                                               channel)})]
+    (if (not (and person ch))
+      (render "/not-found")
+      (binding [*custom-header* ckeditor-header]
         (layout "Nuova pagina"
-          [:h1.section "Crea una nuova pagina"]
+          (if (and _id (not (= _id "")))
+            [:h1.section "Modifica pagina"]
+            [:h1.section "Crea una nuova pagina"])
           (form-to {:accept-charset "utf-8"} [:post "/edit/new-page/preview"]
             (error-table "Errore invio pagina")
             [:div.post
@@ -247,30 +307,36 @@
                 (text-field {:class :postTitle :placeholder "Titolo Pagina"} :title
                   title)]]
               [:tr [:td.postAuthor (user-description person)]]
-              [:tr [:td.postDate (format-timestamp-relative (java.util.Date.))]]
+              [:tr [:td.postDate
+                       "Ultima modifica: " (format-timestamp-relative (java.util.Date.))]]
               [:tr.postContent
                [:td.postContent {:colspan 2}
                 (text-area {:class :ckeditor :rows 15 :placeholder "Contenuto della pagina"}
                   :content content)]]
               [:tr.postBottom
                [:td.postSettings "Canale: "
-                [:input {:type :hidden :name :channel-id :value channel-id}]
-                (link-to (channel-path channel) (:name channel))]
+                (link-to (channel-path ch) (:name ch))]
                [:td.postActions
+                [:input {:type :hidden :name :channel :value (:_id ch)}]
+                [:input {:type :hidden :name :_id :value _id}]
                 (submit-button {:class "postSubmit"} "Anteprima e invio")]]]])
           new-post-help)))))
 
-(defpage "/edit/new-page" {:keys [channel-id] :as data}
+(defpage "/edit/new-page" {:as data}
   (render [:post "/edit/new-page"] data))
 
-(defpage [:post "/edit/new-question"] {:keys [title content channel-id]}
-  (binding [*custom-header* ckeditor-header]
-    (let [person (fetch-one :people :where {:_id (current-id)})
-          channel (fetch-one :channels :where {:_id (obj-id channel-id)})]
-      (if (not (and person channel))
-        (render "/permission-denied")
+(defpage [:post "/edit/new-question"] {:keys [_id title content channel]}
+  (let [person (fetch-one :people :where {:_id (current-id)})
+        ch (fetch-one :channels :where {:_id (if (string? channel)
+                                               (obj-id channel)
+                                               channel)})]
+    (if (not (and person ch))
+      (render "/permission-denied")
+      (binding [*custom-header* ckeditor-header]
         (layout "Nuova domanda"
-          [:h1.section "Crea una nuova domanda"]
+          (if (and _id (not (= _id "")))
+            [:h1.section "Modifica domanda"]
+            [:h1.section "Crea una nuova domanda"])
           (form-to {:accept-charset "utf-8"} [:post "/edit/new-question/preview"]
             (error-table "Errore invio domanda")
             [:div.post
@@ -288,72 +354,92 @@
                   :content content)]]
               [:tr.postBottom
                [:td.postSettings "Canale: "
-                [:input {:type :hidden :name :channel-id :value channel-id}]
-                (link-to (channel-path channel) (:name channel))]
+                (link-to (channel-path ch) (:name ch))]
                [:td.postActions
+                [:input {:type :hidden :name :channel :value (:_id ch)}]
+                [:input {:type :hidden :name :_id :value _id}]
                 (submit-button {:class "postSubmit"} "Anteprima e invio")]]]])
           new-post-help)))))
 
-(defpage "/edit/new-question" {:keys [channel-id] :as data}
+(defpage "/edit/new-question" {:as data}
   (render [:post "/edit/new-question"] data))
 
-(defn valid-post? [{:keys [title content channel-id]}]
+(defpage "/edit/post/:id" {:keys [id]}
+  (let [post (fetch-one :posts :where {:_id (obj-id id)})]
+    (if (can-i-edit? post)
+      (cond
+        (= (:type post) "normal")
+        (render [:post "/edit/new-page"] post)
+        (= (:type post) "question")
+        (render [:post "/edit/new-question"] post)
+        (= (:type post) "answer")
+        (render [:post "/edit/reply/:qid"]
+                (merge post {:qid (str (:answers-to post))})))
+      (render "/permission-denied"))))
+
+(defn valid-post? [{:keys [title content channel]}]
   (vali/rule (not (str/blank? title))
     [:title "Titolo non valido"])
   (vali/rule (not (str/blank? content))
     [:content "Contenuto non valido"])
-  (vali/rule (fetch-one :channels :where {:_id (obj-id channel-id)})
-    [:channel-id "Canale non valido"])
-  (not (vali/errors? :title :content :channel-id)))
+  (vali/rule (fetch-one :channels :where {:_id (obj-id channel)})
+    [:channel "Canale non valido"])
+  (not (vali/errors? :title :content :channel)))
 
-(defpage [:post "/edit/new-page/preview"] {:as post}
+(defpage [:post "/edit/new-page/preview"] {:keys [_id channel] :as post}
   (if (current-id)
     (if (valid-post? post)
       (let [hiddens (for [[name value] post]
                       [:input {:type :hidden :name name :value value}])]
         (layout "Anteprima pagina"
-          (post-div (merge post {:author (current-id) :channel (:channel-id post)
+          [:h1.section "Anteprima pagina:"]
+          (post-div (merge post {:author (current-id) :channel channel
                                  :created-at (java.util.Date.)})
             :preview true)
           (form-to {:accept-charset "utf-8" } [:post "/edit/new-page"]
             hiddens
-            (submit-button {:class "postSubmit"} "Modifica pagina"))
+            (submit-button {:class "postSubmit"} "Indietro"))
           (form-to {:accept-charset "utf-8" } [:post "/edit/save-page"]
             hiddens
-            (submit-button {:class "postSubmit"} "Invia pagina"))))
+            (submit-button {:class "postSubmit"} "Salva modifiche"))
+          (when (and _id (not (= _id "")))
+            [:p "La nuova versione della pagina sarà memorizzata come ultima versione. "
+             "Sarà comunque possibile vedere le versioni precedenti nell'apposita sezione."])))
       (render [:post "/edit/new-page"] post))
     (resp/redirect "/login")))
 
-(defpage [:post "/edit/new-question/preview"] {:as post}
+(defpage [:post "/edit/new-question/preview"] {:keys [_id channel] :as post}
   (if (current-id)
     (if (valid-post? post)
       (let [hiddens (for [[name value] post]
                       [:input {:type :hidden :name name :value value}])]
         (layout "Anteprima domanda"
-          (post-div (merge post {:author (current-id) :channel (:channel-id post)
+          [:h1.section "Anteprima domanda:"]
+          (post-div (merge post {:author (current-id) :channel channel
                                  :created-at (java.util.Date.)})
             :preview true)
           (form-to {:accept-charset "utf-8" } [:post "/edit/new-question"]
             hiddens
-            (submit-button {:class "postSubmit"} "Modifica domanda"))
+            (submit-button {:class "postSubmit"} "Indietro"))
           (form-to {:accept-charset "utf-8" } [:post "/edit/save-question"]
             hiddens
-            (submit-button {:class "postSubmit"} "Invia domanda"))))
+            (submit-button {:class "postSubmit"} "Invia domanda"))
+          (when (and _id (not (= _id "")))
+            [:p "Attenzione: salvando le modifiche la versione precedente della domanda non sarà più accessibile."])))
       (render [:post "/edit/new-question"] post))
     (resp/redirect "/login")))
 
 (defn new-content! [post type]
   (if (current-id)
-    (if (valid-post? post)
-      (let [c-id (obj-id (:channel-id post))
-            ch (fetch-one :channels :where {:_id c-id})
+    (if (valid-post? post) ;; Controllo ridondante, già fatto per anteprima
+      (let [c-id (obj-id (:channel post))
+            ch (fetch-one :channels :where {:_id c-id}) ;;TODO: serve?
             new-post (insert! :posts
-                       (dissoc
-                         (merge post {:author (current-id) :channel c-id
-                                      :created-at (java.util.Date.)
-                                      :keywords (post-keywords post)
-                                      :type type})
-                         :channel-id))]
+                       (merge (dissoc post :_id)
+                              {:author (current-id) :channel c-id
+                               :created-at (java.util.Date.)
+                               :keywords (post-keywords post)
+                               :type type}))]
         (update! :channels {:_id c-id}
           {:$inc {:posts 1}})
         (update! :people {:follows c-id :_id {:$ne (current-id)}} ;; Update a tutti i followers
@@ -364,11 +450,43 @@
       (render [:post "/edit/new-post"] post))
     (resp/redirect "/login")))
 
-(defpage [:post "/edit/save-page"] {:as post}
-  (new-content! post :normal))
+(defpage [:post "/edit/save-page"] {:keys [_id] :as post}
+  (if (and _id (not (= _id "")))
+    (if (valid-post? post)
+      (let [id (obj-id _id) ;; Nuova versione pagina
+            orig (fetch-one :posts :where {:_id id})]
+        (if (and orig (current-id))
+          (do
+            (insert! :old-pages
+              (merge (dissoc orig :_id)
+                {:orig-id (:_id orig)}))
+            (update! :posts {:_id id}
+               {:$set {:title (:title post)
+                       :content (:content post)
+                       :modified-at (java.util.Date.)
+                       :modified-by (current-id)
+                       :keywords (post-keywords post)}})
+            (resp/redirect (post-path post)))
+          (layout "Errore" "Il post originale non esiste.")))
+      (render [:post "/edit/new-page"] post))
+    (new-content! post :normal)))
 
-(defpage [:post "/edit/save-question"] {:as post}
-  (new-content! post :question))
+(defpage [:post "/edit/save-question"] {:keys [_id] :as post}
+  (if (and _id (not (= _id "")))
+    (if (valid-post? post)
+      (let [id (obj-id _id)
+            orig (fetch-one :posts :where {:_id id})]
+        (if orig
+          (do
+            (update! :posts {:_id id}
+               {:$set {:title (:title post)
+                       :content (:content post)
+                       :modified-at (java.util.Date.)
+                       :keywords (post-keywords post)}})
+            (resp/redirect (post-path post)))
+          (layout "Errore" "Il post originale non esiste.")))
+      (render [:post "/edit/new-post"] post))
+    (new-content! post :question)))
 
 (defpage [:post "/edit/remove/:pid"] {:keys [pid conf undo] :as data}
   (let [id (obj-id pid)
@@ -412,21 +530,24 @@
           :content (:content reply))]]
       [:tr.postBottom
        [:td.postActions {:colspan 2}
+        [:input {:type :hidden :name :_id :value (:_id reply)}]
         (submit-button {:class "postReply"} "Anteprima e invio")]]]])
   new-post-help)
 
-(defpage [:post "/edit/reply/:qid"] {:keys [qid] :as reply}
+(defpage [:post "/edit/reply/:qid"] {:keys [_id qid] :as reply}
   (binding [*custom-header* ckeditor-header]
     (let [qid (obj-id qid)
           question (fetch-one :posts :where {:_id qid})
           ch (fetch-one :channels :where {:_id (:channel question)})]
       (layout "Rispondi"
-        [:h1.channelName "Risposta a: " (:title question)]
+        (if (and _id (not (= _id "")))
+          [:h1.section "Modifica risposta a: " (:title question)]
+          [:h1.section "Risposta a: " (:title question)])
         (if (and question (not (:removed question)))
-          [:span
+          (html
            (post-reply-table question reply)
            (post-div question)
-           (post-answers question)]
+           (post-answers question))
           [:p "Post non trovato"])))))
 
 (defpage "/edit/reply/:qid" {:keys [qid] :as reply}
@@ -446,18 +567,19 @@
                       [:input {:type :hidden :name name :value value}])
                     [:input {:type :hidden :name :qid :value qid}])]
       (layout "Anteprima risposta"
-        (post-div (merge reply {:author (current-id) :channel (:channel-id reply)
+        [:h1.section "Anteprima risposta"]
+        (post-div (merge reply {:author (current-id)
                                 :type   "answer" :created-at (java.util.Date.)})
           :preview true)
         (form-to {:accept-charset "utf-8"} [:post (str "/edit/reply/" qid)]
           hiddens
-          (submit-button {:class "postSubmit"} "Modifica risposta"))
+          (submit-button {:class "postSubmit"} "Indietro"))
         (form-to {:accept-charset "utf-8"} [:post (str "/edit/reply/" qid "/save")]
           hiddens
           (submit-button {:class "postSubmit"} "Invia risposta"))))
     (render [:post "/edit/reply/:qid"] reply)))
-  
-(defpage [:post "/edit/reply/:qid/save"] {:keys [qid] :as reply}
+
+(defn new-reply [reply qid]
   (if (and (current-id) (valid-reply? reply))
     (let [qid (obj-id qid)
           question (fetch-one :posts :where {:_id qid})
@@ -476,3 +598,22 @@
                           :time (java.util.Date.)}}}))
       (resp/redirect (post-path question)))
     (render [:post "/edit/reply/:qid"] reply)))
+
+(defn update-reply [reply]
+  (if (and (current-id) (valid-reply? reply))
+    (let [id (obj-id (:_id reply))
+          orig (fetch-one :posts :where {:_id id})]
+      (if orig
+        (do
+          (update! :posts {:_id id}
+             {:$set {:content (:content reply)
+                     :modified-at (java.util.Date.)
+                     :keywords (post-keywords reply)}})
+          (resp/redirect (post-path (fetch-one :posts :where {:_id id}))))
+        (layout "Errore" "Il post di domanda non esiste.")))
+    (render [:post "/edit/reply/:qid"] reply)))
+
+(defpage [:post "/edit/reply/:qid/save"] {:keys [_id qid] :as reply}
+  (if (and _id (not (= _id "")))
+    (update-reply reply)
+    (new-reply reply qid)))

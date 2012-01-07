@@ -139,7 +139,7 @@
   (html
     [:html
      [:head
-      [:script {:type "text/javascript" :src "/jquery-1.6.4.min.js"}]
+      [:script {:type "text/javascript" :src "/jquery-1.7.1.min.js"}]
       [:script {:type "text/javascript"}
        "$(document).ready(function() {"
        (str "$('body').load('" url "');")

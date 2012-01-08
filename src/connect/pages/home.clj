@@ -51,10 +51,15 @@
     (let [posts (fetch :posts :where {:removed {:$ne true} :type :question}
                        :sort {:created-at -1} :limit 5)]
       (channel/post-links posts))
-    [:h2.lastPages [:img.middle {:src "/images/page-big.png"}] " Pagine più recenti:"]
-    (let [posts (fetch :posts :where {:removed {:$ne true} :type :normal}
-                       :sort {:created-at -1} :limit 5)]
-      (channel/post-links posts))))
+    [:h2.lastPages [:img.middle {:src "/images/wiki.png"}] " Ultime pagine wiki:"]
+    (let [pages (fetch :posts :where {:removed {:$ne true} :type :normal}
+                       :sort {:modified-at -1} :limit 5)]
+      [:div.section
+       (for [page pages]
+         (let [channel (fetch-one :channels :where {:_id (:channel page)})]
+           [:p [:a {:href (post-path page)}
+                [:img.edit {:src "/images/page.png"}] [:b (:title page)]]
+            " - " [:a {:href (channel-path channel)} (:name channel)]]))])))
 
 (defpage [:post "/"] {:keys [signed_request ref fb_source] :as data}
   ;(println (pr-str signed_request ref fb_source))

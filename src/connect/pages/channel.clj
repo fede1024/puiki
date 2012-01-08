@@ -97,6 +97,7 @@
     (text-field {:class :channelSearchText :placeholder "Testo ricerca"} :text)
     (submit-button {:class "channelSearch"} "Cerca"))])
 
+;; TODO: dividere in question-links e pages-link
 (defpartial post-links [posts & [show-removed]]
   [:table.postLink
    (for [post posts]
@@ -124,14 +125,14 @@
 ;; TODO: solo i link agli indirizzi? Dividere la funzione in due?
 (defpartial channel-description [ch]
   (if (= (:type ch) "course")
-    [:p "Il corso si applica agli studenti di:"
+    (html [:h2.section "Il corso si applica agli studenti di:"]
      [:ul.years
       (for [course (fetch :courses :where {:code (:code ch)})]
         (if-let [channel (fetch-one :channels :where {:type :field :field (:field course) :year (:year course)})]
           [:li.year [:img.year {:src "/images/users.png"}]
            (link-to (channel-path channel) (:field course) " " (:year course) "°anno")]
           [:li.year [:img.year {:src "/images/users.png"}]
-           (:field course) " " (:year course) "°anno"]))]]
+           (:field course) " " (:year course) "°anno"]))])
     [:p (:description ch)]))
 
 (defpartial channel-follow-buttons [c action & {:keys [only-button]}]
@@ -215,12 +216,13 @@
                 (html 
                   (post-links questions)
                   [:p.right (link-to (str (channel-path ch) "/questions") "Mostra tutto")]))
-              [:h2.lastPages [:img.middle {:src "/images/page-big.png"}] " Wiki:"]
+              [:h2.lastPages [:img.middle {:src "/images/wiki.png"}] " Pagine wiki:"]
               (if (empty? pages)
                 [:p "Non ci sono ancora pagine wiki in questo canale."]
-                (html
-                  (post-links pages)
-                  [:p.right (link-to (str (channel-path ch) "/news") "Mostra tutto")])))))))))
+                [:div.section
+                 (for [page pages]
+                   [:p [:a {:href (post-path page)}
+                        [:img.edit {:src "/images/page.png"}] [:b (:title page)]]])]))))))))
             
 (defpage "/channel/:id/:show" {:keys [id show]}
   (let [id (obj-id id)

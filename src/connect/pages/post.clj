@@ -121,7 +121,7 @@
                       :title "Cancella il post"}
        [:img.remove {:src "/images/remove.png"}]])))
 
-(defpartial post-table [post & {:keys [preview]}]
+(defpartial question-table [post & {:keys [preview]}]
   (if (:removed post)
     (if (:removed-by post)
       (if (= (:removed-by post) (:author post))
@@ -163,12 +163,36 @@
        (when (not preview)
          (post-bottom post))])))
 
+(defpartial page-table [post]
+  (if (:removed post)
+    (if (:removed-by post)
+      (if (= (:removed-by post) (:author post))
+        [:div.remMsg "Post rimosso dall'autore."]
+        (let [p (fetch-one :people :where {:_id (:removed-by post)})]
+          [:div.remMsg "Post rimosso da: " (user-description p)]))
+      [:div.remMsg "Post rimosso."])
+    (html
+      [:h2.postTitle (:title post)]
+      [:table.post
+       [:tr [:td.postContent {:colspan 2}
+             (if (= (:type post) "normal")
+               [:div.pageContent (:content post)]
+               [:div.questionContent (:content post)])]]
+       [:tr [:td.postDate "Versione del: "
+             (format-timestamp (or (:modified-at post) (:created-at post)))
+             ", ultima modifica "
+             (format-timestamp-relative (or (:modified-at post) (:created-at post)))
+             " di "
+             (let [p (fetch-one :people :where {:_id (or (:modified-by post) (:author post))})]
+               (user-description p))]]])))
+
 (defpartial post-div [post & {:keys [preview]}]
   [:div.post.anchor {:id (str "post" (:_id post))}
-   (post-table post :preview preview)])
+   (if (= (:type post) "normal")
+     (page-table post)
+     (question-table post :preview preview))])
 
 (defpartial post-summary [post]
-  [:h2.section "Informazioni post:"]
   [:p "Commenti: " (count (:comments post))] ;; TODO: fix?
   (when (= "question" (:type post))
     [:p "Risposte: " (fetch-count :posts :where {:answers-to (:_id post)})]))
@@ -194,7 +218,7 @@
   (let [current? (not (:orig-id version))]
     [:p (when (= (:_id page) (:_id version)) "-> ")
      (link-to (if current?
-                (post-path version)
+                (encode-url (post-path version) {:cron true})
                 (old-pages-path version))
               (str (:title version)
                    (when current?
@@ -214,13 +238,48 @@
      (for [version (reverse (sort-by :modified-at versions))]
        (page-history-item version page))]))
 
-(defpage "/post/:id" {:keys [id]}
+(defpartial question-sidebar [question]
+  [:div.sideBarSection
+   [:h2.section "Informazioni post:"]
+   (post-summary question)
+   (channel-link question)])
+
+(defpartial page-sidebar [page cron]
+  [:div.sideBarSection
+   [:h2.section "Wiki"]
+    [:p [:a {:href (str (edit-path page))}
+         [:img.edit {:src "/images/edit.png" :alt "Modifica" :title "Modifica"}]
+         "Modifica"]]
+    [:p [:a {:href (encode-url (post-path page) {:cron (not (= cron "true"))})}
+         [:img.edit {:src "/images/clock.png" :alt "Modifica" :title "Modifica"}]
+         (if (= cron "true")
+           "Nascondi cronologia"
+           "Vedi cronologia")]]
+    (when (and (current-id) ;; TODO: mettere can-i-remove? o fare un sistema di privilegi
+               (admin? (current-id)))
+      [:p {:id (str "remove" (:_id page))}
+       (remove-button page) " Rimuovi"])] ;;TODO: fix
+  [:div.sideBarSection
+   [:h2.section "Informazioni"]
+   (let [ch (fetch-one :channels :where {:_id (:channel page)})]
+     [:p [:a {:href (channel-path ch)}
+          [:img.edit {:src "/images/channels-small.png" :alt "Canale" :title "Canale"}]
+          (:name ch)]])
+   [:a {:href (post-path page)}
+    [:img.edit {:src "/images/link.png" :alt "Link" :title "Link permanente"}]
+    "Link permanente"]]
+   [:div.sideBarSection
+    [:h2.section "Voto"
+    [:span {:id (str "votes" (:_id page))}
+      (vote-section page)]]])
+
+(defpage "/post/:id" {:keys [id cron]}
   (let [id (obj-id id)
         post (fetch-one :posts :where {:_id id})]
     (if post
-      (binding [*sidebar* (html [:div.sideBarSection
-                                   (post-summary post)
-                                   (channel-link post)])]
+      (binding [*sidebar* (if (= (:type post) "normal")
+                            (page-sidebar post cron)
+                            (question-sidebar post))]
         (when (current-id)
           (update! :people {:_id (current-id)} ;; Toglie il post dalle notifiche
             {:$pull {:news {:post id}}}
@@ -234,12 +293,11 @@
         (layout (:title post)
           (let [ch (fetch-one :channels :where {:_id (:channel post)})]
             [:h1.section [:a.nodecor {:href (channel-path ch)} (:name ch) ":"]])
+          (when (= cron "true")
+            [:div.sideBarSection (page-history post)])
           (post-div post)
-          (cond
-            (= "question" (:type post))
-            (post-answers post)
-            (= "normal" (:type post))
-            (page-history post))))
+          (when (= "question" (:type post))
+            (post-answers post))))
       (render "/not-found"))))
 
 (defpage "/old-pages/:id" {:keys [id]}
@@ -247,13 +305,14 @@
         page (fetch-one :old-pages :where {:_id id})]
     (if page
       (binding [*sidebar* (html [:div.sideBarSection
+                                 [:h2.section "Informazioni"]
                                    (post-summary page)
                                    (channel-link page)])]
         (layout (:title page)
           (let [ch (fetch-one :channels :where {:_id (:channel page)})]
             [:h1.section [:a.nodecor {:href (channel-path ch)} (:name ch) ":"]])
-          (post-div page :preview true)
-          (page-history page)))
+          [:div.sideBarSection (page-history page)]
+          (post-div page)))
       (render "/not-found"))))
 
 (defn update-vote [current dir]

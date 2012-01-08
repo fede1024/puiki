@@ -78,16 +78,16 @@
                        (.getTime date))
                     1000))]
     (cond (< diff 60)
-      "Pochi secondi fa"
+      "pochi secondi fa"
       (< diff 3600)
       (let [n (int (/ diff 60))]
         (if (= n 1)
-          "Un minuto fa"
+          "un minuto fa"
           (str n " minuti fa")))
       (< diff 86400) ;; Giorno
       (let [n (int (/ diff 3600))]
         (if (= n 1)
-          "Un ora fa"
+          "un ora fa"
           (str n " ore fa")))
       (< diff 518400) ;; sei giorni
       (let [cal (Calendar/getInstance)]

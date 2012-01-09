@@ -131,7 +131,8 @@
       [:div.remMsg "Post rimosso."])
     (html
       (when (not (= (:type post) "answer"))
-        [:h2.postTitle (when (= (:type post) "question") (post-images (:type post))) " " (:title post)])
+        [:h2.postTitle (when (= (:type post) "question") (post-images (:type post))) " " (:title post)
+         [:div.like_button (like-button (post-path post))]])
       [:table.post
        [:tr
         (let [p (fetch-one :people :where {:_id (:author post)})]
@@ -172,7 +173,8 @@
           [:div.remMsg "Post rimosso da: " (user-description p)]))
       [:div.remMsg "Post rimosso."])
     (html
-      [:h2.postTitle (:title post)]
+      [:h2.postTitle (:title post)
+       [:div.like_button (like-button (post-path post))]]
       [:table.post
        [:tr [:td.postContent {:colspan 2}
              (if (= (:type post) "normal")
@@ -246,6 +248,15 @@
 
 (defpartial page-sidebar [page cron]
   [:div.sideBarSection
+   [:h2.section "Informazioni"]
+   (let [ch (fetch-one :channels :where {:_id (:channel page)})]
+     [:p [:a {:href (channel-path ch)}
+          [:img.edit {:src "/images/channels-small.png" :alt "Canale" :title "Canale"}]
+          (:name ch)]])
+   [:p [:a {:href (post-path page)}
+        [:img.edit {:src "/images/link.png" :alt "Link" :title "Link permanente"}]
+        "Link permanente"]]]
+  [:div.sideBarSection
    [:h2.section "Wiki"]
     [:p [:a {:href (str (edit-path page))}
          [:img.edit {:src "/images/edit.png" :alt "Modifica" :title "Modifica"}]
@@ -259,18 +270,9 @@
                (admin? (current-id)))
       [:p {:id (str "remove" (:_id page))}
        (remove-button page) " Rimuovi"])] ;;TODO: fix
-  [:div.sideBarSection
-   [:h2.section "Informazioni"]
-   (let [ch (fetch-one :channels :where {:_id (:channel page)})]
-     [:p [:a {:href (channel-path ch)}
-          [:img.edit {:src "/images/channels-small.png" :alt "Canale" :title "Canale"}]
-          (:name ch)]])
-   [:a {:href (post-path page)}
-    [:img.edit {:src "/images/link.png" :alt "Link" :title "Link permanente"}]
-    "Link permanente"]]
    [:div.sideBarSection
     [:h2.section "Voto"
-    [:span {:id (str "votes" (:_id page))}
+     [:span {:id (str "votes" (:_id page))}
       (vote-section page)]]])
 
 (defpage "/post/:id" {:keys [id cron]}

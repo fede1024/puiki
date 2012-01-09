@@ -16,12 +16,13 @@
  (defpartial info-section []
   (let [div-prop {:style "text-align: justify; margin-right: 20px;"}]
     [:span
-     [:h1.section "Benvenuto!"]
+     [:h1.section "Benvenuto!" [:div.like_button (like-button "www.policonnect.it")]]
      [:div.section div-prop
       [:p "Benvenuto su PoliConnect, il sito creato per gli studenti del Politecnico di Torino, "
        "dove fare domande e trovare informazioni riguardanti i corsi e non solo."]]
      [:h2.section "Come funziona:"]
      [:div.section div-prop
+      [:img.right {:src "/images/logo.png" :style "padding-left: 10px"}]
       [:p "Il sito è diviso in " (link-to "/channel/list" "canali")
        ", ognuno riguardante un corso di studi (ad esempio Ingegneri Informatici iscritti al "
        (link-to "/channel/4ea283f4e4b0b301111bb1e2" "terzo anno")
@@ -60,7 +61,7 @@
            [:p [:a {:href (post-path page)}
                 [:img.edit {:src "/images/page.png"}] [:b (:title page)]]
             " - " [:a {:href (channel-path channel)} (:name channel)]]))])))
-
+  
 (defpage [:post "/"] {:keys [signed_request ref fb_source] :as data}
   ;(println (pr-str signed_request ref fb_source))
   (let [fb-user-id (get (decode-string-request signed_request) "user_id")]

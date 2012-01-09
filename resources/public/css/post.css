@@ -293,3 +293,8 @@ div.remMsg {
     padding: 3px;
     text-align: center;
 }
+
+div.like_button {
+	float: right;
+	text-align: right;
+}

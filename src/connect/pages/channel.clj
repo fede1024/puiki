@@ -86,16 +86,18 @@
 
 (defpartial add-post [channel]
   [:div.sideBarSection
-   [:h2.section "Modifica: "]
+   [:h2.section "Modifica:"]
    [:p [:a {:href (encode-url "/edit/new-question" {:channel (:_id channel)})}
         [:img.middle {:src "/images/question.png"}] "Nuova domanda"]]
    [:p [:a {:href (encode-url "/edit/new-page" {:channel (:_id channel)})}
         [:img.middle {:src "/images/page.png"}] "Nuova pagina"]]
-  [:h2.section "Cerca: "]
+  [:h2.section "Cerca:"]
   (form-to [:get "/search"]
     [:input {:type :hidden :name :channel :value (:_id channel)}]
     (text-field {:class :channelSearchText :placeholder "Testo ricerca"} :text)
-    (submit-button {:class "channelSearch"} "Cerca"))])
+    (submit-button {:class "channelSearch"} "Cerca"))
+  [:h2.section "Condividi:"]
+  (like-button (channel-path channel))])
 
 ;; TODO: dividere in question-links e pages-link
 (defpartial post-links [posts & [show-removed]]

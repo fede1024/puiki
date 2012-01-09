@@ -110,12 +110,22 @@
 
 (def ^:dynamic *sidebar* default-sidebar)
 (def ^:dynamic *custom-header* nil)
+(def ^:dynamic *like-button* nil)
+
+(defpartial like-button [url]
+  (let [complete-url (str "http://www.policonnect.it" url)]
+    [:iframe {:src (encode-url "https://www.facebook.com/plugins/like.php"
+                               {:href complete-url :show_faces :false
+                                :layout :button_count :ref :fb_like})
+              :scrolling :no :frameborder 0
+              :style "vertical-align: middle; border:none; width:95px; height:21px"}]))
 
 (defpartial layout-header []
   [:div.headerContainer
    [:div.header
     [:a.logo {:href "/"}
      [:img.logo {:src "/images/policonnect.png"}]]
+    (when *like-button* (like-button "www.policonnect.it"))
     [:div.rfloat
      [:a {:href "/" :title "Home"}
      [:img.header {:src "/images/home.png"}]]

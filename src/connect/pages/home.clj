@@ -16,7 +16,7 @@
  (defpartial info-section []
   (let [div-prop {:style "text-align: justify; margin-right: 20px;"}]
     [:span
-     [:h1.section "Benvenuto!" [:div.like_button (like-button "www.policonnect.it")]]
+     [:h1.section "Benvenuto!" [:div.like_button (like-button "/")]]
      [:div.section div-prop
       [:p "Benvenuto su PoliConnect, il sito creato per gli studenti del Politecnico di Torino, "
        "dove fare domande e trovare informazioni riguardanti i corsi e non solo."]]

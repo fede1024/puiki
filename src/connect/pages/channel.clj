@@ -21,6 +21,8 @@
 (def privacy-options
   {"public" "Pubblico" "private" "Privato"})
 
+(def preferred-channels-number 5)
+
 (defpartial channel-info [ch]
   "Tipo canale: " (channel-types (:type ch))
   " (" (privacy-options (or (:privacy ch) "public")) "), "
@@ -56,9 +58,20 @@
        "Nessun canale presente.")))
 
 (defpage "/channel/list" []
-  (let [follows (when (current-id)
-                  (into #{} (:follows (fetch-one :people :where {:_id (current-id)}))))]
+  (let [last-channels (when (current-id)
+                        (:last-channels (fetch-one :people :where {:_id (current-id)})))]
     (layout "Tutti i canali"
+      [:div.like_button (like-button "/channel/list")]
+      (when (not (empty? last-channels))
+        (html
+          [:h1.section "Preferiti:"]
+          [:ul.years
+           (for [c (sort-by :name (map #(fetch-one :channels :where {:_id %}) last-channels))]
+             [:li.year
+              [:h3.section
+               [:a.nodecor {:href (channel-path c)}
+                [:img.year {:src "/images/users.png"}] (:name c)]]])]
+          [:br]))
       [:h1.section "Indirizzi di studio:"]
       [:ul.fields
        (for [f (fetch :fields :sort {:name 1})]
@@ -70,7 +83,7 @@
       [:h1.section "Gruppi:"]
       [:ul.channels
        (for [c (fetch :channels :where {:type "group"} :sort {:name 1})]
-        (channel-list-link c :description true))])))
+         (channel-list-link c :description true))])))
 
 (defpartial followers [channel]
   (let [limit 10
@@ -174,6 +187,24 @@
         (channel-follow-buttons c (if (get follows id) 'remove 'add) :only-button true)
         (channel-list-link c :follows follows)))))
 
+;; Mantiene un vettore ordinato degli ultimi canali visitati,
+;; se la lunghezza va oltre preferred-channels-number elimina
+;; quello visitato meno recentemente.
+(defn store-preferred-channel [ch]
+  (let [person-id (current-id)]
+    (when person-id
+      (let [ch-id (:_id ch)
+            last-channels (:last-channels (fetch-one :people :where {:_id person-id}))
+            new (not (some #(= % ch-id) last-channels))]
+        (if new
+          (when (>= (count last-channels) preferred-channels-number)
+            (update! :people {:_id person-id}
+               {:$pop {:last-channels -1}}))
+          (update! :people {:_id person-id}
+               {:$pull {:last-channels ch-id}}))
+        (update! :people {:_id person-id}
+           {:$push {:last-channels ch-id}})))))
+
 (defpage "/channel/:id" {:keys [id]}
   (let [id (obj-id id)
         ch (fetch-one :channels :where {:_id id})
@@ -183,6 +214,7 @@
       (render "/not-found")
       (binding [*sidebar* (html (add-post ch)
                             (followers ch))]
+        (store-preferred-channel ch)
         (layout (:name ch)
           (when (= (session/flash-get) :new-channel) 
             [:p "Nuovo canale creato."])

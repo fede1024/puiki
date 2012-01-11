@@ -120,10 +120,12 @@
   [:p "TODO: da fare"])
 
 (defpage "/user/:id/edit" {:keys [id] :as data}
-  (layout "Modifica utente"
-    (if (= (session/flash-get) :new-user) 
-      [:p "Nuovo utente registrato"])
-    (let [person (fetch-one :people :where {:_id id})]
+  (let [person (fetch-one :people :where {:_id id})]
+    (layout "Modifica utente"
+      (when (= (session/flash-get) :new-user) 
+        (html
+          [:h1.section "Benvenuto!"]
+          [:p "Grazie per esserti registrato. Ora fai parte di PoliConnect."]))
       (if person
         (if (or (admin? (current-id)) (= id (current-id)))
           (if (= (:job person) "student")

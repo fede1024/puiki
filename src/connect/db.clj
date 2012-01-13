@@ -4,6 +4,7 @@
 
 ;(mongo! :db "connect")
 
+;; TODO: completare
 (defn reset-db []
   (destroy! :people {})
   (destroy! :fields {})

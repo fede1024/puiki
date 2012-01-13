@@ -3,7 +3,7 @@
   :main connect.core
   :dependencies [[org.clojure/clojure "1.3.0"]
                  [org.clojure/clojure-contrib "1.2.0"]
-                 [noir "1.2.1-SNAPSHOT"]
+                 [noir "1.2.2"]
                  [congomongo "0.1.7"]
                  [commons-lang "2.5"]
                  [javax.mail/mail "1.4.3"]

@@ -73,6 +73,9 @@
       [:tr [:td.head "Conf. password:"]
        [:td (password-field {:size 15} :pwd2)]
        (error-cell :pwd2) [:td]]
+      [:tr [:td {:colspan 3} "La password viene memorizzata in modo codificato, quindi ne gli amministratori di "
+            "PoliConnect ne chiunque altro possa avere accesso al database degli utenti è in grado di risalire alla "
+            "vostra password."]]
       [:tr [:td.head "Nome:"]
        [:td {:colspan 2} 
         (text-field {:size 30} :firstname (or (:firstname data) ""))]
@@ -184,3 +187,122 @@
         (session/flash-put! :new-user) 
         (resp/redirect (user-edit-path (:_id data))))
       (render "/not-found"))))
+
+(defpartial password-restore-form [& [data]]
+  (recaptcha-config)
+  [:div.registrationForm
+   (form-to {:accept-charset "utf-8" } [:post "/restore-password"]
+     [:table
+      (when (admin? (current-id))
+        [:tr [:td.head "Email di controllo (solo admin):"]
+         [:td (text-field {:size 25} :check-email (or (:check-email data) ""))
+          " L'email sarà inviata a questo indirizzo."]])
+      [:tr [:td.head "Matricola:"]
+       [:td (text-field {:size 15} :id (or (:id data) "")) " Esempio: s12345"]
+       (error-cell :id)]
+      (when-not (admin? (current-id))
+        [:tr [:td {:colspan 3} "Per verificare la matricola verrà inviata una email a &lt;matricola&gt;@studenti.polito.it"]])
+      [:tr [:td {:colspan 3} (recaptcha)]]
+      [:tr (when-let [err (first (vali/get-errors :captcha))]
+             [:td.errorMsg [:img.errorMsg {:src "/images/error.png"}] " " err])
+       [:td {:colspan 2} (submit-button "Invia email")]]])])
+
+(defpage "/restore-password" {:as user}
+  (layout "Registrazione"
+    (if (current-id)
+      (html
+        [:h1.section "Utente già registrato"]
+        [:div.sectin [:p "Username: " (link-to (user-info-path (current-id)) (current-id))]]
+        (when (admin? (current-id))
+          (html
+            [:h1.section "Simulazione registrazione (solo admin)"]
+            (password-restore-form user))))
+      (html
+        [:h1.section "Recupero password"]
+        [:p "Inserisci il tuo nome utente e ti verrà inviato tramite email un link per cambiare password."]
+        (password-restore-form user)))))
+
+(defn restore-valid? [data]
+  (vali/rule (re-matches #"s[0-9]+" (:id data))
+    [:id "Matricola non valida"])
+  (vali/rule (fetch-one :people :where {:_id (:id data)})
+    [:id "Matricola non registrata"])
+  (vali/rule (:status (verify-captcha data))
+    [:captcha "Stringa errata"])
+  (not (vali/errors? :id :captcha)))
+
+(defn send-password-restore-mail [address code]
+  (send-mail address "PoliConnect: password dimenticata"
+    (html [:h1 "Password dimenticata?"]
+      [:p [:img {:src "http://www.policonnect.it/images/logo.png" :style "float: left; padding-right: 10px"}]
+       "Se hai simenticato la password clicca su "
+       (link-to (str "http://www.policonnect.it/restore-password/" code) "questo link") "." [:br]
+       "Se hai ricevuto questa email per errore è sufficiente eliminarla e "
+       "non verrai più contattato da " (link-to "http://www.policonnect.it" "PoliConnect") "."])))
+
+(defn new-restore-procedure [data]
+  (let [address (if (admin? (current-id))
+                  (:check-email data)
+                  (get-email-address data))
+        code (str (UUID/randomUUID))]
+    (update! :restore-procedure {:_id (:id data)}
+        {:_id (:id data) :code code
+         :created-at-at (java.util.Date.)})
+    (future
+      (try
+        (send-password-restore-mail address code)
+        (catch Exception e
+          (println "Email error." (str e)))))
+    address))
+
+(defpage [:post "/restore-password"] {:as data}
+  (if (restore-valid? data)
+    (let [email (new-restore-procedure data)]
+      (layout "Recupero password"
+        [:h1.section "Operazione avvenuta"]
+        [:h2.section "Controlla la tua casella email"]
+        [:div.section
+         [:p "Un'email è stata inviata a " email]
+         [:p "Controlla la tua casella di posta elettronica e clicca sul link per confermare la modifica della password."]]))
+    (render "/restore-password" data)))
+
+(defpartial change-pwd-form [code]
+  [:div.registrationForm
+   (form-to {:accept-charset "utf-8" } [:post (str "/restore-password/" code)]
+     [:table
+      [:tr [:td.head "Password:"]
+       [:td (password-field {:size 15} :pwd)]
+       (error-cell :pwd) [:td]]
+      [:tr [:td.head "Conf. password:"]
+       [:td (password-field {:size 15} :pwd2)]
+       (error-cell :pwd2) [:td]]
+      [:tr [:td {:colspan 2} (submit-button "Modifica password")]]])])
+
+(defpage "/restore-password/:code" {:keys [code]}
+  (let [data (fetch-one :restore-procedure :where {:code code})]
+    (if data
+      (layout "Modifica password"
+        [:h1.section "Modifica dati utente"]
+        [:h2.section "Scrivi la tua nuova password (matricola " (:_id data) ")"]
+        (change-pwd-form code))
+      (render "/not-found"))))
+
+(defn change-pwd-valid? [data]
+  (vali/rule (vali/min-length? (:pwd data) 4)
+    [:pwd "Deve avere almeno 4 lettere."])
+  (vali/rule (= (:pwd data) (:pwd2 data))
+    [:pwd2 "Le password non corrispondono"])
+  (not (vali/errors? :pwd :pwd2)))
+
+(defpage [:post "/restore-password/:code"] {:keys [code] :as data}
+  (if (change-pwd-valid? data)
+    (let [{id :_id} (fetch-one :restore-procedure :where {:code code})]
+      (update! :people {:_id id}
+         {:$set {:pwd (crypt/encrypt (:pwd data))}})
+      (destroy! :restore-procedure {:code code})
+      (layout "Password modificata"
+        [:h1.section "Procedura completata"]
+        [:h2.section "Effettua il login"]
+        [:p "La password relativa all'utente " id " è stata modificata."]
+        [:p "Ora puoi effettuare il " (link-to "/login" "login") "."]))
+    (render "/restore-password/:code" data)))

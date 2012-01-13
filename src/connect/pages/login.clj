@@ -27,6 +27,7 @@
          [:tr [:td.head "Password: "]
           [:td (password-field {:placeholder "Password"} :password)]
           [:td (submit-button "Login")]]]
+        [:p "Se hai dimenticato la password clicca " (link-to "/restore-password" "qui") "."]
         [:h1.section "Registrazione"]
         [:p "Se non sei ancora registrato clicca " (link-to "/register" "qui") "!"]))))
 

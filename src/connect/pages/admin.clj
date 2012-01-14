@@ -151,7 +151,6 @@
   (let [session (if (str/blank? session-str) nil session-str)
         logs (log-tail-by-session n session)]
     [:table.logs
-     [:caption "Session " (or session "NEW")]
      [:tr.logs [:th "IP"] [:th "Date"] [:th.logs "Time"] [:th.logs "Method"]
       [:th.logs "URL"] [:th.logs "Status"] [:th.logs "Type"] [:th.logs "ID"]]
      (for [log logs]
@@ -168,15 +167,15 @@
 (defpartial logs-table [n]
   (let [logs (log-tail n)]
     [:table.logs
-     [:caption "All sessions"]
      [:tr.logs [:th "Session"] [:th.logs "IP"] [:th.logs "Date"] [:th.logs "Time"] [:th.logs "Method"]
       [:th.logs "URL"] [:th.logs "Status"] [:th.logs "Type"] [:th.logs "ID"]]
      (for [log logs]
        [:tr.logs
-        [:td.logs (if (:session log)
-                    (link-to (str "/admin/logs?session=" (:session log) "&n=" n)
-                      (subs (:session log) 0 5))
-                    (link-to (str "/admin/logs?session=&n=" n) "NEW"))]
+        [:td.logs {:title (:user-agent log)}
+         (if (:session log)
+           (link-to (str "/admin/logs?session=" (:session log) "&n=" n)
+                    (subs (:session log) 0 5))
+           (link-to (str "/admin/logs?session=&n=" n) "NEW"))]
         [:td.logsB (:ip log)]
         [:td.logsB (format-log-date (:date log))]
         [:td.logsB (:resp-time log)]
@@ -190,16 +189,24 @@
   (let [num (Integer/parseInt n)]
     (if session
       (layout "Logs"
+        [:h1.section "Logs"]
+        [:h2.section "Accessi alle pagine per la sessione " session]
         (session-logs-table num session))
-      (layout "Logs"
-;        [:table.logs
-;         [:caption "Active sessions"]
-;         [:tr.logs [:th "Identifier"] [:th.logs "data"]]
-;         (for [[id data] @noir.session/mem]
-;           [:tr.logs
-;            [:td.logs (link-to (str "/admin/logs?session=" id "&n=" n) id)]
-;            [:td.logsB (pr-str data)]])]
-        (logs-table num)))))
+      (let [sessions (fetch :sessions :where {:last-access {:$gt (get-time-ago :days 1)}}
+                      :sort {:last-access -1})]
+        (layout "Logs"
+          [:h1.section "Logs"]
+          [:h2.section "Sessioni attive nelle ultime 24 ore: " (count sessions)]
+          [:table.logs
+           [:tr.logs [:th "Identifier"] [:th.logs "Last access"] [:th.logs "Utente"] [:th.logs "Data"]]
+           (for [{data :data id :_id date :last-access} sessions]
+             [:tr.logs
+              [:td.logs (link-to (str "/admin/logs?session=" id "&n=" n) id)]
+              [:td.logsB (format-log-date date)]
+              [:td.logsB (:username data)]
+              [:td.logsB (pr-str (dissoc data :username))]])]
+          [:h2.section "Accessi alle pagine"]
+          (logs-table num))))))
 
 (defpage "/admin/feedbacks" {:keys [n] :or {n "20"}}
   (let [feeds (if (= n "all")

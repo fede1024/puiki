@@ -7,15 +7,18 @@
 ;db.createCollection("mycoll", {capped:true, size:10000000})
 
 (def ^:dynamic *ip* nil)
+(def ^:dynamic *user-agent* nil)
 
 (defn wrap-logging [handler]
   (fn [req]
-    (binding [*ip* (:remote-addr req)] ;; TODO - memorizzare altri dati?
+    (binding [*ip* (:remote-addr req)
+              *user-agent* (get-in req [:headers "user-agent"])]
       (let [[out exec-time] (exec-time (handler req))]
         (insert! :logs
           {:date (java.util.Date.) :resp-time exec-time
            :method (:request-method req) :uri (:uri req)
            :referer (get-in req [:headers "referer"])
+           :user-agent (get-in req [:headers "user-agent"])
            :session (:value (get-in req [:cookies "ring-session"]))
            :status (:status out) :out-type (get-in out [:headers "Content-Type"])
            :username (session/get :username) :ip (:remote-addr req)})

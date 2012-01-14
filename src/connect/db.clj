@@ -2,7 +2,7 @@
   (:use connect.email
     somnium.congomongo
     [ring.middleware.session.store :as ringstore])
-  (:import [java.util UUID Date]))
+  (:import [java.util UUID]))
 
 ;(mongo! :db "connect")
 
@@ -112,7 +112,8 @@
   (write-session [this key data]
     (let [key (or key (new-key))]
       ;(println "Scrivo " (pr-str data))
-      (update! coll {:_id key} {:$set {:data data}})
+      (update! coll {:_id key}
+         {:$set {:data data :last-access (java.util.Date.)}})
       key))
   (delete-session [this key]
     (destroy! coll {:_id key})

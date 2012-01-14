@@ -68,7 +68,7 @@
          (when lastname (str (:lastname person) " ")) (:firstname person)
          (when (and edit (or (admin? (current-id)) (= (:_id person) (current-id))))
            [:span " - " (link-to (user-edit-path (:_id person)) "Modifica")])]
-        (when field [:td.personId (:field person)])
+        (when field [:td.personField (:field person)])
         [:td.personDate (when date (format-timestamp-relative (:created-at person)))]]
        (when (or info id)
          [:tr 
@@ -86,8 +86,8 @@
 (defpartial last-registrations []
   [:h2.section "Ultimi utenti registrati:"]
   (people-table (fetch :people :limit 5 :sort {:created-at -1})
-     :date true ;:lastname (not (nil? (current-id)))
-     :id (admin? (current-id))) [:br]
+     :date (admin? (current-id)) ;:lastname (not (nil? (current-id)))
+     :id (admin? (current-id)) :field true) [:br]
   "Totale " (link-to "/user/list" (fetch-count :people) " utenti") ".")
 
 (defpartial user-sidebar []

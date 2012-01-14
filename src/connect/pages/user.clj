@@ -83,7 +83,8 @@
                    (fetch :people)))]
     (layout "Elenco utenti"
       [:h2.section "Utenti registrati: (" (count users)")"]
-      (people-table users :lastname true :date true))))
+      (people-table users :lastname true :date (admin? (current-id))
+                    :field true))))
 
 (defpartial account-edit-form [person & [data]] ;; TODO: fix data
   [:h2.section "Account:"]

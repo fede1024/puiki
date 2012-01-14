@@ -98,7 +98,9 @@
   [:div.sideBarSection
    [:h2.section "Strumenti di amministrazione"]
    [:p (link-to "/admin/" "Pagina amministratore")]
-   [:p (link-to "/logs/errors/" "Log degli errori.")]])
+   [:p (link-to "/logs/errors/" "Errori") " " (connect.errors/errors-count)]
+   [:p (link-to "/admin/logs" "Logs")]
+   [:p (link-to "/admin/feedbacks" "Feedbacks") " " (fetch-count :feedbacks)]])
 
 (defpartial default-sidebar []
   (let [id (current-id)]

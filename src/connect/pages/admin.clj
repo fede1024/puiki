@@ -35,11 +35,11 @@
      " Effettua una divisione per zero. "
      "Verifica il funzionamento della cattura degli errori"]
     [:p (link-to "/logs/errors/" "/logs/errors/")
-     " Log degli errori."]
+     " Log degli errori " (connect.errors/errors-count) "."]
     [:p (link-to "/admin/logs" "/admin/logs")
      " Log deglle pagine."]
     [:p (link-to "/admin/feedbacks" "/admin/feedbacks")
-     " Feedback degli utenti."]
+     " Feedback degli utenti " (fetch-count :feedbacks) "."]
     [:p (link-to "/admin/recur3" "/admin/recur3") 
      " Mostra ricorsivamente il layout."]
     [:p [:a {:href (str "mailto:" (get-all-emails))} "Email"]
@@ -183,7 +183,7 @@
         [:td.logsB (:uri log)]
         [:td.logsB (:status log)]
         [:td.logsB (:out-type log)]
-        [:td.logsB (:username log)]])]))
+        [:td.logsB (link-to (user-info-path (:username log)) (:username log))]])]))
 
 (defpage "/admin/logs" {:keys [session n] :or {n "50"}}
   (let [num (Integer/parseInt n)]

@@ -139,6 +139,9 @@
                                   " (" (:request-method request)  ")")
                   ex request)}))))
 
+(defn errors-count []
+  (count (.listFiles (java.io.File. errors-dir))))
+
 ;(defmacro GETx [path args description & body]
 ;  `(GET ~path ~args 
 ;     (err/check (str "Errore pagina: " ~description)

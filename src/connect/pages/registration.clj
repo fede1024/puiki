@@ -184,7 +184,7 @@
           (:_id data))
         (connect.pages.login/login! {:username (:_id data) :password (:pwd data)}
           :already-encrypted)
-        (session/flash-put! :new-user) 
+        (session/flash-put! "new-user") 
         (resp/redirect (user-edit-path (:_id data))))
       (render "/not-found"))))
 

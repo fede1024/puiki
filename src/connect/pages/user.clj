@@ -29,8 +29,7 @@
      [:p (link-to (user-edit-path (current-id)) "Modifica")]]
     [:h2.section "Canali:"]
     [:div.section
-     [:p (link-to "/user/following" "Notifiche")]
-     [:p (link-to "/channel/list" "Modifica i canali seguiti")]]
+     [:p (link-to "/user/following" "Notifiche")]]
     [:h2.section "Utenti:"]
     [:div.section
      [:p (link-to "/user/list" "Elenco utenti")]]))
@@ -62,7 +61,7 @@
 
 (defpage "/user/:id/info" {:keys [id]}
   (layout "Informazioni utente"
-    (if (= (session/flash-get) :done) 
+    (if (= (session/flash-get) "done") 
       [:p "I dati sono stati modificati"])
     [:h1.section "Informazioni utente"]
     (let [person (fetch-one :people :where {:_id id})]
@@ -123,7 +122,7 @@
 (defpage "/user/:id/edit" {:keys [id] :as data}
   (let [person (fetch-one :people :where {:_id id})]
     (layout "Modifica utente"
-      (when (= (session/flash-get) :new-user) 
+      (when (= (session/flash-get) "new-user") 
         (html
           [:h1.section "Benvenuto!"]
           [:p "Grazie per esserti registrato. Ora fai parte di PoliConnect."]))
@@ -159,7 +158,7 @@
       (update! :people {:_id id}
         {:$set {:year y :field field :firstname firstname :lastname lastname}})
       (when channel (follow-channel (:_id channel) id))
-      (session/flash-put! :done)
+      (session/flash-put! "done")
       (resp/redirect (user-info-path id)))))
 
 (defpage "/user/following" {:keys [remove-news]}
@@ -304,7 +303,7 @@
               (submit-button "Conferma")))
           (let [channel (or old-channel (create-course-channel! name code))]
             (create-course! field name (Integer/parseInt year) code)
-            (session/flash-put! (if old-channel :new-course :new-channel))
+            (session/flash-put! (if old-channel "new-course" "new-channel"))
             (resp/redirect (channel-path channel)))))
       (render "/user/new-course" data))
     (render "/permission-denied")))

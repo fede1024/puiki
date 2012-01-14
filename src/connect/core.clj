@@ -69,6 +69,7 @@
       (swap! servers assoc p
         (server/start p
           {:ns 'connect
+           :session-store (mongo-session :sessions)
            :session-cookie-attrs {:expires "Wed, 09 Jun 2021 10:18:14 GMT"}})))))
 
 (defn stop-server [port]

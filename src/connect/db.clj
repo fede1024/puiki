@@ -1,6 +1,8 @@
 (ns connect.db
   (:use connect.email
-    somnium.congomongo))
+    somnium.congomongo
+    [ring.middleware.session.store :as ringstore])
+  (:import [java.util UUID Date]))
 
 ;(mongo! :db "connect")
 
@@ -92,6 +94,36 @@
   (update! :people {} ;; Cancella tutte le notifiche
     {:$unset {:news 1}} :multiple true))
 
+;; 
+;; SESSIONI
+;; https://github.com/Raynes/mongo-session/blob/develop/src/mongo_session/core.clj
+;;
 
+(defn new-key []
+  (str (UUID/randomUUID)))
 
+;; Effettua molte richieste inutili al database
+(defrecord MongoSessionStore [coll]
+  SessionStore
+  (read-session [this key]
+    (let [data (:data (fetch-one coll :where {:_id key} :only [:data]))]
+      ;(println "Leggo" data)
+      (or (reduce merge (map (fn [[k val]] {(name k) val}) data)){})))
+  (write-session [this key data]
+    (let [key (or key (new-key))]
+      ;(println "Scrivo " (pr-str data))
+      (update! coll {:_id key} {:$set {:data data}})
+      key))
+  (delete-session [this key]
+    (destroy! coll {:_id key})
+    nil))
 
+(defn mongo-session
+  "Create a mongodb store for ring sessions. The store will use whatever
+  mongodb connection you have open, and assumes that it has ownership of the
+  collection named by coll."
+  [coll]
+  (MongoSessionStore. coll))
+
+(defn list-session-ids [store]
+  (map :_id (fetch (:coll store) :only [:_id])))

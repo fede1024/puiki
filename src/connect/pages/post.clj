@@ -154,9 +154,7 @@
          (when (not preview)
            [:span {:id (str "votes" (:_id post))}
             (vote-section post)])]]
-       [:tr [:td.postDate (when (= (:type post) "normal")
-                            "Ultima modifica: ")
-             (format-timestamp-relative (or (:modified-at post) (:created-at post)))]]
+       [:tr [:td.postDate (format-timestamp-relative (:created-at post))]]
        [:tr [:td.postContent {:colspan 2}
              (if (= (:type post) "normal")
                [:div.pageContent (:content post)]

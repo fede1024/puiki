@@ -217,9 +217,9 @@
         (store-preferred-channel ch)
         (update! :channels {:_id id} {:$inc {:views 1}})
         (layout (:name ch)
-          (when (= (session/flash-get) :new-channel) 
+          (when (= (session/flash-get) "new-channel") 
             [:p "Nuovo canale creato."])
-          (when (= (session/flash-get) :new-course) 
+          (when (= (session/flash-get) "new-course") 
             [:p "Nuovo corso creato."])
           (when (current-id)
             [:span {:id id}

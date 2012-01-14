@@ -2,6 +2,7 @@
   (:use connect.logs
         connect.pages.layout
         connect.pages.utils
+        connect.errors
         noir.core   
         hiccup.core
         hiccup.page-helpers

@@ -5,7 +5,8 @@
         hiccup.page-helpers
         hiccup.form-helpers
         somnium.congomongo)
- (:require [noir.server :as server]
+ (:require connect.errors
+           [noir.server :as server]
            [noir.validation :as vali]
            [noir.session :as session]
            [noir.response :as resp]

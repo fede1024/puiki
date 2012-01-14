@@ -86,7 +86,10 @@
      "Annulla"]
     [:button {:class "postComment" :onClick (js-comment post)} "Commenta"]]]
   [:tr.postBottom {:id (str "actions" (:_id post))}    ;; Rispondi/Commenta
-   [:td.postInfo]
+   [:td.postInfo
+    (when (= (:type post) "question")
+      [:p [:img.edit {:src "/images/users.png" :alt "Vis" :title "Visualizzazzioni"}]
+       "Domanda visualizzata " (or (:views post) 0) " volte."])]
    [:td.postActions
     (when (= (:type post) "question")
       (form-to [:get (user-reply-path post)]
@@ -180,6 +183,9 @@
              (if (= (:type post) "normal")
                [:div.pageContent (:content post)]
                [:div.questionContent (:content post)])]]
+       [:tr [:td [:br]
+             [:p [:img.edit {:src "/images/users.png" :alt "Vis" :title "Visualizzazzioni"}]
+              "Pagina visualizzata " (or (:views post) 0) " volte."]]]
        [:tr [:td.postDate "Versione del: "
              (format-timestamp (or (:modified-at post) (:created-at post)))
              ", ultima modifica "
@@ -242,8 +248,9 @@
 
 (defpartial question-sidebar [question]
   [:div.sideBarSection
-   [:h2.section "Informazioni post:"]
+   [:h2.section "Informazioni post:"] ;; TODO: fare come page-sidebar? (senza sotto funzioni)
    (post-summary question)
+   [:p "Visite: " (or (:views question) 0)]
    (channel-link question)])
 
 (defpartial page-sidebar [page cron]
@@ -255,7 +262,9 @@
           (:name ch)]])
    [:p [:a {:href (post-path page)}
         [:img.edit {:src "/images/link.png" :alt "Link" :title "Link permanente"}]
-        "Link permanente"]]]
+        "Link permanente"]]
+   [:p [:img.edit {:src "/images/users-small.png" :alt "Vis" :title "Visualizzazzioni"}]
+    "Visite: " (or (:views page) 0)]]
   [:div.sideBarSection
    [:h2.section "Wiki"]
     [:p [:a {:href (str (edit-path page))}
@@ -292,6 +301,7 @@
                 (update! :people {:_id (current-id)} ;; tolgo le risposte dalle notifiche
                   {:$pull {:news {:post (:_id answer)}}}
                   :multiple true)))))
+        (update! :posts {:_id id} {:$inc {:views 1}})
         (layout (:title post)
           (let [ch (fetch-one :channels :where {:_id (:channel post)})]
             [:h1.section [:a.nodecor {:href (channel-path ch)} (:name ch) ":"]])

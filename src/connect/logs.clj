@@ -10,7 +10,7 @@
 
 (defn wrap-logging [handler]
   (fn [req]
-    (binding [*ip* (:remote-addr req)]
+    (binding [*ip* (:remote-addr req)] ;; TODO - memorizzare altri dati?
       (let [[out exec-time] (exec-time (handler req))]
         (insert! :logs
           {:date (java.util.Date.) :resp-time exec-time

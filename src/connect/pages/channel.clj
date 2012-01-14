@@ -215,6 +215,7 @@
       (binding [*sidebar* (html (add-post ch)
                             (followers ch))]
         (store-preferred-channel ch)
+        (update! :channels {:_id id} {:$inc {:views 1}})
         (layout (:name ch)
           (when (= (session/flash-get) :new-channel) 
             [:p "Nuovo canale creato."])
@@ -256,7 +257,9 @@
                 [:div.section
                  (for [page pages]
                    [:p [:a {:href (post-path page)}
-                        [:img.edit {:src "/images/page.png"}] [:b (:title page)]]])]))))))))
+                        [:img.edit {:src "/images/page.png"}] [:b (:title page)]]])])))
+          [:p [:img.edit {:src "/images/users.png" :alt "Vis" :title "Visualizzazzioni"}]
+              "Canale visualizzato " (or (:views ch) 0) " volte."])))))
             
 (defpage "/channel/:id/:show" {:keys [id show]}
   (let [id (obj-id id)

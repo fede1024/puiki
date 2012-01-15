@@ -107,14 +107,14 @@
   SessionStore
   (read-session [this key]
     (let [data (:data (fetch-one coll :where {:_id key} :only [:data]))]
-      ;(println "Leggo" data)
+      ;(println "Leggo da" key data)
       (or (reduce merge (map (fn [[k val]] {(name k) val}) data)){})))
   (write-session [this key data]
-    (let [key (or key (new-key))]
-      ;(println "Scrivo " (pr-str data))
+    ;(println "Scrivo in " key (pr-str data))
+    (when key
       (update! coll {:_id key}
-         {:$set {:data data :last-access (java.util.Date.)}})
-      key))
+        {:$set {:data data :last-access (java.util.Date.)}}))
+    (or key (new-key)))
   (delete-session [this key]
     (destroy! coll {:_id key})
     nil))

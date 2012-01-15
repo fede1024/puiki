@@ -6,6 +6,7 @@
         hiccup.form-helpers
         somnium.congomongo)
  (:require connect.errors
+           connect.logs
            [noir.server :as server]
            [noir.validation :as vali]
            [noir.session :as session]
@@ -45,37 +46,44 @@
 (defpartial status-section []
   (if (current-id)
     (let [id (current-id)
-          person (fetch-one :people :where {:_id id})]
+          person (fetch-one :people :where {:_id id})
+          recents (fetch-count :sessions :where {:last-access {:$gt (connect.logs/get-time-ago :minutes 8)}})]
       [:div.status
        [:table.status
         [:tr
          [:td.statusWelcome
           "Benvenuto " (:firstname person) "!"]]
         [:tr
-         [:td.statusInfo "Matricola " id " " (link-to "/logout" "logout")]]]])
+         [:td.statusInfo "Matricola " id " " (link-to "/logout" "logout")]]
+        [:tr
+         [:td.statusOnline "Utenti online " (if (zero? recents) 1 recents)]]]])
     [:div.status "Effettua il " 
      [:a {:href "/login" :id :loginLink} "login"]
      ;[:script "document.write('<a href = \"/login?redirect=' + document.URL + '\">login</a>')"]
      [:script "$('#loginLink').attr('href', '/login?redirect=' + document.URL);"]
      " oppure " [:a {:href "/register"} "registrati"] "."]))
 
-(defpartial people-table [people & {:keys [img field edit id info date lastname]}]
+(defpartial people-table [people & {:keys [link img field edit id info date lastname]}]
   [:table.people
    (for [person people]
-     (html
-       [:tr.person
-        [:td.personName
-         (when img [:img {:src "/images/user-small.png" :height 13}]) " "
-         (when lastname (str (:lastname person) " ")) (:firstname person)
-         (when (and edit (or (admin? (current-id)) (= (:_id person) (current-id))))
-           [:span " - " (link-to (user-edit-path (:_id person)) "Modifica")])]
-        (when field [:td.personField (:field person)])
-        [:td.personDate (when date (format-timestamp-relative (:created-at person)))]]
-       (when (or info id)
-         [:tr 
-          [:td.personId {:colspan "2"}
-           (when info (str (translate-job (:job person)) " "))
-           (when id (:_id person))]])))])
+     (let [name (str (when lastname (str (:lastname person) " "))
+                     (:firstname person))]
+       (html
+         [:tr.person
+          [:td.personName
+           (when img [:img {:src "/images/one-user.png"}]) " "
+           (if link
+             [:a {:href (user-info-path (:_id person))} name]
+             name)
+           (when (and edit (or (admin? (current-id)) (= (:_id person) (current-id))))
+             [:span " - " (link-to (user-edit-path (:_id person)) "Modifica")])]
+          (when date [:td.personDate (format-timestamp-relative (:created-at person))])]
+         (when field [:tr [:td.personField (:field person)]])
+         (when (or info id)
+           [:tr 
+            [:td.personId {:colspan "2"}
+             (when info (str (translate-job (:job person)) " "))
+             (when id (:_id person))]]))))])
 
 ;(defpartial last-posts []
 ;  [:h2.section "Ultimi post"]
@@ -87,8 +95,7 @@
 (defpartial last-registrations []
   [:h2.section "Ultimi utenti registrati:"]
   (people-table (fetch :people :limit 5 :sort {:created-at -1})
-     :date (admin? (current-id)) ;:lastname (not (nil? (current-id)))
-     :id (admin? (current-id)) :field true) [:br]
+     :field true :img true :link (not (nil? (current-id)))) [:br]
   "Totale " (link-to "/user/list" (fetch-count :people) " utenti") ".")
 
 (defpartial user-sidebar []

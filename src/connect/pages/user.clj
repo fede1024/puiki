@@ -73,7 +73,8 @@
            [:p "TODO info docente"]
            (= (:job person) "admin")
            [:p "TODO info admin"])
-         [:h2.section (link-to (user-edit-path (current-id)) "Modifica")]]
+         (when (or (admin? (current-id)) (= (current-id) id)) 
+           [:h2.section (link-to (user-edit-path id) "Modifica")])]
         "Utente non esistente."))))
 
 (defpage "/user/list" []
@@ -82,8 +83,8 @@
                    (fetch :people)))]
     (layout "Elenco utenti"
       [:h2.section "Utenti registrati: (" (count users)")"]
-      (people-table users :lastname true :date (admin? (current-id))
-                    :field true))))
+      (people-table users :lastname true :field true :img true
+                    :link (not (nil? (current-id)))))))
 
 (defpartial account-edit-form [person & [data]] ;; TODO: fix data
   [:h2.section "Account:"]

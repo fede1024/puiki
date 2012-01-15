@@ -192,14 +192,14 @@
         [:h1.section "Logs"]
         [:h2.section "Accessi alle pagine per la sessione " session]
         (session-logs-table num session))
-      (let [sessions (fetch :sessions :where {:last-access {:$gt (get-time-ago :days 1)}}
-                      :sort {:last-access -1})]
+      (let [recents (fetch :sessions :where {:last-access {:$gt (get-time-ago :hours 1)}}
+                           :sort {:last-access -1})]
         (layout "Logs"
           [:h1.section "Logs"]
-          [:h2.section "Sessioni attive nelle ultime 24 ore: " (count sessions)]
+          [:h2.section "Sessioni attive negli ull'ultima ora: " (count recents)]
           [:table.logs
            [:tr.logs [:th "Identifier"] [:th.logs "Last access"] [:th.logs "Utente"] [:th.logs "Data"]]
-           (for [{data :data id :_id date :last-access} sessions]
+           (for [{data :data id :_id date :last-access} recents]
              [:tr.logs
               [:td.logs (link-to (str "/admin/logs?session=" id "&n=" n) id)]
               [:td.logsB (format-log-date date)]

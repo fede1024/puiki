@@ -225,6 +225,13 @@ td.statusInfo, td.statusLogout {
     font-size: 9pt;
 }
 
+
+td.statusOnline {
+	padding-top: 3px;
+    text-align: center;
+    font-size: 9pt;
+}
+
 div.register {
     font-size: 12pt;
     text-align: center;

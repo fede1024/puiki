@@ -19,31 +19,27 @@
      [:h1.section "Benvenuto!" [:div.like_button (like-button "/")]]
      [:div.section div-prop
       [:p "Benvenuto su PoliConnect, il sito creato per gli studenti del Politecnico di Torino, "
-       "dove fare domande e trovare informazioni riguardanti i corsi e non solo."]]
-     [:h2.section "Come funziona:"]
+       "dove fare domande e trovare informazioni riguardanti i corsi, condividere appunti e altro ancora."]]
+     [:h2.section "Condividi ciò che sai e chiedi cosa vuoi sapere:"]
      [:div.section div-prop
       [:img.right {:src "/images/logo.png" :style "padding-left: 10px"}]
-      [:p "Il sito è diviso in " (link-to "/channel/list" "canali")
-       ", ognuno riguardante un corso di studi (ad esempio Ingegneri Informatici iscritti al "
-       (link-to "/channel/4ea283f4e4b0b301111bb1e2" "terzo anno")
-       ") oppure una " (link-to "/channel/4ea2844fe4b0b301111bb1f3" "materia di studio")
-       ". Ogni studente iscritto può aggiungere le sue domande (" (link-to "/post/4ea28778e4b0b301111bb242" "un esercizio")
-       ", un dubbio su un argomento della lezione...) nel canale adeguato e una notifica arriverà a tutti gli studenti che seguono il canale, i quali potranno rispondere."
-       " Le varie risposte vengono poi ordinate in base ai giudizi degli studenti stessi, così che la risposta ritenuta migliore sia visualizzata per prima. Ad ogni nuova risposta alle domande che hai effettuato ti arriverà una notifica."]
-      [:p "Il contenuto delle domande e delle risposte viene indicizzato per permettere una "
+      [:p "Il sito ha una pagina dedicata ad ogni " (link-to "/channel/list" "materia")
+       ", in cui puoi porre le tue domande e condividere ciò che sai."
+       " Ogni studente iscritto può aggiungere le sue domande (" (link-to "/post/4ea28778e4b0b301111bb242" "un esercizio")
+       ", un dubbio su un argomento della lezione...) nella pagina dedicata alla materia e una notifica arriverà a tutti gli studenti che seguono il tuo stesso corso, i quali potranno rispondere."
+       " Le varie risposte vengono poi ordinate in base ai giudizi degli studenti stessi, così che la risposta ritenuta migliore sia visualizzata per prima."]
+      [:p "Puoi anche condividere ciò che sai e contribuire a raccogliere informazioni sui corsi, tramite la sezione wiki, dove puoi creare nuove pagine o modificare quelle esistenti, aggiungendo informazioni utili ad altri studenti."
+       " Vedi una " (link-to "http://www.policonnect.it/post/4f0c3627e4b056ec797378a3" "pagina di esempio") "."]
+      [:p "Il contenuto delle pagine, delle domande e delle risposte viene indicizzato per permettere una "
        (link-to "/search?text=java+public" "rapida ricerca")
        " e per trovare subito le informazioni che cerchi."]]
      [:h2.section "Iscrizione:"]
      [:div.section div-prop
       [:p "Se sei uno studente del Politecnico di Torino l'iscrizione è rapidissima, è sufficiente cliccare "
-       (link-to "/register" "qui") " e in un attimo sarai in grado di aggiungere le tue domande o provare a rispondere ai quesiti già presenti."]
+       (link-to "/register" "qui") " e in un attimo sarai in grado di aggiungere le tue domande, provare a rispondere ai quesiti già presenti e creare nuove pagine wiki."]
       [:p "Per ogni informazione/suggerimento scrivi a "
        (link-to "mailto:giraud.federico@gmail.com" "giraud.federico@gmail.com")
-       " o utilizza il pulsante Feedback in alto."]]
-     [:h2.section "Versione beta:"]
-     [:div.section div-prop
-      [:p "Il sito è in fase di test, abbiamo quindi bisogno di studenti che abbiano voglia di provare ad utilizzarlo inserendo nuovi contenuti."
-       "	Ora è disponibile solo un funzionamento di base ma molto sarà aggiunto, seguici!"]]]))
+       " o utilizza il pulsante Feedback in alto."]]]))
 
 (defpage "/" []
   (layout "PoliConnect"

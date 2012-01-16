@@ -11,5 +11,6 @@
                  [clj-json "0.4.3"]
                  [commons-codec "1.5"]]
   :dev-dependencies [[com.github.robertrolandorg/lein-eclipse "1.1.0"]]
+  :repl-retry-limit 2000
   :keep-non-project-classes true)
 

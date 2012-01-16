@@ -44,24 +44,26 @@
       :allowTransparency "true"}]))
 
 (defpartial status-section []
-  (if (current-id)
-    (let [id (current-id)
-          person (fetch-one :people :where {:_id id})
-          recents (fetch-count :sessions :where {:last-access {:$gt (connect.logs/get-time-ago :minutes 8)}})]
+  (let [recents (fetch-count :sessions :where {:last-access {:$gt (connect.logs/get-time-ago :minutes 8)}})]
+    (if (current-id)
+      (let [id (current-id)
+            person (fetch-one :people :where {:_id id})]
+        [:div.status
+         [:table.status
+          [:tr
+           [:td.statusWelcome
+            "Benvenuto " (:firstname person) "!"]]
+          [:tr
+           [:td.statusInfo "Matricola " id " " (link-to "/logout" "logout")]]
+          [:tr
+           [:td.statusOnline "Utenti online " (if (zero? recents) 1 recents)]]]])
       [:div.status
-       [:table.status
-        [:tr
-         [:td.statusWelcome
-          "Benvenuto " (:firstname person) "!"]]
-        [:tr
-         [:td.statusInfo "Matricola " id " " (link-to "/logout" "logout")]]
-        [:tr
-         [:td.statusOnline "Utenti online " (if (zero? recents) 1 recents)]]]])
-    [:div.status "Effettua il " 
-     [:a {:href "/login" :id :loginLink} "login"]
-     ;[:script "document.write('<a href = \"/login?redirect=' + document.URL + '\">login</a>')"]
-     [:script "$('#loginLink').attr('href', '/login?redirect=' + document.URL);"]
-     " oppure " [:a {:href "/register"} "registrati"] "."]))
+       [:p "Effettua il " 
+        [:a {:href "/login" :id :loginLink} "login"]
+        ;[:script "document.write('<a href = \"/login?redirect=' + document.URL + '\">login</a>')"]
+        [:script "$('#loginLink').attr('href', '/login?redirect=' + document.URL);"]
+        " oppure " [:a {:href "/register"} "registrati"] "."]
+       [:div.center "Utenti online " (if (zero? recents) 1 recents)]])))
 
 (defpartial people-table [people & {:keys [link img field edit id info date lastname]}]
   [:table.people

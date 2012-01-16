@@ -112,6 +112,7 @@
   (write-session [this key data]
     ;(println "Scrivo in " key (pr-str data))
     (when key
+      ;(println "FATTO")
       (update! coll {:_id key}
         {:$set {:data data :last-access (java.util.Date.)}}))
     (or key (new-key)))

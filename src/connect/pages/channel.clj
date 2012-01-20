@@ -47,7 +47,7 @@
         (for [c channels]
           [:li.year
            [:h3.section
-            [:a.nodecor {:href "#" :onClick (js-toggle-anim "#channels_" (:year c) "_" (:_id f))}
+            [:a.nodecor {:onClick (js-toggle-anim "#channels_" (:year c) "_" (:_id f))}
               [:img.year {:src "/images/users.png"}] (cardinali (:year c)) " anno"]]
            [:div.section {:id (str "channels_" (:year c) "_" (:_id f)) :style "display: none"}
             [:p (link-to (channel-path c) "Canale dedicato a " (:name c))]

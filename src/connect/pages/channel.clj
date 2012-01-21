@@ -47,7 +47,7 @@
         (for [c channels]
           [:li.year
            [:h3.section
-            [:a.nodecor {:onClick (js-toggle-anim "#channels_" (:year c) "_" (:_id f))}
+            [:a.channel {:onClick (js-toggle-anim "#channels_" (:year c) "_" (:_id f))}
               [:img.year {:src "/images/users.png"}] (cardinali (:year c)) " anno"]]
            [:div.section {:id (str "channels_" (:year c) "_" (:_id f)) :style "display: none"}
             [:p (link-to (channel-path c) "Canale dedicato a " (:name c))]
@@ -236,7 +236,7 @@
                  (if-let [c (fetch-one :channels :where {:code (:code course)})]
                    [:li.channel
                     (link-to (channel-path c) (:name c))]))]
-              (link-to (encode-url "/user/new-course?" {:field (:field ch) :year (:year ch)})
+              (link-to (encode-url "/user/new-course" {:field (:field ch) :year (:year ch)})
                        "Crea nuovo corso")))
           ;[:p (link-to "/user/following" "Canali seguiti")]
           [:br]

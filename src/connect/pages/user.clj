@@ -155,7 +155,7 @@
   (if (not (valid? person))
     (render "/user/:id/edit" person)
     (let [y (Integer/parseInt year)
-          channel (fetch-one :channels :where {:field field :year y})]
+          channel (fetch-one :channels :where {:field field :year (- 2012 y)})]
       (update! :people {:_id id}
         {:$set {:year y :field field :firstname firstname :lastname lastname}})
       (when channel (follow-channel (:_id channel) id))

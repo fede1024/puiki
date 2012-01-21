@@ -49,10 +49,14 @@
                        :sort {:created-at -1} :limit 5)]
       (channel/post-links posts))
     [:h2.lastPages [:img.middle {:src "/images/wiki.png"}] " Ultime pagine wiki:"]
-    (let [pages (fetch :posts :where {:removed {:$ne true} :type :normal}
-                       :sort {:modified-at -1} :limit 5)]
+    (let [pages (concat
+                  (fetch :posts :where {:removed {:$ne true} :type :normal}
+                         :sort {:modified-at -1} :limit 5)
+                  (fetch :posts :where {:removed {:$ne true} :type :normal}
+                         :sort {:created-at -1} :limit 5))
+          ordered (sort-by #(or (:modified-at %) (:created-at %)) (distinct pages))]
       [:div.section
-       (for [page pages]
+       (for [page (take 5 (reverse (sort-by #(or (:modified-at %) (:created-at %)) ordered)))]
          (let [channel (fetch-one :channels :where {:_id (:channel page)})]
            [:p [:a {:href (post-path page)}
                 [:img.edit {:src "/images/page.png"}] [:b (:title page)]]

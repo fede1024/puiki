@@ -443,4 +443,5 @@ div.wide {
 
 a.nodecor {
 	text-decoration: none;
+	cursor: pointer;
 }

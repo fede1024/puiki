@@ -2,6 +2,7 @@
   (:use connect.pages.layout
         connect.pages.utils
         connect.fb
+        connect.db
         noir.core   
         hiccup.core
         hiccup.page-helpers
@@ -60,8 +61,22 @@
          (let [channel (fetch-one :channels :where {:_id (:channel page)})]
            [:p [:a {:href (post-path page)}
                 [:img.edit {:src "/images/page.png"}] [:b (:title page)]]
-            " - " [:a {:href (channel-path channel)} (:name channel)]]))])))
-  
+            " - " [:a {:href (channel-path channel)} (:name channel)]]))])
+    [:h2.lastPages [:img.middle {:src "/images/files.png"}] " Ultimi files (beta)"]
+    (let [files (if (current-id)
+                  (fetch :files :sort {:created -1} :limit 5)
+                  (fetch :files :where {:privacy "Pubblico"}
+                         :sort {:created -1} :limit 5))]
+      [:div.section
+       (for [file files]
+         (let [channel (fetch-one :channels :where {:_id (obj-id (:channel file))})]
+           (html
+             [:a {:href (file-path (:channel file) (:filename file))}
+              [:img.edit {:src "/images/box.png"}] [:b (:filename file)]]
+             " - " [:a {:href (channel-path channel)} (:name channel)]
+             " - " (:category file)
+             (when (current-id) (str " (" (:privacy file) ")")) [:br])))])))
+          
 (defpage [:post "/"] {:keys [signed_request ref fb_source] :as data}
   ;(println (pr-str signed_request ref fb_source))
   (let [fb-user-id (get (decode-string-request signed_request) "user_id")]

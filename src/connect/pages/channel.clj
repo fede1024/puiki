@@ -265,7 +265,7 @@
                  (for [page pages]
                    [:p [:a {:href (post-path page)}
                         [:img.edit {:src "/images/page.png"}] [:b (:title page)]]]))]
-              [:h2.lastPages [:img.middle {:src "/images/files.png"}] " Files"]
+              [:h2.lastPages [:img.middle {:src "/images/files.png"}] " Files (beta)"]
               [:div.section
                (if (empty? files)
                  [:p "Non ci sono ancora files condivisi in questo canale."]
@@ -277,7 +277,7 @@
                      (html
                        [:a {:href (file-path id (:filename file))}
                         [:img.edit {:src "/images/box.png"}] [:b (:filename file)]]
-                       " - " (:category file) [:br]))))]))
+                       " - " (:category file) " (" (:privacy file) ")" [:br]))))]))
           [:p [:img.edit {:src "/images/users.png" :alt "Vis" :title "Visualizzazzioni"}]
               "Canale visualizzato " (or (:views ch) 0) " volte."])))))
             
@@ -306,10 +306,13 @@
                                 :sort {:created-at -1})))))))))
 
 (def auth {:secret-key "Y69xCpsGpStpnZsaBsjHMM5aUepNmdRRwThNBezE" :access-key "AKIAJGKXPJQMXBDLLF2A"})
-(def bucket "files.policonnect.it")
+
+(defn get-bucket-name []
+  (:bucket (fetch-one :admin :where {:_id "s3"})))
+
 (def expire-minutes 1)
 
-(def file-categories ["Appunti" "Esercizi" "Laboratori" "Temi d'esame"])
+(def file-categories ["Appunti" "Esercizi" "Laboratori" "Temi d'esame" "Vario"])
 
 (def size-limit-mb 10) ;; Limite dimensione file in megabyte
 
@@ -324,7 +327,7 @@
           [:p (file-upload :file) " La dimensione massima è di " size-limit-mb "Mb."]
           [:p "Descrizione file: "
            (text-area {:class :postComment :rows 3} :description)]
-          [:p "Categoria:" (drop-down :category file-categories)
+          [:p "Categoria:" (drop-down :category file-categories "Vario")
            " Visibilità:" (drop-down :privacy '["Pubblico" "Privato"])]
           [:p "I file pubblici sono accessibili a chiunque, mentre quelli privati solo agli utenti iscritti "
            " e quindi solo agli studenti."]
@@ -370,7 +373,7 @@
   (let [obj-name (str channel "/" (:filename file))
         ret (try
               (s3/with-s3 auth
-                (s3/put-file! (:tempfile file) "files.policonnect.it"
+                (s3/put-file! (:tempfile file) (get-bucket-name)
                   :name obj-name
                   :mime (:content-type file)))
               (catch Exception exc
@@ -380,7 +383,8 @@
       (insert! :files
         {:channel channel :filename (:filename file) :description description
          :category category :obj-name obj-name :size (to-integer (:size file))
-         :privacy privacy :content-type (:content-type file)}))))
+         :privacy privacy :content-type (:content-type file)
+         :created-at (java.util.Date.)}))))
 
 (defpage [:post "/edit/upload"] {:keys [file description channel category privacy] :as data}
   (if (and (valid-file-descripion? data) (valid-file? file channel))
@@ -407,25 +411,32 @@
             (for [error errors]
               [:p error]))))))
 
-(defn channel-file-redirect [id filename]
-  (let [file (fetch-one :files :where {:channel id :filename filename})]
-    (if file
-      (let [url (s3/with-s3 auth
-                  (s3/get-expiring-url (:obj-name file) bucket expire-minutes :virtual true))] 
-        {:status 303
-         :headers {"Location" url}})
-      (resp/redirect "/not-found"))))
+(defn channel-file-redirect [file]
+  (if file
+    (let [url (s3/with-s3 auth
+                (s3/get-expiring-url (:obj-name file) (get-bucket-name) expire-minutes :virtual true))] 
+      {:status 302
+       :headers {"Location" url}})
+    (resp/redirect "/not-found")))
 
 (defpage "/channel/:id/files/:filename" {:keys [id filename action]}
-  (let [dec-filename (URLDecoder/decode filename)]
-    (if (= action "info")
-      (layout "ok"
-        [:h1.section dec-filename]
-        (link-to (file-path id filename :action 'open) "Apri"))
-      (do
-        (update! :files {:channel id :filename dec-filename}
-           {:$inc {:views 1}})
-        (channel-file-redirect id dec-filename)))))
+  (let [dec-filename (URLDecoder/decode filename)
+        file (fetch-one :files :where {:channel id :filename dec-filename})]
+    (if file
+      (if (or (= (:privacy file) "Pubblico")
+              (current-id))
+        (if (= action "info")
+          (layout "ok"
+             [:h1.section dec-filename]
+             (link-to (file-path id filename :action 'open) "Apri"))
+          (do
+            (update! :files {:channel id :filename dec-filename}
+               {:$inc {:views 1}})
+            (channel-file-redirect file)))
+        (layout "Effettua il login"
+          [:h1.section "Permessi insufficienti"]
+          [:p "Effettua il login per poter accedere al file."]))
+      (render "/not-found"))))
 
 ;(defpage "/upload" []
 ;  (layout "Condividi un file"

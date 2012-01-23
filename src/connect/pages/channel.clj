@@ -108,7 +108,7 @@
    [:p [:a {:href (encode-url "/edit/new-page" {:channel (:_id channel)})}
         [:img.middle {:src "/images/page.png"}] "Nuova pagina"]]
    [:p [:a {:href (encode-url "/edit/upload" {:channel (:_id channel)})}
-        [:img.middle {:src "/images/upload.png"}] "Carica file"]]
+        [:img.middle {:src "/images/upload.png"}] "Carica file (beta)"]]
   [:h2.section "Cerca:"]
   (form-to [:get "/search"]
     [:input {:type :hidden :name :channel :value (:_id channel)}]
@@ -270,11 +270,14 @@
                (if (empty? files)
                  [:p "Non ci sono ancora files condivisi in questo canale."]
                  (for [file files]
-                   (html
-                     [:a {:href (file-path id (:name file) :action 'open)}
-                      [:img.edit {:src "/images/box.png"}] [:b (:name file)]]
-                      " - " (:filename file) " (" (:category file) ")"
-                     [:br])))]))
+                   (if (and (= (:privacy file) "Privato")
+                            (not (current-id)))
+                     [:span [:img.edit {:src "/images/box.png"}] 
+                      "File privato, esegui il login per accedere." [:br]]
+                     (html
+                       [:a {:href (file-path id (:filename file))}
+                        [:img.edit {:src "/images/box.png"}] [:b (:filename file)]]
+                       " - " (:category file) [:br]))))]))
           [:p [:img.edit {:src "/images/users.png" :alt "Vis" :title "Visualizzazzioni"}]
               "Canale visualizzato " (or (:views ch) 0) " volte."])))))
             
@@ -310,61 +313,60 @@
 
 (def size-limit-mb 10) ;; Limite dimensione file in megabyte
 
-(defpage "/edit/upload" {:keys [name description channel category]}
+(defpage "/edit/upload" {:keys [channel]}
   (let [ch (fetch-one :channels :where {:_id (obj-id channel)})]
     (if ch
       (layout "Condividi un file"
-        [:h1.section "Carica un file"]
+        [:h1.section "Carica un file (beta)"]
         [:h2.section "Condividi un file con chiunque o con gli altri studenti"]
-        (form-to {:accept-charset "utf-8"} [:post "/edit/upload-select-file"]
+        (form-to {:enctype "multipart/form-data"} [:post "/edit/upload"]
           [:input {:type :hidden :name :channel :value channel}]
-          [:p "Nome file: "
-           (text-field {:placeholder "Nome"} :name name)
-           (error-cell :name)]
+          [:p (file-upload :file) " La dimensione massima è di " size-limit-mb "Mb."]
           [:p "Descrizione file: "
-           (text-area {:class :postComment :rows 3} :description description)]
-          [:p "Tipo: "
-           (drop-down :category file-categories category)
-           (error-cell :category)]
-          [:p "La dimensione massima è di " size-limit-mb "Mb."]
-          (submit-button "Prosegui")))
+           (text-area {:class :postComment :rows 3} :description)]
+          [:p "Categoria:" (drop-down :category file-categories)
+           " Visibilità:" (drop-down :privacy '["Pubblico" "Privato"])]
+          [:p "I file pubblici sono accessibili a chiunque, mentre quelli privati solo agli utenti iscritti "
+           " e quindi solo agli studenti."]
+          (submit-button "Carica")
+          [:p "Il caricamento potrebbe richiedere molto tempo per file di grandi dimensioni, attendi."]))
       (layout "Errore" "Canale non valido."))))
 
-(defn valid-file-descripion? [{:keys [name description channel category]}]
-  (vali/rule (not (str/blank? name))
-    [:name "Nome non valido"])
-  (vali/rule (not (fetch-one :files :where {:channel channel :name name}))
-    [:name "File già esistente"])
+(defn valid-file-descripion? [{:keys [description channel category privacy]}]
   (vali/rule (fetch-one :channels :where {:_id (obj-id channel)})
     [:channel "Canale non valido"])
   (vali/rule (some #(= category %) file-categories)
     [:category "Categoria non valida"])
-  (not (vali/errors? :name :channel)))
+  (vali/rule (some #(= privacy %) '["Pubblico" "Privato"])
+    [:privacy "Visibilità non valida"])
+  (not (vali/errors? :name :channel :category :privacy)))
 
-(defpage [:post "/edit/upload-select-file"] {:keys [name description channel category] :as data}
-  (if (valid-file-descripion? data)
-    (layout "Scegli il file"
-       (form-to {:enctype "multipart/form-data"} [:post "/edit/upload-end"]
-         [:input {:type :hidden :name :name :value name}]
-         [:input {:type :hidden :name :description :value description}]
-         [:input {:type :hidden :name :channel :value channel}]
-         [:input {:type :hidden :name :category :value category}]
-         [:p "File " name ", categoria " category]
-         [:p "Descrizione file: " (if (str/blank? description) "nessuna." description)]
-         [:p "File: " (file-upload :file)]
-         [:p "La dimensione massima è di " size-limit-mb "Mb."]
-         (submit-button "Carica")))
-    (render "/edit/upload" data)))
+;(defpage [:post "/edit/upload-select-file"] {:keys [name description channel category] :as data}
+;  (if (valid-file-descripion? data)
+;    (layout "Scegli il file"
+;       (form-to {:enctype "multipart/form-data"} [:post "/edit/upload-end"]
+;         [:input {:type :hidden :name :name :value name}]
+;         [:input {:type :hidden :name :description :value description}]
+;         [:input {:type :hidden :name :channel :value channel}]
+;         [:input {:type :hidden :name :category :value category}]
+;         [:p "File " name ", categoria " category]
+;         [:p "Descrizione file: " (if (str/blank? description) "nessuna." description)]
+;         [:p "File: " (file-upload :file)]
+;         [:p "La dimensione massima è di " size-limit-mb "Mb."]
+;         (submit-button "Carica")))
+;    (render "/edit/upload" data)))
 
-(defn valid-file? [file]
+(defn valid-file? [file channel]
   (let [size (to-integer (:size file))]
+    (vali/rule (not (fetch-one :files :where {:channel channel :filename (:filename file)}))
+      [:file "File già esistente"])
     (vali/rule (> size 0)
       [:file "Errore caricamento file."])
     (vali/rule (< size (* size-limit-mb (Math/pow 1024 2)))
       [:file "File troppo grande."]))
   (not (vali/errors? :file)))
 
-(defn upload-channel-file! [file name description channel category]
+(defn upload-channel-file! [file description channel category privacy]
   (let [obj-name (str channel "/" (:filename file))
         ret (try
               (s3/with-s3 auth
@@ -372,29 +374,41 @@
                   :name obj-name
                   :mime (:content-type file)))
               (catch Exception exc
+                (println (pr-str exc))
                 nil))]
     (when ret
       (insert! :files
-        {:channel channel :name name :filename (:filename file) :description description
+        {:channel channel :filename (:filename file) :description description
          :category category :obj-name obj-name :size (to-integer (:size file))
-         :content-type (:content-type file)}))))
+         :privacy privacy :content-type (:content-type file)}))))
 
-(defpage [:post "/edit/upload-end"] {:keys [file name description channel category] :as data}
-  (if (and (valid-file-descripion? data) (valid-file? file))
-    (let [ret (upload-channel-file! file name description channel category)]
+(defpage [:post "/edit/upload"] {:keys [file description channel category privacy] :as data}
+  (if (and (valid-file-descripion? data) (valid-file? file channel))
+    (let [ret (upload-channel-file! file description channel category privacy)
+          ch (fetch-one :channels :where {:_id (obj-id channel)})]
       (.delete (:tempfile file))
       (if ret
         (layout "File caricato"
-           "Il file è stato caricato correttamente")
+           [:h1.section "File caricato"]
+           [:h2.section "Grazie per aver condiviso un file!"]
+           [:p "Torna alla pagina di " (link-to (channel-path ch) (:name ch)) "."])
         (layout "Errore"
-           "Il file non è stato caricato."))) ;; TODO: controllo errore
+          [:h1.section "Errore"]
+          [:h2.section "Si è verificato un errore"]
+          (for [[field errors] @vali/*errors*]
+            (for [error errors]
+              [:p error]))))) ;; TODO: controllo errore
     (do
       (.delete (:tempfile file))
       (layout "Errore"
-        "Si è verificato un errore: " (first (vali/get-errors :file))))))
+        [:h1.section "Errore"]
+        [:h2.section "Si è verificato un errore"] ;; TODO: controllo errore
+        (for [[field errors] @vali/*errors*]
+            (for [error errors]
+              [:p error]))))))
 
-(defn channel-file-redirect [id name]
-  (let [file (fetch-one :files :where {:channel id :name name})]
+(defn channel-file-redirect [id filename]
+  (let [file (fetch-one :files :where {:channel id :filename filename})]
     (if file
       (let [url (s3/with-s3 auth
                   (s3/get-expiring-url (:obj-name file) bucket expire-minutes :virtual true))] 
@@ -402,41 +416,44 @@
          :headers {"Location" url}})
       (resp/redirect "/not-found"))))
 
-(defpage "/channel/:id/files/:name" {:keys [id name action]}
-  (let [dec-name (URLDecoder/decode name)]
-    (if (= action "open")
-      (channel-file-redirect id dec-name)
+(defpage "/channel/:id/files/:filename" {:keys [id filename action]}
+  (let [dec-filename (URLDecoder/decode filename)]
+    (if (= action "info")
       (layout "ok"
-        [:h1.section dec-name]
-        (link-to (file-path id name :action 'open) "Apri")))))
+        [:h1.section dec-filename]
+        (link-to (file-path id filename :action 'open) "Apri"))
+      (do
+        (update! :files {:channel id :filename dec-filename}
+           {:$inc {:views 1}})
+        (channel-file-redirect id dec-filename)))))
 
-(defpage "/upload" []
-  (layout "Condividi un file"
-    [:h1.section "Carica un file"]
-    [:h2.section "Condividi un file con chiunque o con gli altri studenti"]
-    (form-to {:enctype "multipart/form-data"} [:post "/upload"]
-      [:input {:type :file :name :file}]
-      (submit-button "Carica"))))
+;(defpage "/upload" []
+;  (layout "Condividi un file"
+;    [:h1.section "Carica un file"]
+;    [:h2.section "Condividi un file con chiunque o con gli altri studenti"]
+;    (form-to {:enctype "multipart/form-data"} [:post "/upload"]
+;      [:input {:type :file :name :file}]
+;      (submit-button "Carica"))))
 
-(defpage [:post "/upload"] {:keys [file]}
-  (println file)
-  (let [ret (if (not (= "0" (:size file)))
-              (do
-                (s3/with-s3 auth
-                   (s3/put-file! (:tempfile file) "PoliConnect"
-                       :name (:filename file)
-                       :mime (:content-type file)))
-                true) nil)]
-   (.delete (:tempfile file))
-   (if ret
-     (let [path (str "http://s3.amazonaws.com/PoliConnect/"
-                     ;(URLEncoder/encode (:filename file))
-                     )]
-       (layout "File caricato"
-         "Il file è stato caricato correttamente in "
-         (link-to path path)))
-     (layout "Errore"
-       "fail"))))
+;(defpage [:post "/upload"] {:keys [file]}
+;  (println file)
+;  (let [ret (if (not (= "0" (:size file)))
+;              (do
+;                (s3/with-s3 auth
+;                   (s3/put-file! (:tempfile file) "PoliConnect"
+;                       :name (:filename file)
+;                       :mime (:content-type file)))
+;                true) nil)]
+;   (.delete (:tempfile file))
+;   (if ret
+;     (let [path (str "http://s3.amazonaws.com/PoliConnect/"
+;                     ;(URLEncoder/encode (:filename file))
+;                     )]
+;       (layout "File caricato"
+;         "Il file è stato caricato correttamente in "
+;         (link-to path path)))
+;     (layout "Errore"
+;       "fail"))))
 
 ;(defpage "/testb" []
 ; (layout "hehe"

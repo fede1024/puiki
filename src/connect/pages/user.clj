@@ -316,7 +316,7 @@
      "scrivi nella casella sottostante, oppure mandami un "
      (link-to "mailto:giraud.federico@gmail.com" "email") "."]
     [:p "Grazie per il tuo aiuto!"]
-    (form-to {:accept-charset "utf-8" } [:post "/user/feedback"]
+    (form-to {:accept-charset "utf-8"} [:post "/user/feedback"]
       (text-area {:class :postComment :rows 10 :placeholder "Vorrei che..."} :text)
       (submit-button "Invia!"))))
 

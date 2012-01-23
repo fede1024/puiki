@@ -7,7 +7,8 @@
             [clojure.contrib.string :as str]
             [noir.session :as session])
   (:import [java.util Locale Date Calendar GregorianCalendar]
-    [java.text SimpleDateFormat DateFormatSymbols]))
+    [java.text SimpleDateFormat DateFormatSymbols]
+    [java.net URLEncoder URLDecoder]))
 
 (defn current-id []
   (session/get :username))
@@ -49,6 +50,10 @@
 
 (defn post-remove-path [post]
   (str "/edit/remove/" (:_id post)))
+
+(defn file-path [channel file &{:keys [action]}]
+  (str "/channel/" channel "/files/" (URLEncoder/encode file)
+       (when action (str "?action=" action))))
 
 (defn user? [id] ;; TODO: Migliorare qui
   (when id

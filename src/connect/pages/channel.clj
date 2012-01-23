@@ -8,11 +8,14 @@
         hiccup.page-helpers
         hiccup.form-helpers
         somnium.congomongo)
- (:require [clojure.contrib.string :as str]
-           [noir.server :as server]
-           [noir.validation :as vali]
-           [noir.session :as session]
-           [noir.response :as resp]))
+  (:import [java.net URLEncoder URLDecoder])
+  (:require [clojure.java.io :as io]
+            [connect.s3 :as s3]
+            [clojure.contrib.string :as str]
+            [noir.server :as server]
+            [noir.validation :as vali]
+            [noir.session :as session]
+            [noir.response :as resp]))
 
 (def channel-types
   {"group" "Gruppo",
@@ -104,6 +107,8 @@
         [:img.middle {:src "/images/question.png"}] "Nuova domanda"]]
    [:p [:a {:href (encode-url "/edit/new-page" {:channel (:_id channel)})}
         [:img.middle {:src "/images/page.png"}] "Nuova pagina"]]
+   [:p [:a {:href (encode-url "/edit/upload" {:channel (:_id channel)})}
+        [:img.middle {:src "/images/upload.png"}] "Carica file"]]
   [:h2.section "Cerca:"]
   (form-to [:get "/search"]
     [:input {:type :hidden :name :channel :value (:_id channel)}]
@@ -243,21 +248,33 @@
           (let [pages (fetch :posts :where {:channel id :type "normal" :removed {:$ne true}}
                              :sort {:title 1})
                 questions (fetch :posts :where {:channel id :type "question" :removed {:$ne true}}
-                                 :sort {:created-at -1} :limit 5)]
+                                 :sort {:created-at -1} :limit 5)
+                files (fetch :files :where {:channel (str id)} :sort {:name 1})]
             (html
-              [:h2.lastQuestions [:img.middle {:src "/images/question-big.png"}] " Ultime domande: "]
-              (if (empty? questions)
-                [:p "Non ci sono ancora domande in questo canale."]
-                (html 
-                  (post-links questions)
-                  [:p.right (link-to (str (channel-path ch) "/questions") "Mostra tutto")]))
-              [:h2.lastPages [:img.middle {:src "/images/wiki.png"}] " Pagine wiki:"]
-              (if (empty? pages)
-                [:p "Non ci sono ancora pagine wiki in questo canale."]
-                [:div.section
+              [:h2.lastQuestions [:img.middle {:src "/images/question-big.png"}] " Ultime domande"]
+              [:div.section
+               (if (empty? questions)
+                 [:p "Non ci sono ancora domande in questo canale."]
+                 (html 
+                   (post-links questions)
+                   [:p.right (link-to (str (channel-path ch) "/questions") "Mostra tutto")]))]
+              [:h2.lastPages [:img.middle {:src "/images/wiki.png"}] " Pagine wiki"]
+              [:div.section
+               (if (empty? pages)
+                 [:p "Non ci sono ancora pagine wiki in questo canale."]
                  (for [page pages]
                    [:p [:a {:href (post-path page)}
-                        [:img.edit {:src "/images/page.png"}] [:b (:title page)]]])])))
+                        [:img.edit {:src "/images/page.png"}] [:b (:title page)]]]))]
+              [:h2.lastPages [:img.middle {:src "/images/files.png"}] " Files"]
+              [:div.section
+               (if (empty? files)
+                 [:p "Non ci sono ancora files condivisi in questo canale."]
+                 (for [file files]
+                   (html
+                     [:a {:href (file-path id (:name file) :action 'open)}
+                      [:img.edit {:src "/images/box.png"}] [:b (:name file)]]
+                      " - " (:filename file) " (" (:category file) ")"
+                     [:br])))]))
           [:p [:img.edit {:src "/images/users.png" :alt "Vis" :title "Visualizzazzioni"}]
               "Canale visualizzato " (or (:views ch) 0) " volte."])))))
             
@@ -284,3 +301,191 @@
             (html [:h2.lastQuestions [:img.middle {:src "/images/question-big.png"}] "Tutte le domande: "]
              (post-links (fetch :posts :where {:channel id :type "question"}
                                 :sort {:created-at -1})))))))))
+
+(def auth {:secret-key "Y69xCpsGpStpnZsaBsjHMM5aUepNmdRRwThNBezE" :access-key "AKIAJGKXPJQMXBDLLF2A"})
+(def bucket "files.policonnect.it")
+(def expire-minutes 1)
+
+(def file-categories ["Appunti" "Esercizi" "Laboratori" "Temi d'esame"])
+
+(def size-limit-mb 10) ;; Limite dimensione file in megabyte
+
+(defpage "/edit/upload" {:keys [name description channel category]}
+  (let [ch (fetch-one :channels :where {:_id (obj-id channel)})]
+    (if ch
+      (layout "Condividi un file"
+        [:h1.section "Carica un file"]
+        [:h2.section "Condividi un file con chiunque o con gli altri studenti"]
+        (form-to {:accept-charset "utf-8"} [:post "/edit/upload-select-file"]
+          [:input {:type :hidden :name :channel :value channel}]
+          [:p "Nome file: "
+           (text-field {:placeholder "Nome"} :name name)
+           (error-cell :name)]
+          [:p "Descrizione file: "
+           (text-area {:class :postComment :rows 3} :description description)]
+          [:p "Tipo: "
+           (drop-down :category file-categories category)
+           (error-cell :category)]
+          [:p "La dimensione massima è di " size-limit-mb "Mb."]
+          (submit-button "Prosegui")))
+      (layout "Errore" "Canale non valido."))))
+
+(defn valid-file-descripion? [{:keys [name description channel category]}]
+  (vali/rule (not (str/blank? name))
+    [:name "Nome non valido"])
+  (vali/rule (not (fetch-one :files :where {:channel channel :name name}))
+    [:name "File già esistente"])
+  (vali/rule (fetch-one :channels :where {:_id (obj-id channel)})
+    [:channel "Canale non valido"])
+  (vali/rule (some #(= category %) file-categories)
+    [:category "Categoria non valida"])
+  (not (vali/errors? :name :channel)))
+
+(defpage [:post "/edit/upload-select-file"] {:keys [name description channel category] :as data}
+  (if (valid-file-descripion? data)
+    (layout "Scegli il file"
+       (form-to {:enctype "multipart/form-data"} [:post "/edit/upload-end"]
+         [:input {:type :hidden :name :name :value name}]
+         [:input {:type :hidden :name :description :value description}]
+         [:input {:type :hidden :name :channel :value channel}]
+         [:input {:type :hidden :name :category :value category}]
+         [:p "File " name ", categoria " category]
+         [:p "Descrizione file: " (if (str/blank? description) "nessuna." description)]
+         [:p "File: " (file-upload :file)]
+         [:p "La dimensione massima è di " size-limit-mb "Mb."]
+         (submit-button "Carica")))
+    (render "/edit/upload" data)))
+
+(defn valid-file? [file]
+  (let [size (to-integer (:size file))]
+    (vali/rule (> size 0)
+      [:file "Errore caricamento file."])
+    (vali/rule (< size (* size-limit-mb (Math/pow 1024 2)))
+      [:file "File troppo grande."]))
+  (not (vali/errors? :file)))
+
+(defn upload-channel-file! [file name description channel category]
+  (let [obj-name (str channel "/" (:filename file))
+        ret (try
+              (s3/with-s3 auth
+                (s3/put-file! (:tempfile file) "files.policonnect.it"
+                  :name obj-name
+                  :mime (:content-type file)))
+              (catch Exception exc
+                nil))]
+    (when ret
+      (insert! :files
+        {:channel channel :name name :filename (:filename file) :description description
+         :category category :obj-name obj-name :size (to-integer (:size file))
+         :content-type (:content-type file)}))))
+
+(defpage [:post "/edit/upload-end"] {:keys [file name description channel category] :as data}
+  (if (and (valid-file-descripion? data) (valid-file? file))
+    (let [ret (upload-channel-file! file name description channel category)]
+      (.delete (:tempfile file))
+      (if ret
+        (layout "File caricato"
+           "Il file è stato caricato correttamente")
+        (layout "Errore"
+           "Il file non è stato caricato."))) ;; TODO: controllo errore
+    (do
+      (.delete (:tempfile file))
+      (layout "Errore"
+        "Si è verificato un errore: " (first (vali/get-errors :file))))))
+
+(defn channel-file-redirect [id name]
+  (let [file (fetch-one :files :where {:channel id :name name})]
+    (if file
+      (let [url (s3/with-s3 auth
+                  (s3/get-expiring-url (:obj-name file) bucket expire-minutes :virtual true))] 
+        {:status 303
+         :headers {"Location" url}})
+      (resp/redirect "/not-found"))))
+
+(defpage "/channel/:id/files/:name" {:keys [id name action]}
+  (let [dec-name (URLDecoder/decode name)]
+    (if (= action "open")
+      (channel-file-redirect id dec-name)
+      (layout "ok"
+        [:h1.section dec-name]
+        (link-to (file-path id name :action 'open) "Apri")))))
+
+(defpage "/upload" []
+  (layout "Condividi un file"
+    [:h1.section "Carica un file"]
+    [:h2.section "Condividi un file con chiunque o con gli altri studenti"]
+    (form-to {:enctype "multipart/form-data"} [:post "/upload"]
+      [:input {:type :file :name :file}]
+      (submit-button "Carica"))))
+
+(defpage [:post "/upload"] {:keys [file]}
+  (println file)
+  (let [ret (if (not (= "0" (:size file)))
+              (do
+                (s3/with-s3 auth
+                   (s3/put-file! (:tempfile file) "PoliConnect"
+                       :name (:filename file)
+                       :mime (:content-type file)))
+                true) nil)]
+   (.delete (:tempfile file))
+   (if ret
+     (let [path (str "http://s3.amazonaws.com/PoliConnect/"
+                     ;(URLEncoder/encode (:filename file))
+                     )]
+       (layout "File caricato"
+         "Il file è stato caricato correttamente in "
+         (link-to path path)))
+     (layout "Errore"
+       "fail"))))
+
+;(defpage "/testb" []
+; (layout "hehe"
+;   [:a {:href (str "mailto:s162270@studenti.polito.it?Subject=prova&Body="
+;                   "ma che bello è??")}
+;    "Email"]))
+
+;(defpage "/test" []
+;  {:status 303
+;   :headers {"Content-Disposition" "attachment; filename=\"fname.jpg\""
+;             "Location" "http://s3-eu-west-1.amazonaws.com/fede-test/cat.jpg"}})
+
+;(defpage "/test3" []
+;  {:status 303
+;   :headers {"Content-Disposition" "attachment; filename=\"fname.jpg\""
+;             "Location" "http://s3-eu-west-1.amazonaws.com/fede-test/cpu.svg"}})
+
+;(defpage "/test4" []
+;  {:status 303
+;   :headers {"Location" "http://s3-eu-west-1.amazonaws.com/fede-test/un/test.jpg"}})
+
+;(s3/with-s3 auth
+;  (s3/put-file! (java.io.File. "/home/federico/cat.jpg")
+;     "fede-test" :name "un/test.jpg"))
+
+;(defpage "/test2" []
+;  {:status 200
+;   :headers {"Content-Length" "566461"}
+;   :body (io/input-stream
+;           (s3/with-s3 auth
+;              (s3/get-object "eurecom per sito.pdf" "PoliConnect")))})
+
+;(defpage "/test5" []
+;  (layout "hehe"
+;    (s3/test-post)))
+
+;(spit "/home/federico/form.txt" (s3/test-post))
+
+;(io/input-stream
+;  (s3/with-s3 auth
+;            (s3/get-object "eurecom per sito.pdf" "PoliConnect")))
+
+;(s3/with-s3 auth
+;  (s3/put-file! (java.io.File. "/home/federico/Archivio/cat.jpg")
+;     "fede-test" :attachment true))
+
+;(try
+;  (s3/with-s3 auth
+;    (s3/put-file! (java.io.File. "/home/federico/Archivio/cat.jpg")
+;      "fede-test" :attachment true))
+;  (catch Exception exc
+;    nil))

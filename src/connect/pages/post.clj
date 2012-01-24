@@ -156,9 +156,7 @@
             (vote-section post)])]]
        [:tr [:td.postDate (format-timestamp-relative (:created-at post))]]
        [:tr [:td.postContent {:colspan 2}
-             (if (= (:type post) "normal")
-               [:div.pageContent (:content post)]
-               [:div.questionContent (:content post)])]]
+             [:div.questionContent (:content post)]]]
        (when (not preview)
          [:tr [:td {:id (str "comments" (:_id post))}
                (post-comments post)]])
@@ -178,9 +176,7 @@
        [:div.like_button (like-button (post-path post))]]
       [:table.post
        [:tr [:td.postContent {:colspan 2}
-             (if (= (:type post) "normal")
-               [:div.pageContent (:content post)]
-               [:div.questionContent (:content post)])]]
+             [:div.pageContent (:content post)]]]
        [:tr [:td [:br]
              [:p [:img.edit {:src "/images/users.png" :alt "Vis" :title "Visualizzazzioni"}]
               "Pagina visualizzata " (or (:views post) 0) " volte."]]]

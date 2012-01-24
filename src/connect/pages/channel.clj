@@ -249,7 +249,7 @@
                              :sort {:title 1})
                 questions (fetch :posts :where {:channel id :type "question" :removed {:$ne true}}
                                  :sort {:created-at -1} :limit 5)
-                files (fetch :files :where {:channel (str id)} :sort {:name 1})]
+                files (fetch :files :where {:channel (str id)} :sort {:filename 1})]
             (html
               [:h2.lastQuestions [:img.middle {:src "/images/question-big.png"}] " Ultime domande"]
               [:div.section
@@ -257,7 +257,8 @@
                  [:p "Non ci sono ancora domande in questo canale."]
                  (html 
                    (post-links questions)
-                   [:p.right (link-to (str (channel-path ch) "/questions") "Mostra tutto")]))]
+                   ;[:p.right (link-to (str (channel-path ch) "/questions") "Mostra tutto")] ;;TODO: correggere
+                   ))]
               [:h2.lastPages [:img.middle {:src "/images/wiki.png"}] " Pagine wiki"]
               [:div.section
                (if (empty? pages)
@@ -277,33 +278,34 @@
                      (html
                        [:a {:href (file-path id (:filename file))}
                         [:img.edit {:src "/images/box.png"}] [:b (:filename file)]]
-                       " - " (:category file) " (" (:privacy file) ")" [:br]))))]))
+                       " - " (:category file) 
+                       (when (current-id) (str " (" (:privacy file) ")")) [:br]))))]))
           [:p [:img.edit {:src "/images/users.png" :alt "Vis" :title "Visualizzazzioni"}]
               "Canale visualizzato " (or (:views ch) 0) " volte."])))))
             
-(defpage "/channel/:id/:show" {:keys [id show]}
-  (let [id (obj-id id)
-        ch (fetch-one :channels :where {:_id id})]
-    (if (not ch)
-      (render "/not-found")
-      (binding [*sidebar* (html (add-post ch)
-                            (followers ch))]
-        (layout (:name ch)
-          [:h1.section (link-to (channel-path ch) (:name ch))]
-          (channel-description ch)
-          ;[:p (channel-info ch)]
-          ;[:p "Canale creato il: " (format-timestamp (:created-at ch))]
-          ;[:p (link-to "/user/following" "Canali seguiti")]
-          [:br]
-          (cond (= show "news")
-            (html
-             [:h2.lastPages [:img.middle {:src "/images/page-big.png"}] "Tutte le pagine:"]
-             (post-links (fetch :posts :where {:channel id :type "normal"}
-                                :sort {:created-at -1})))
-            (= show "questions")
-            (html [:h2.lastQuestions [:img.middle {:src "/images/question-big.png"}] "Tutte le domande: "]
-             (post-links (fetch :posts :where {:channel id :type "question"}
-                                :sort {:created-at -1})))))))))
+;(defpage "/channel/:id/:show" {:keys [id show]}
+;  (let [id (obj-id id)
+;        ch (fetch-one :channels :where {:_id id})]
+;    (if (not ch)
+;      (render "/not-found")
+;      (binding [*sidebar* (html (add-post ch)
+;                            (followers ch))]
+;        (layout (:name ch)
+;          [:h1.section (link-to (channel-path ch) (:name ch))]
+;          (channel-description ch)
+;          ;[:p (channel-info ch)]
+;          ;[:p "Canale creato il: " (format-timestamp (:created-at ch))]
+;          ;[:p (link-to "/user/following" "Canali seguiti")]
+;          [:br]
+;          (cond (= show "news")
+;            (html
+;             [:h2.lastPages [:img.middle {:src "/images/page-big.png"}] "Tutte le pagine:"]
+;             (post-links (fetch :posts :where {:channel id :type "normal"}
+;                                :sort {:created-at -1})))
+;            (= show "questions")
+;            (html [:h2.lastQuestions [:img.middle {:src "/images/question-big.png"}] "Tutte le domande: "]
+;             (post-links (fetch :posts :where {:channel id :type "question"}
+;                                :sort {:created-at -1})))))))))
 
 (def auth {:secret-key "Y69xCpsGpStpnZsaBsjHMM5aUepNmdRRwThNBezE" :access-key "AKIAJGKXPJQMXBDLLF2A"})
 
@@ -384,7 +386,7 @@
         {:channel channel :filename (:filename file) :description description
          :category category :obj-name obj-name :size (to-integer (:size file))
          :privacy privacy :content-type (:content-type file)
-         :created-at (java.util.Date.)}))))
+         :created-at (java.util.Date.) :author (current-id)}))))
 
 (defpage [:post "/edit/upload"] {:keys [file description channel category privacy] :as data}
   (if (and (valid-file-descripion? data) (valid-file? file channel))
@@ -408,8 +410,8 @@
         [:h1.section "Errore"]
         [:h2.section "Si è verificato un errore"] ;; TODO: controllo errore
         (for [[field errors] @vali/*errors*]
-            (for [error errors]
-              [:p error]))))))
+          (for [error errors]
+            [:p error]))))))
 
 (defn channel-file-redirect [file]
   (if file
@@ -419,7 +421,7 @@
        :headers {"Location" url}})
     (resp/redirect "/not-found")))
 
-(defpage "/channel/:id/files/:filename" {:keys [id filename action]}
+(defpage "/channel/:id/files" {:keys [id filename action]}
   (let [dec-filename (URLDecoder/decode filename)
         file (fetch-one :files :where {:channel id :filename dec-filename})]
     (if file

@@ -48,7 +48,7 @@
     [:h2.lastQuestions [:img.middle {:src "/images/question-big.png"}] " Domande più recenti:"]
     (let [posts (fetch :posts :where {:removed {:$ne true} :type :question}
                        :sort {:created-at -1} :limit 5)]
-      (channel/post-links posts))
+      [:div.section (channel/post-links posts)])
     [:h2.lastPages [:img.middle {:src "/images/wiki.png"}] " Ultime pagine wiki:"]
     (let [pages (concat
                   (fetch :posts :where {:removed {:$ne true} :type :normal}
@@ -64,9 +64,9 @@
             " - " [:a {:href (channel-path channel)} (:name channel)]]))])
     [:h2.lastPages [:img.middle {:src "/images/files.png"}] " Ultimi files (beta)"]
     (let [files (if (current-id)
-                  (fetch :files :sort {:created -1} :limit 5)
+                  (fetch :files :sort {:created-at -1} :limit 5)
                   (fetch :files :where {:privacy "Pubblico"}
-                         :sort {:created -1} :limit 5))]
+                         :sort {:created-at -1} :limit 5))]
       [:div.section
        (for [file files]
          (let [channel (fetch-one :channels :where {:_id (obj-id (:channel file))})]

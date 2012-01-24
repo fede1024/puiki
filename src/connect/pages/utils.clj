@@ -52,8 +52,8 @@
   (str "/edit/remove/" (:_id post)))
 
 (defn file-path [channel file &{:keys [action]}]
-  (str "/channel/" channel "/files/" (URLEncoder/encode file)
-       (when action (str "?action=" action))))
+  (str "/channel/" channel "/files?filename="  (URLEncoder/encode file)
+       (when action (str "action=" action))))
 
 (defn user? [id] ;; TODO: Migliorare qui
   (when id

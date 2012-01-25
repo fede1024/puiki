@@ -41,7 +41,7 @@ span.loader {
     vertical-align: middle;
 }
 
-h1.section {
+h1, h1.section {
     margin-bottom: 10px;
     font-size: 20pt;
     font-weight: bold;
@@ -50,7 +50,7 @@ h1.section {
     line-height: 110%;
 }
 
-h2.section {
+h2, h2.section {
     width: 100%;
     text-decoration: none;
     font-size: 13pt;
@@ -59,6 +59,15 @@ h2.section {
     margin-bottom: 8px;
     color: #3366CC;
     /*text-shadow: -1px 1px 1px #d0d0d0;*/
+}
+
+h3 {
+    text-decoration: none;
+    font-size: 10pt;
+    font-weight: bold;
+    margin-top: 10px;
+    margin-bottom: 3px;
+    color: #3366CC;
 }
 
 a {
@@ -380,24 +389,9 @@ img.right, table.right {
 	text-align: inherit;
 }
 
-h1 {
-    font-size: 16pt;
-    margin-top: 10px;
-    margin-left: 0px;
-    margin-bottom: 13px;
-}
-
-h2 {
-    font-size: 13pt;
-    margin-top: 10px;
-    margin-left: 0px;
-    margin-bottom: 5px;
-}
-
 ul {
     margin-left: 10px;
-    list-style-type: disc;  
-    list-style-position: inside;
+    list-style: disc inside none;
     margin-bottom: 5px;
 }
 
@@ -406,6 +400,10 @@ ol {
     list-style-position: inside;
     list-style-type: decimal;
     margin-bottom: 5px;
+}
+
+li {
+    margin-bottom: 3px;
 }
 
 button.continue, button.abort {

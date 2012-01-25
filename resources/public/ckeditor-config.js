@@ -16,6 +16,7 @@ CKEDITOR.editorConfig = function( config )
 	['Undo','Redo','-','Find','Replace','-','SelectAll','RemoveFormat'],
 	//['Source','-','Save','Preview'],
 	]; 
+	CKEDITOR.config.height = '300px' ;
 	
 	config.extraPlugins = 'syntaxhighlight';
 	config.toolbar_Full.push(['Code']);

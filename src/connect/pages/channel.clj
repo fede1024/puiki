@@ -34,7 +34,8 @@
 
 (defpartial channel-list-link [c & {:keys [name info description]}]
   [:li.channel
-   (link-to (channel-path c) (or name (:name c)))
+   [:a.channel {:href (channel-path c)}
+    [:img.year {:src "/images/users.png"}] (or name (:name c))]
    (when info [:p.channelInfo (channel-info c)])
    (when description
      [:p.channelDescription (:description c)])])
@@ -49,15 +50,14 @@
        [:ul.years
         (for [c channels]
           [:li.year
-           [:h3.section
-            [:a.channel {:onClick (js-toggle-anim "#channels_" (:year c) "_" (:_id f))}
-              [:img.year {:src "/images/users.png"}] (cardinali (:year c)) " anno"]]
-           [:div.section {:id (str "channels_" (:year c) "_" (:_id f)) :style "display: none"}
-            [:p (link-to (channel-path c) "Canale dedicato a " (:name c))]
+           [:a.year {:onClick (js-toggle-anim "#channels_" (:year c) "_" (:_id f))}
+              [:img.year {:src "/images/users.png"}] (cardinali (:year c)) " anno"]
+           [:ul.channels {:id (str "channels_" (:year c) "_" (:_id f)) :style "display: none"}
+            [:li.channel [:a.channel {:href (channel-path c)} "Canale dedicato a " (:name c)]]
             (for [course (fetch :courses :where {:field (:name f) :year (:year c)}
                                 :sort {:name 1})]
               (if-let [ch (fetch-one :channels :where {:code (:code course)})]
-                [:p (link-to (channel-path ch) (:name ch))]))]])]
+                [:li.channel [:a.channel {:href (channel-path ch)} (:name ch)]]))]])]
        "Nessun canale presente.")))
 
 (defpage "/channel/list" []
@@ -68,12 +68,11 @@
       (when (not (empty? last-channels))
         (html
           [:h1.section "Preferiti:"]
-          [:ul.years
+          [:ul.channels
            (for [c (sort-by :name (map #(fetch-one :channels :where {:_id %}) last-channels))]
-             [:li.year
-              [:h3.section
-               [:a.nodecor {:href (channel-path c)}
-                [:img.year {:src "/images/users.png"}] (:name c)]]])]
+             [:li.channel
+              [:a.channel {:href (channel-path c)}
+                [:img.channel {:src "/images/users.png"}] (:name c)]])]
           [:br]))
       [:h1.section "Indirizzi di studio:"]
       [:ul.fields
@@ -210,7 +209,7 @@
         (update! :people {:_id person-id}
            {:$push {:last-channels ch-id}})))))
 
-(defpage "/channel/:id" {:keys [id]}
+(defpage "/channel/:id" {:keys [id show]}
   (let [id (obj-id id)
         ch (fetch-one :channels :where {:_id id})
         follows (when (current-id) ;; TODO: serve?
@@ -248,7 +247,7 @@
           (let [pages (fetch :posts :where {:channel id :type "normal" :removed {:$ne true}}
                              :sort {:title 1})
                 questions (fetch :posts :where {:channel id :type "question" :removed {:$ne true}}
-                                 :sort {:created-at -1} :limit 5)
+                                 :sort {:created-at -1} :limit (if (= show "all") 0 5))
                 files (fetch :files :where {:channel (str id)} :sort {:filename 1})]
             (html
               [:h2.lastQuestions [:img.middle {:src "/images/question-big.png"}] " Ultime domande"]
@@ -257,7 +256,7 @@
                  [:p "Non ci sono ancora domande in questo canale."]
                  (html 
                    (post-links questions)
-                   ;[:p.right (link-to (str (channel-path ch) "/questions") "Mostra tutto")] ;;TODO: correggere
+                   [:p.right (link-to (str (channel-path ch) "?show=all") "Mostra tutto")]
                    ))]
               [:h2.lastPages [:img.middle {:src "/images/wiki.png"}] " Pagine wiki"]
               [:div.section
@@ -281,31 +280,8 @@
                        " - " (:category file) 
                        (when (current-id) (str " (" (:privacy file) ")")) [:br]))))]))
           [:p [:img.edit {:src "/images/users.png" :alt "Vis" :title "Visualizzazzioni"}]
-              "Canale visualizzato " (or (:views ch) 0) " volte."])))))
-            
-;(defpage "/channel/:id/:show" {:keys [id show]}
-;  (let [id (obj-id id)
-;        ch (fetch-one :channels :where {:_id id})]
-;    (if (not ch)
-;      (render "/not-found")
-;      (binding [*sidebar* (html (add-post ch)
-;                            (followers ch))]
-;        (layout (:name ch)
-;          [:h1.section (link-to (channel-path ch) (:name ch))]
-;          (channel-description ch)
-;          ;[:p (channel-info ch)]
-;          ;[:p "Canale creato il: " (format-timestamp (:created-at ch))]
-;          ;[:p (link-to "/user/following" "Canali seguiti")]
-;          [:br]
-;          (cond (= show "news")
-;            (html
-;             [:h2.lastPages [:img.middle {:src "/images/page-big.png"}] "Tutte le pagine:"]
-;             (post-links (fetch :posts :where {:channel id :type "normal"}
-;                                :sort {:created-at -1})))
-;            (= show "questions")
-;            (html [:h2.lastQuestions [:img.middle {:src "/images/question-big.png"}] "Tutte le domande: "]
-;             (post-links (fetch :posts :where {:channel id :type "question"}
-;                                :sort {:created-at -1})))))))))
+              "Canale visualizzato " (+ 1 (or (:views ch) 0)) " volte."])))))
+
 
 (def auth {:secret-key "Y69xCpsGpStpnZsaBsjHMM5aUepNmdRRwThNBezE" :access-key "AKIAJGKXPJQMXBDLLF2A"})
 
@@ -333,6 +309,7 @@
            " Visibilità:" (drop-down :privacy '["Pubblico" "Privato"])]
           [:p "I file pubblici sono accessibili a chiunque, mentre quelli privati solo agli utenti iscritti "
            " e quindi solo agli studenti."]
+          [:p "Canale: " (link-to (channel-path ch) (:name ch))]
           (submit-button "Carica")
           [:p "Il caricamento potrebbe richiedere molto tempo per file di grandi dimensioni, attendi."]))
       (layout "Errore" "Canale non valido."))))

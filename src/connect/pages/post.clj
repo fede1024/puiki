@@ -48,12 +48,6 @@
     (when (and field (:field p))
       (str " (" (:field p) " " (- 2012 (:year p)) "°anno)"))))
 
-;; TODO: togliere quelle inutilizzate
-(def post-images
-  {"normal"   [:img.middle {:src "/images/page-big.png"}]
-   "question" [:img.middle {:src "/images/question-big.png"}]
-   "answer"   [:img.middle {:src "/images/exclamation.png"}]})
-
 (defn can-i-edit? [post]
   (and (current-id)
        (or (= (:type post) "normal")
@@ -89,7 +83,7 @@
    [:td.postInfo
     (when (= (:type post) "question")
       [:p [:img.edit {:src "/images/users.png" :alt "Vis" :title "Visualizzazzioni"}]
-       "Domanda visualizzata " (or (:views post) 0) " volte."])]
+       "Domanda visualizzata " (+ 1 (or (:views post) 0)) " volte."])]
    [:td.postActions
     (when (= (:type post) "question")
       (form-to [:get (user-reply-path post)]
@@ -134,7 +128,9 @@
       [:div.remMsg "Post rimosso."])
     (html
       (when (not (= (:type post) "answer"))
-        [:h2.postTitle (when (= (:type post) "question") (post-images (:type post))) " " (:title post)
+        [:h2.postTitle (when (= (:type post) "question")
+                         [:img.middle {:src "/images/question-big.png"}])
+         " " (:title post)
          [:div.like_button (like-button (post-path post))]])
       [:table.post
        [:tr
@@ -179,7 +175,7 @@
              [:div.pageContent (:content post)]]]
        [:tr [:td [:br]
              [:p [:img.edit {:src "/images/users.png" :alt "Vis" :title "Visualizzazzioni"}]
-              "Pagina visualizzata " (or (:views post) 0) " volte."]]]
+              "Pagina visualizzata " (+ (or (:views post) 0) 1) " volte."]]]
        [:tr [:td.postDate "Versione del: "
              (format-timestamp (or (:modified-at post) (:created-at post)))
              ", ultima modifica "
@@ -244,7 +240,7 @@
   [:div.sideBarSection
    [:h2.section "Informazioni post:"] ;; TODO: fare come page-sidebar? (senza sotto funzioni)
    (post-summary question)
-   [:p "Visite: " (or (:views question) 0)]
+   [:p "Visite: " (+ 1 (or (:views question) 0))]
    (channel-link question)])
 
 (defpartial page-sidebar [page cron]
@@ -258,7 +254,7 @@
         [:img.edit {:src "/images/link.png" :alt "Link" :title "Link permanente"}]
         "Link permanente"]]
    [:p [:img.edit {:src "/images/users-small.png" :alt "Vis" :title "Visualizzazzioni"}]
-    "Visite: " (or (:views page) 0)]]
+    "Visite: " (+ 1 (or (:views page) 0))]]
   [:div.sideBarSection
    [:h2.section "Wiki"]
     [:p [:a {:href (str (edit-path page))}
@@ -298,7 +294,7 @@
         (update! :posts {:_id id} {:$inc {:views 1}})
         (layout (:title post)
           (let [ch (fetch-one :channels :where {:_id (:channel post)})]
-            [:h1.section [:a.nodecor {:href (channel-path ch)} (:name ch) ":"]])
+            [:h1.section [:a.nodecor {:href (channel-path ch)} (:name ch)]])
           (when (= cron "true")
             [:div.sideBarSection (page-history post)])
           (post-div post)
@@ -316,7 +312,7 @@
                                    (channel-link page)])]
         (layout (:title page)
           (let [ch (fetch-one :channels :where {:_id (:channel page)})]
-            [:h1.section [:a.nodecor {:href (channel-path ch)} (:name ch) ":"]])
+            [:h1.section [:a.nodecor {:href (channel-path ch)} (:name ch)]])
           [:div.sideBarSection (page-history page)]
           (post-div page)))
       (render "/not-found"))))

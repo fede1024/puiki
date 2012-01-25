@@ -152,23 +152,22 @@
         logs (log-tail-by-session n session)]
     [:table.logs
      [:tr.logs [:th "IP"] [:th "Date"] [:th.logs "Time"] [:th.logs "Method"]
-      [:th.logs "URL"] [:th.logs "Status"] [:th.logs "Type"] [:th.logs "ID"]]
+      [:th.logs "URL"] [:th.logs "Status"] [:th.logs "ID"]]
      (for [log logs]
        [:tr.logs
         [:td.logs (:ip log)]
         [:td.logsB (format-log-date (:date log))]
         [:td.logsB (:resp-time log)]
         [:td.logsB (:method log)]
-        [:td.logsB (:uri log)]
+        [:td.logsB (link-to (:uri log) (:uri log))]
         [:td.logsB (:status log)]
-        [:td.logsB (:out-type log)]
-        [:td.logsB (:username log)]])]))
+        [:td.logsB (link-to (user-info-path (:username log)) (:username log))]])]))
 
 (defpartial logs-table [n]
   (let [logs (log-tail n)]
     [:table.logs
      [:tr.logs [:th "Session"] [:th.logs "IP"] [:th.logs "Date"] [:th.logs "Time"] [:th.logs "Method"]
-      [:th.logs "URL"] [:th.logs "Status"] [:th.logs "Type"] [:th.logs "ID"]]
+      [:th.logs "URL"] [:th.logs "Status"] [:th.logs "ID"]]
      (for [log logs]
        [:tr.logs
         [:td.logs {:title (:user-agent log)}
@@ -180,9 +179,8 @@
         [:td.logsB (format-log-date (:date log))]
         [:td.logsB (:resp-time log)]
         [:td.logsB (:method log)]
-        [:td.logsB (:uri log)]
+        [:td.logsB (link-to (:uri log) (:uri log))]
         [:td.logsB (:status log)]
-        [:td.logsB (:out-type log)]
         [:td.logsB (link-to (user-info-path (:username log)) (:username log))]])]))
 
 (defpage "/admin/logs" {:keys [session n] :or {n "50"}}

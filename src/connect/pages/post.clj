@@ -69,10 +69,10 @@
   [:tr.postBottom {:id (str "commentArea" (:_id post)) :style "display: none"}
    [:td.postInfo {:colspan 2}
     (text-area {:id (str "commentText" (:_id post))
-                :class :postComment :rows 1 :maxlength 300 :placeholder "Commento"} :comment)]]
+                :class :postComment :rows 1 :maxlength 1000 :placeholder "Commento"} :comment)]]
   [:tr.postBottom {:id (str "commentButtons" (:_id post)) :style "display: none"}
    [:td.postInfo 
-    "Massimo 300 caratteri."]
+    "Massimo 1000 caratteri."]
    [:td.postActions
     [:button {:class "postComment" :onClick (js-do (js-hide "#commentArea" (:_id post))
                                               (js-hide "#commentButtons" (:_id post))
@@ -94,13 +94,16 @@
                (if (not (current-id)) {:disabled true}))
      "Commenta"]]])
 
-(defpartial post-comments [post]
+(defpartial post-comments [post & {:keys [sort]}]
   [:table
-   (for [{body :body author :author date :created-at} (:comments post)]
+   (for [{body :body author :author date :created-at}
+         (if (= sort :new-first)
+           (reverse (sort-by :created-at (:comments post)))
+           (sort-by :created-at (:comments post)))]
      [:tr.comment
       (let [p (fetch-one :people :where {:_id author})]
-        [:td.comment
-         [:span.commentInfo {:title (str (user-description p) " " (format-timestamp-relative date))}
+        [:td.comment {:title (str (user-description p) " " (format-timestamp-relative date))}
+         [:span.commentInfo
           (user-description p :field false)]
          body])])])
 
@@ -159,7 +162,7 @@
        (when (not preview)
          (post-bottom post))])))
 
-(defpartial page-table [post]
+(defpartial page-table [post & {:keys [preview]}]
   (if (:removed post)
     (if (:removed-by post)
       (if (= (:removed-by post) (:author post))
@@ -174,7 +177,7 @@
        [:tr [:td.postContent {:colspan 2}
              [:div.pageContent (:content post)]]]
        [:tr [:td [:br]
-             [:p [:img.edit {:src "/images/users.png" :alt "Vis" :title "Visualizzazzioni"}]
+             [:p [:img.edit {:src "/images/users.png" :alt "Vis" :title "Visualizzazioni"}]
               "Pagina visualizzata " (+ (or (:views post) 0) 1) " volte."]]]
        [:tr [:td.postDate "Versione del: "
              (format-timestamp (or (:modified-at post) (:created-at post)))
@@ -182,12 +185,19 @@
              (format-timestamp-relative (or (:modified-at post) (:created-at post)))
              " di "
              (let [p (fetch-one :people :where {:_id (or (:modified-by post) (:author post))})]
-               (user-description p))]]])))
+               (user-description p))]]
+       (when (not preview)
+         (html
+           [:tr [:td [:br] [:h2.section "Commenti"]]]
+           [:tr [:td {:id (str "comments" (:_id post))}
+                 (post-comments post :sort :new-first)]]))
+       (when (not preview)
+         (post-bottom post))])))
 
 (defpartial post-div [post & {:keys [preview]}]
   [:div.post.anchor {:id (str "post" (:_id post))}
    (if (= (:type post) "normal")
-     (page-table post)
+     (page-table post :preview preview)
      (question-table post :preview preview))])
 
 (defpartial post-summary [post]

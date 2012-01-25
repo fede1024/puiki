@@ -153,12 +153,13 @@
     (try
       (handler request)
       (catch Throwable ex
+        (let [error (log-error-page (str "Errore pagina: " (:uri request)
+                                      " (" (:request-method request)  ")")
+                                    ex request)]
         {:status 500 :headers {"Content-Type" "text/html"}
          :body (if (admin? (current-id))
-                 (log-error-page (str "Errore pagina: " (:uri request)
-                                      " (" (:request-method request)  ")")
-                    ex request)
-                 (user-error-page))}))))
+                 error
+                 (user-error-page))})))))
 
 (defn errors-count []
   (count (.listFiles (java.io.File. errors-dir))))

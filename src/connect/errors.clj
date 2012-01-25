@@ -1,6 +1,7 @@
 (ns connect.errors
  (:use [hiccup core page-helpers]
-   noir.core))
+   noir.core
+   connect.pages.utils))
 
 (def render-error true)
 (def stacktrace-length 20)
@@ -129,15 +130,35 @@
           :body (log-error-page ~title exc#)}
          (throw exc#)))))
 
+(defn user-error-page []
+  (html
+    (doctype :html4)
+    [:head
+     [:meta {:charset "utf-8"}]
+     "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"/> "
+     (include-css "/css/reset.css")
+     (include-css "/css/error.css")
+     [:title "Errore"]]
+    [:body
+     [:div.content
+      [:h1.title "Errore interno"]
+      [:p "E' avvenuto un errore. I dati relativi sono già stati memorizzati e verranno esaminati al più presto"
+       " dall'amministratore. Ci scusiamo per il disagio."]
+      [:p "Per qualsiasi informazione manda un email a "
+       [:a {:href "mailto:giraud.federico@gmail.com?subject=Errore"}
+        "giraud.federico@gmail.com"] "."]]]))
+
 (defn wrap-error-check [handler]
   (fn [request]
     (try
       (handler request)
       (catch Throwable ex
         {:status 500 :headers {"Content-Type" "text/html"}
-         :body (log-error-page (str "Errore pagina: " (:uri request)
-                                  " (" (:request-method request)  ")")
-                  ex request)}))))
+         :body (if (admin? (current-id))
+                 (log-error-page (str "Errore pagina: " (:uri request)
+                                      " (" (:request-method request)  ")")
+                    ex request)
+                 (user-error-page))}))))
 
 (defn errors-count []
   (count (.listFiles (java.io.File. errors-dir))))

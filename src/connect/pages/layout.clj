@@ -189,7 +189,7 @@
      "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"/> "
      [:meta {:http-equiv "X-UA-Compatible" :content "IE=edge,chrome=1"}]
      [:meta {:name "viewport" :content "width=device-width, initial-scale=1, maximum-scale=1"}]
-     [meta {:property "og:image" :content "/images/logo-small.png"}]
+     [:meta {:property "og:image" :content "/images/logo-small.png"}]
      [:link {:rel "shortcut icon" :href "/images/favicon.ico"}]
      [:script {:type "text/javascript" :src "/jquery-1.7.1.min.js"}]
      ;[:script {:type "text/javascript" :src "https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.min.js"}]

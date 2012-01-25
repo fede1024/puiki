@@ -159,7 +159,10 @@
         [:td.logsB (format-log-date (:date log))]
         [:td.logsB (:resp-time log)]
         [:td.logsB (:method log)]
-        [:td.logsB (link-to (:uri log) (:uri log))]
+        [:td.logsB (link-to (:uri log)
+                     (if (> (count (:uri log)) 70)
+                       (str (subs (:uri log) 0 67) "...")
+                       (:uri log)))]
         [:td.logsB (:status log)]
         [:td.logsB (link-to (user-info-path (:username log)) (:username log))]])]))
 
@@ -179,7 +182,10 @@
         [:td.logsB (format-log-date (:date log))]
         [:td.logsB (:resp-time log)]
         [:td.logsB (:method log)]
-        [:td.logsB (link-to (:uri log) (:uri log))]
+        [:td.logsB (link-to (:uri log)
+                     (if (> (count (:uri log)) 70)
+                       (str (subs (:uri log) 0 67) "...")
+                       (:uri log)))]
         [:td.logsB (:status log)]
         [:td.logsB (link-to (user-info-path (:username log)) (:username log))]])]))
 

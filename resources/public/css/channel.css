@@ -55,6 +55,7 @@ li.channel {
 }
 
 li.year {
+	font-family: 'Ubuntu', sans-serif;
 	font-size: 12pt;
     margin-top: 5px;
 }

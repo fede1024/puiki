@@ -29,7 +29,7 @@ h2.answers {
     padding-bottom: 2px;
     border-bottom: 1px solid #3366CC;
     font-size: 16pt;
-    font-weight: bold;
+    font-weight: 500;
     color: #3366CC;
 }
 
@@ -189,7 +189,7 @@ table.postLink {
 }
 
 td.postLinkSpace {
-    width: 3px;
+    width: 5px;
     padding: 0px;
 }
 
@@ -199,10 +199,10 @@ tr.postLinkSpace {
 
 td.postLinkTitle {
     color: #3366CC;
-    padding: 3px;
+    padding-left: 3px;
     background-color: #f8f8f8;
     border-radius: 5px 0px 0px 5px;
-    font-size: 11pt;
+    font-size: 10pt;
     font-weight: bold;
     margin: 8px;
     text-decoration: none;
@@ -216,10 +216,10 @@ a.postLinkTitle {
 td.postLinkVote {
     width: 20px;
     height: 20px;
-    padding: 3px;
+    padding: 1px;
     vertical-align: middle;
     color: #3366CC;
-    font-size: 12pt;
+    font-size: 10pt;
     font-weight: bold;
     text-align: center;
     border-radius: 5px;
@@ -230,10 +230,10 @@ td.postLinkVote {
 td.postLinkAnswers {
     width: 20px;
     height: 20px;
-    padding: 3px;
+    padding: 1px;
     vertical-align: middle;
     color: #3366CC;
-    font-size: 12pt;
+    font-size: 10pt;
     font-weight: bold;
     text-align: center;
     border-radius: 5px;
@@ -241,7 +241,7 @@ td.postLinkAnswers {
 }
 
 td.postLinkDate {
-	padding: 3px;
+	padding-right: 3px;
     background-color: #f8f8f8;
     border-radius: 0px 5px 5px 0px;
     text-align: right;

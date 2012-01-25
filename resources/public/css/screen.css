@@ -10,7 +10,7 @@ body {
     background-color: #ffffff;
     /*font-family: Arial,Helvetica,sans-serif;*/
     font-family: "lucida grande",tahoma,verdana,arial,sans-serif;
-    font-size: 12px;
+    font-size: 10pt;
     line-height: 130%;
     overflow-y: scroll;
 }
@@ -42,19 +42,21 @@ span.loader {
 }
 
 h1, h1.section {
+	font-family: 'Ubuntu', sans-serif;
     margin-bottom: 10px;
     font-size: 20pt;
-    font-weight: bold;
+    font-weight: 500;
     color: #3366CC;
     /*text-shadow: -1px 1px 1px #a0a0a0;*/
     line-height: 110%;
 }
 
 h2, h2.section {
+	font-family: 'Ubuntu', sans-serif;
     width: 100%;
     text-decoration: none;
     font-size: 13pt;
-    font-weight: bold;
+    font-weight: 500;
     margin-top: 10px;
     margin-bottom: 8px;
     color: #3366CC;
@@ -62,12 +64,20 @@ h2, h2.section {
 }
 
 h3 {
+	font-family: 'Ubuntu', sans-serif;
     text-decoration: none;
     font-size: 10pt;
-    font-weight: bold;
+    font-weight: 500;
     margin-top: 10px;
     margin-bottom: 3px;
     color: #3366CC;
+}
+
+p.login {
+	font-family: 'Ubuntu', sans-serif;
+	text-align: center;
+	font-weight: 500;
+	font-size: 10pt;
 }
 
 a {
@@ -224,7 +234,8 @@ td.statusWelcome {
 	text-align: center;
     font-size: 12pt;
     padding-bottom: 5px;
-    font-weight: bold;
+    font-family: 'Ubuntu', sans-serif;
+    font-weight: 500;
     color: #3366CC;
     text-shadow: -1px 1px 1px #d0d0d0;
 }

@@ -11,7 +11,7 @@
     (java.util Calendar GregorianCalendar))
   (:require [noir.util.s3 :as s3]))
 
-(def ^{:dynamic true} *s3* nil)
+(def ^:dynamic *s3* nil)
 
 (defn credentials 
   "Create an S3 service object"

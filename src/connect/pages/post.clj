@@ -8,7 +8,8 @@
         hiccup.page-helpers
         hiccup.form-helpers
         somnium.congomongo)
- (:require [clojure.contrib.string :as str]
+ (:require [connect.logs :as logs]
+           [clojure.contrib.string :as str]
            [noir.server :as server]
            [noir.validation :as vali]
            [noir.session :as session]
@@ -301,7 +302,9 @@
                 (update! :people {:_id (current-id)} ;; tolgo le risposte dalle notifiche
                   {:$pull {:news {:post (:_id answer)}}}
                   :multiple true)))))
-        (update! :posts {:_id id} {:$inc {:views 1}})
+        (when (not logs/*bot*)
+          (update! :posts {:_id id}
+                   {:$inc {:views 1}}))
         (layout (:title post)
           (let [ch (fetch-one :channels :where {:_id (:channel post)})]
             [:h1.section [:a.nodecor {:href (channel-path ch)} (:name ch)]])

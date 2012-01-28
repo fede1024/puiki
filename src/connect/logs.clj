@@ -7,22 +7,36 @@
 ;db.createCollection("mycoll", {capped:true, size:10000000})
 
 (def ^:dynamic *ip* nil)
-(def ^:dynamic *user-agent* nil)
+(def ^:dynamic *bot* nil)
+;(def ^:dynamic *user-agent* nil)
+
+(defn bot? [user-agent]
+  (not (nil? (re-find #".*bot.*" (or user-agent "")))))
+
+(defn get-bot-statistics [n]
+  (reverse
+    (sort-by second
+      (map (fn [[str data]] [str (count data)])
+        (group-by identity
+          (filter bot? (map :user-agent (fetch :logs :sort {:$natural -1} :limit n))))))))
+
+;(get-bot-statistics 10000)
 
 (defn wrap-logging [handler]
   (fn [req]
-    (binding [*ip* (:remote-addr req)
-              *user-agent* (get-in req [:headers "user-agent"])]
-      (let [[out exec-time] (exec-time (handler req))]
-        (insert! :logs
-          {:date (java.util.Date.) :resp-time exec-time
-           :method (:request-method req) :uri (:uri req)
-           :referer (get-in req [:headers "referer"])
-           :user-agent (get-in req [:headers "user-agent"])
-           :session (:value (get-in req [:cookies "ring-session"]))
-           :status (:status out) :out-type (get-in out [:headers "Content-Type"])
-           :username (session/get :username) :ip (:remote-addr req)})
-        out))))
+    (let [user-agent (get-in req [:headers "user-agent"])]
+      (binding [*ip* (:remote-addr req)
+                *bot* (bot? user-agent)]
+        (let [[out exec-time] (exec-time (handler req))]
+          (insert! :logs
+            {:date (java.util.Date.) :resp-time exec-time
+             :method (:request-method req) :uri (:uri req)
+             :referer (get-in req [:headers "referer"])
+             :user-agent user-agent :bot *bot*
+             :session (:value (get-in req [:cookies "ring-session"]))
+             :status (:status out) :out-type (get-in out [:headers "Content-Type"])
+             :username (session/get :username) :ip (:remote-addr req)})
+          out)))))
 
 (defn format-log-date [date]
   (.format (java.text.SimpleDateFormat. "yy-MM-dd HH:mm:ss") date))

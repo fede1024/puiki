@@ -9,7 +9,8 @@
         hiccup.form-helpers
         somnium.congomongo)
   (:import [java.net URLEncoder URLDecoder])
-  (:require [clojure.java.io :as io]
+  (:require [connect.logs :as logs]
+            [clojure.java.io :as io]
             [connect.s3 :as s3]
             [clojure.contrib.string :as str]
             [noir.server :as server]
@@ -219,7 +220,8 @@
       (binding [*sidebar* (html (add-post ch)
                             (followers ch))]
         (store-preferred-channel ch)
-        (update! :channels {:_id id} {:$inc {:views 1}})
+        (when (not logs/*bot*)
+          (update! :channels {:_id id} {:$inc {:views 1}}))
         (layout (:name ch)
           (when (= (session/flash-get) "new-channel") 
             [:p "Nuovo canale creato."])
@@ -409,8 +411,9 @@
              [:h1.section dec-filename]
              (link-to (file-path id filename :action 'open) "Apri"))
           (do
-            (update! :files {:channel id :filename dec-filename}
-               {:$inc {:views 1}})
+            (when (not logs/*bot*)
+              (update! :files {:channel id :filename dec-filename}
+                       {:$inc {:views 1}}))
             (channel-file-redirect file)))
         (layout "Effettua il login"
           [:h1.section "Permessi insufficienti"]

@@ -352,11 +352,13 @@
 
 (defn upload-channel-file! [file description channel category privacy]
   (let [obj-name (str channel "/" (:filename file))
+        bucket (get-bucket-name)
         ret (try
               (s3/with-s3 auth
-                (s3/put-file! (:tempfile file) (get-bucket-name)
+                (s3/put-file! (:tempfile file) bucket
                   :name obj-name
-                  :mime (:content-type file)))
+                  :mime (:content-type file)
+                  :public (= privacy "Pubblico")))
               (catch Exception exc
                 (println (pr-str exc))
                 nil))]
@@ -364,7 +366,7 @@
       (insert! :files
         {:channel channel :filename (:filename file) :description description
          :category category :obj-name obj-name :size (to-integer (:size file))
-         :privacy privacy :content-type (:content-type file)
+         :privacy privacy :content-type (:content-type file) :bucket bucket
          :created-at (java.util.Date.) :author (current-id)}))))
 
 (defpage [:post "/edit/upload"] {:keys [file description channel category privacy] :as data}
@@ -394,8 +396,10 @@
 
 (defn channel-file-redirect [file]
   (if file
-    (let [url (s3/with-s3 auth
-                (s3/get-expiring-url (:obj-name file) (get-bucket-name) expire-minutes :virtual true))] 
+    (let [url (if (= (:privacy file) "Pubblico")
+                (str "http://" (get-bucket-name) "/" (:obj-name file))
+                (s3/with-s3 auth
+                  (s3/get-expiring-url (:obj-name file) (get-bucket-name) expire-minutes :virtual true)))] 
       {:status 302
        :headers {"Location" url}})
     (resp/redirect "/not-found")))

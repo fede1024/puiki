@@ -36,12 +36,14 @@
 ;  (S3Service/buildPostForm "test-bucket" "file.jpg" (credentials auth) (get-time-add 30)
 ;                           (into-array conditions), (into-array String inputs), nil, true))
 
-(defn put-file! [file bucket &{:keys [name mime attachment]}]
+(defn put-file! [file bucket &{:keys [name mime attachment public]}]
   (let [obj (new S3Object file)
         obj-mime (or mime
                      (. (new MimetypesFileTypeMap)
                        getContentType file))
         obj-name (or name (. file getName))]
+    (when public
+      (.setAcl obj AccessControlList/REST_CANNED_PUBLIC_READ));
     (. obj setContentType obj-mime)
     (. obj setName obj-name)
     (when attachment
@@ -56,6 +58,20 @@
 
 (defn get-object [object bucket]
   (. *s3* getObject (. *s3* getBucket bucket) object))
+
+(with-s3 auth
+  (let [obj (get-object "cat.jpg" "test.policonnect.it")]
+    (.getAcl obj)))
+
+(with-s3 auth
+  (let [obj (get-object "4ed2a94ee4b0b5637ab5bc14/fortune.sh" "test.policonnect.it")]
+    (.getAcl obj)))
+
+(with-s3 auth
+  (let [acl (AccessControlList.)
+        obj (get-object "4ed2a94ee4b0b5637ab5bc14/fortune.sh" "test.policonnect.it")]
+    (.grantPermission acl GroupGrantee/ALL_USERS Permission/PERMISSION_READ)
+    (.setAcl obj acl)))
 
 (defn get-object-stream [object bucket]
   (. (. *s3* getObject (. *s3* getBucket bucket) object)
@@ -90,6 +106,6 @@
 
 ;(def auth {:secret-key "Y69...ezE" :access-key "AKIA...2A"})
 
-;(with-s3 auth
-;  (put-file! (java.io.File. "/home/federico/comandi")
-;     "files.policonnect.it"))
+(with-s3 auth
+  (put-file! (java.io.File. "/home/federico/comandi")
+     "test.policonnect.it"))

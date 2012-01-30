@@ -12,7 +12,7 @@
 (defn get-courses-links [anno docente]
   ;(println "\n" (java.util.Date.))
   (print "Cerco:" anno (pr-str docente))
-  (let [links (re-seq #"sviluppo.public_iscritti.espandi\?[^\"]*"
+  (let [links (re-seq  #"sviluppo.public_iscritti.espandi\?[^\"]*" ; #"sviluppo.public_iscritti.espandi\?([^\"]*)"
                 (:body
                   (client/post "https://didattica.polito.it/pls/portal30/sviluppo.public_iscritti.cerca"
                     {:form-params {:from_portlet "N" :a_acc anno :doc docente :cod_ins "" :nome_ins "" :p_header ""}})))]
@@ -26,12 +26,14 @@
 ;(def pagina (client/get "https://didattica.polito.it/pls/portal30/sviluppo.public_iscritti.espandi?p_a_acc=2012&p_cod_ins=23ACIOA%2023ACINZ%2023ACIPC&p_id_inc=56386&p_id_ins=87347&p_id_comm_esa=&p_alfa=GI-ZZ&p_header=&p_periodo=1"))
 
 (defn get-link-names [link]
-  (map (fn [[_ matr cogn nome]] {:matr matr :nome nome :cogn cogn})
+  (map (fn [[_ matr cogn nome]] {:code matr :firstname nome :lastname cogn})
        (re-seq #"<tr>
 <td valign=\"top\"><font class=\"policorpo\">([0-9][0-9][0-9][0-9]+)</font></td>
-<td valign=\"top\"><font class=\"policorpo\">([a-zA-Z ]*)</font></td>
-<td valign=\"top\"><font class=\"policorpo\">([a-zA-Z ]*)</font></td>"
+<td valign=\"top\"><font class=\"policorpo\">(.*)</font></td>
+<td valign=\"top\"><font class=\"policorpo\">(.*)</font></td>"
                (:body (client/get (str "https://didattica.polito.it/pls/portal30/" link))))))
+
+;(get-link-names (first links))
 
 ;(def data (doall (mapcat get-link-names links)))
 
@@ -41,7 +43,7 @@
 
 (defn get-student-data [anno docente]
   (let [links (get-courses-links anno docente)]
-    (reduce #(assoc % (:matr %2) %2) {}
+    (reduce #(assoc % (:code %2) %2) {}
             (mapcat get-link-names links))))
 
 ;(def data (get-student-data 2012 "scuderi"))
@@ -77,7 +79,6 @@
 ;                       (gen-strings)))))
 
 ;(write-to-file "/home/federico/studenti" tmp)
-;(write-data-file "/home/federico/studenti" tmp)
 
 (defn write-data-file [path data]
   (binding [*out* (new java.io.FileWriter path)]
@@ -91,19 +92,18 @@
 
 ;(take 10 (drop 56 seqs))
 
-;(spit "/home/federico/seqs" (seq seqs))
+;(spit "/home/federico/db-seqs" (seq seqs))
 
 ;(spit "/home/federico/data" tmp)
 
 ;; 3382 + 18968 = 22350
 
 ;(def seqs
-;  (map first
-;    (filter #(> (second %) 0)
-;       (map (fn [line]
-;              (let [[_ n val] (re-find #"Cerco: 2012 \"([a-z][a-z][a-z])\" trovati ([0-9]*) " line)]
-;                [n (Integer/parseInt val)]))
-;            (line-seq (new java.io.BufferedReader (new java.io.FileReader "/home/federico/log")))))))
+;  (filter #(> (second %) 0)
+;    (map (fn [line]
+;           (let [[_ n val] (re-find #"Cerco: 2012 \"([a-z][a-z][a-z])\" trovati ([0-9]*) " line)]
+;             [n (Integer/parseInt val)]))
+;         (line-seq (new java.io.BufferedReader (new java.io.FileReader "/home/federico/log"))))))
 
 ;(def vet (atom []))
 
@@ -114,7 +114,7 @@
 ;    (dorun (for [[m d] group]
 ;             (println (format "%s   %-20s   %s" m (:nome d) (:cogn d)))))))
 
-;(def tmp (reduce merge @vet))
+;(write-data-file "/home/federico/studenti" (reduce merge @vet))
 
 ;(def matr-min (apply min (map #(Integer/parseInt (first %)) tmp)))
 ;(def matr-max (apply max (map #(Integer/parseInt (first %)) tmp)))
@@ -130,12 +130,14 @@
 
 ;(count (reduce merge @vet))
 
+;(def db-seq (map first (reverse (sort-by second seqs))))
+
 ;(binding [*out* (new java.io.FileWriter "/home/federico/log2")]
 ;  (def data
 ;    (reduce merge (map #(let [d (get-student-data 2012 %)]
 ;                          (swap! vet conj d)
 ;                          (Thread/sleep 1000) d)
-;                       (drop 56 seqs)))))
+;                       db-seq))))
 
 
 ;(map #(println (pr-str %)) (re-seq #"<a([^>]+)>(.+?)</a>" body))

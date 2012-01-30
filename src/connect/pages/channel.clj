@@ -294,7 +294,7 @@
 
 (def file-categories ["Appunti" "Esercizi" "Laboratori" "Temi d'esame" "Vario"])
 
-(def size-limit-mb 10) ;; Limite dimensione file in megabyte
+(def size-limit-mb 30) ;; Limite dimensione file in megabyte
 
 (defpage "/edit/upload" {:keys [channel]}
   (let [ch (fetch-one :channels :where {:_id (obj-id channel)})]

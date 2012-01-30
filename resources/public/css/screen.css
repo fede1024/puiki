@@ -66,8 +66,8 @@ h2, h2.section {
 h3 {
 	font-family: 'Ubuntu', sans-serif;
     text-decoration: none;
-    font-size: 10pt;
-    font-weight: 500;
+    font-size: 11pt;
+    font-weight: 400;
     margin-top: 10px;
     margin-bottom: 3px;
     color: #3366CC;
@@ -94,6 +94,7 @@ img.notFound {
 
 img.logo {
     vertical-align: middle;
+    margin-left: 15px;
     margin-right: 5px;
     margin-top: 3px;
 }

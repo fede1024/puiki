@@ -47,6 +47,10 @@
 
 ;(mongo! :host "dbh42.mongolab.com" :port 27427 :db "connect-test")
 
+(defn in-localhost []
+  (= (.getHostName (java.net.InetAddress/getLocalHost))
+     "federico-linux"))
+
 (defn -main [& args]
   (with-command-line args
     "PoliConnect software."
@@ -70,7 +74,10 @@
         (server/start p
           {:ns 'connect
            :session-store (mongo-session :sessions)
-           :session-cookie-attrs {:expires "Wed, 09 Jun 2021 10:18:14 GMT"}})))))
+           :session-cookie-attrs
+           (merge {:expires "Wed, 09 Jun 2021 10:18:14 GMT"}
+                  (when (not (in-localhost))
+                    {:domain ".puiki.it"}))})))))
 
 (defn stop-server [port]
   (when (@servers port)

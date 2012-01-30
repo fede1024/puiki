@@ -136,7 +136,7 @@
   [:div.headerContainer
    [:div.header
     [:a.logo {:href "/"}
-     [:img.logo {:src "/images/policonnect.png"}]]
+     [:img.logo {:src "/images/puiki.png"}]]
     (when *like-button* (like-button "www.policonnect.it"))
     [:div.rfloat
      [:a {:href "/" :title "Home"}

@@ -74,7 +74,7 @@
        [:td (password-field {:size 15} :pwd2)]
        (error-cell :pwd2) [:td]]
       [:tr [:td {:colspan 3} "La password viene memorizzata in modo codificato, quindi ne gli amministratori di "
-            "PoliConnect ne chiunque altro possa avere accesso al database degli utenti è in grado di risalire alla "
+            "Puiki ne chiunque altro possa avere accesso al database degli utenti è in grado di risalire alla "
             "vostra password."]]
       [:tr [:td.head "Nome:"]
        [:td {:colspan 2} 
@@ -110,7 +110,7 @@
             (registration-form user))))
       (html
         [:h1.section "Registrazione"]
-        [:p "Registrati a PoliConnect, è questione di un minuto!"]
+        [:p "Registrati a Puiki, è questione di un minuto!"]
         (registration-form user)))))
 
 (defn valid? [data]
@@ -135,14 +135,14 @@
   (str (:id reg-data) "@studenti.polito.it"))
 
 (defn send-registration-mail [address code firstname]
-  (send-mail address "Registrazione PoliConnect"
+  (send-mail address "Registrazione Puiki"
     (html [:h1 "Benvenuto"]
-      [:p [:img {:src "http://www.policonnect.it/images/logo.png" :style "float: left; padding-right: 10px"}]
+      [:p [:img {:src "http://www.puiki.it/images/logo.png" :style "float: left; padding-right: 10px"}]
        "Grazie per esserti registrato." [:br]
        "Conferma il tuo account cliccando su "
-       (link-to (str "http://www.policonnect.it/register/" code) "questo link") "." [:br]
+       (link-to (str "http://www.puiki.it/register/" code) "questo link") "." [:br]
        "Se hai ricevuto questa email per errore è sufficiente eliminarla e "
-       "non verrai più contattato da " (link-to "http://www.policonnect.it" "PoliConnect") "."])))
+       "non verrai più contattato da " (link-to "http://www.puiki.it" "Puiki") "."])))
 
 (defn new-pending-user [reg-data]
   (let [address (if (admin? (current-id))
@@ -180,7 +180,7 @@
         (insert! :people (merge (dissoc data :code)
                            {:created-at (java.util.Date.)}))
         (destroy! :people-pending {:code code})
-        (follow-channel (:_id (fetch-one :channels :where {:name "Poli Connect"}))
+        (follow-channel (:_id (fetch-one :channels :where {:name "Puiki"}))
           (:_id data))
         (connect.pages.login/login! {:username (:_id data) :password (:pwd data)}
           :already-encrypted)
@@ -232,13 +232,13 @@
   (not (vali/errors? :id :captcha)))
 
 (defn send-password-restore-mail [address code]
-  (send-mail address "PoliConnect: password dimenticata"
+  (send-mail address "Puiki: password dimenticata"
     (html [:h1 "Password dimenticata?"]
-      [:p [:img {:src "http://www.policonnect.it/images/logo.png" :style "float: left; padding-right: 10px"}]
+      [:p [:img {:src "http://www.puiki.it/images/logo.png" :style "float: left; padding-right: 10px"}]
        "Se hai simenticato la password clicca su "
-       (link-to (str "http://www.policonnect.it/restore-password/" code) "questo link") "." [:br]
+       (link-to (str "http://www.puiki.it/restore-password/" code) "questo link") "." [:br]
        "Se hai ricevuto questa email per errore è sufficiente eliminarla e "
-       "non verrai più contattato da " (link-to "http://www.policonnect.it" "PoliConnect") "."])))
+       "non verrai più contattato da " (link-to "http://www.puiki.it" "Puiki") "."])))
 
 (defn new-restore-procedure [data]
   (let [address (if (admin? (current-id))

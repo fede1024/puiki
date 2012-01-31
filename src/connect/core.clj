@@ -53,7 +53,7 @@
 
 (defn -main [& args]
   (with-command-line args
-    "PoliConnect software."
+    "Puiki software."
     [[port "Specify the http port" "8080"]
      [mongo-port "Specify the mongodb post" "27017"]
      [mongo-host "Specify the mongodb host" "localhost"]

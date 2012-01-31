@@ -21,35 +21,35 @@
     :port 465
     :protocol "smtp"
     :ssl true)
-  (when (not (fetch-one :channels :where {:name "Poli Connect"}))
+  (when (not (fetch-one :channels :where {:name "Puiki"}))
     (insert! :channels
-      {:name "Poli Connect" :description "Canale dedicato a Poli Connect"
+      {:name "Puiki" :description "Canale dedicato a Puiki"
        :type :group :posts 1
        :created-at (java.util.Date.)})
     (insert! :posts
       {:title "Benvenuto" :content "Questo è un post di prova."
        :author "admin"
        :type :normal
-       :channel (:_id (fetch-one :channels :where {:name "Poli Connect"}))
+       :channel (:_id (fetch-one :channels :where {:name "Puiki"}))
        :created-at (java.util.Date.)}))  
 ;  (insert! :people
 ;    {:_id "s123"  :pwd "ciao"
 ;     :firstname "robbo"  :lastname "boh"
 ;     :roles ["user"]
 ;     :job "student"
-;     :follows [(:_id (fetch-one :channels :where {:name "Poli Connect"}))]
+;     :follows [(:_id (fetch-one :channels :where {:name "Puiki"}))]
 ;     :created-at (java.util.Date.)})
   (insert! :people
     {:_id "admin"   :pwd "admin"
-     :firstname "Admin" :lastname "Poli Connect"
+     :firstname "Admin" :lastname "Puiki"
      :roles ["admin" "user"]
      :job "student"
-     :follows [(:_id (fetch-one :channels :where {:name "Poli Connect"}))]
+     :follows [(:_id (fetch-one :channels :where {:name "Puiki"}))]
      :created-at (java.util.Date.)}))
 
 ;(insert! :channels
-;  {:name "Poli Connect"
-;   :description "Canale dedicato a Poli Connect"
+;  {:name "Puiki"
+;   :description "Canale dedicato a Puiki"
 ;   :type :normal
 ;   :posts 1
 ;   :created-at (java.util.Date.)})
@@ -58,7 +58,7 @@
 ;  {:title "Benvenuto"
 ;   :content "Questo è un post di prova."
 ;   :type :normal
-;   :channel (:_id (fetch-one :channels :where {:name "Poli Connect"}))
+;   :channel (:_id (fetch-one :channels :where {:name "Puiki"}))
 ;   :created-at (java.util.Date.)})
 
 (defn unref [db-ref]

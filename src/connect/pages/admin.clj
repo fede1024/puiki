@@ -28,7 +28,7 @@
     (apply str (interpose " ," (map #(str (:_id %) "@studenti.polito.it") students)))))
 
 (defpage "/admin/" {}
-  (layout "PoliConnect"
+  (layout "Admin - Puiki"
     [:h2.section "Amministrazione:"]
     [:p (link-to "/admin/fields" "Modifica indirizzi di studio")]
     [:h2.section "Altro:"]

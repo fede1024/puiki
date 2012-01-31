@@ -127,7 +127,7 @@
       (when (= (session/flash-get) "new-user") 
         (html
           [:h1.section "Benvenuto!"]
-          [:p "Grazie per esserti registrato. Ora fai parte di PoliConnect."]))
+          [:p "Grazie per esserti registrato. Ora fai parte di Puiki."]))
       (if person
         (if (or (admin? (current-id)) (= id (current-id)))
           (if (= (:job person) "student")
@@ -339,7 +339,7 @@
 ;  $('#loader').css('display', 'none');});")
 
 (defpartial invite-email [user-firstname user-lastname firstname lastname & [msg]]
-  [:img {:src "http://www.policonnect.it/images/logo.png" :style "float: right; padding: 10px"}]
+  [:img {:src "http://www.puiki.it/images/logo.png" :style "float: right; padding: 10px"}]
   (when (not (empty? firstname))
     [:p "Ciao " firstname ","])
   [:p user-firstname " " user-lastname " ti invita a far parte del progetto "

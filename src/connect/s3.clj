@@ -66,16 +66,16 @@
 ;      "files.puiki.it" obj false)))
 
 ;(with-s3 auth
-;  (let [obj (get-object "cat.jpg" "test.policonnect.it")]
+;  (let [obj (get-object "cat.jpg" "test.puiki.it")]
 ;    (.getAcl obj)))
 
 ;(with-s3 auth
-;  (let [obj (get-object "4ed2a94ee4b0b5637ab5bc14/fortune.sh" "test.policonnect.it")]
+;  (let [obj (get-object "4ed2a94ee4b0b5637ab5bc14/fortune.sh" "test.puiki.it")]
 ;    (.getAcl obj)))
 
 ;(with-s3 auth
 ;  (let [acl (AccessControlList.)
-;        obj (get-object "4ed2a94ee4b0b5637ab5bc14/fortune.sh" "test.policonnect.it")]
+;        obj (get-object "4ed2a94ee4b0b5637ab5bc14/fortune.sh" "test.puiki.it")]
 ;    (.grantPermission acl GroupGrantee/ALL_USERS Permission/PERMISSION_READ)
 ;    (.setAcl obj acl)))
 
@@ -101,11 +101,11 @@
 
 ;(println
 ;  (with-s3 auth
-;    (get-expiring-url "comandi" "files.policonnect.it" 1 :virtual true)))
+;    (get-expiring-url "comandi" "files.puiki.it" 1 :virtual true)))
 
 ;(println
 ;  (with-s3 auth
-;    (get-expiring-url "comandi" "files.policonnect.it" 1)))
+;    (get-expiring-url "comandi" "files.puiki.it" 1)))
 
 ;(defn get-expiring-put-url [name bucket minutes]
 ;  (. *s3* createSignedGetUrl "PUT" bucket name nil (java.util.HashMap.) (* 60 minutes)))
@@ -114,4 +114,4 @@
 
 ;(with-s3 auth
 ;  (put-file! (java.io.File. "/home/federico/comandi")
-;     "test.policonnect.it"))
+;     "test.puiki.it"))

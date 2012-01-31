@@ -125,7 +125,7 @@
 (def ^:dynamic *like-button* nil)
 
 (defpartial like-button [url]
-  (let [complete-url (str "http://www.policonnect.it" url)]
+  (let [complete-url (str "http://www.puiki.it" url)]
     [:iframe {:src (encode-url "https://www.facebook.com/plugins/like.php"
                                {:href complete-url :show_faces :false
                                 :layout :button_count :ref :fb_like})
@@ -137,7 +137,7 @@
    [:div.header
     [:a.logo {:href "/"}
      [:img.logo {:src "/images/puiki.png"}]]
-    (when *like-button* (like-button "www.policonnect.it"))
+    (when *like-button* (like-button "www.puiki.it"))
     [:div.rfloat
      [:a {:href "/" :title "Home"}
      [:img.header {:src "/images/home.png"}]]

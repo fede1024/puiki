@@ -19,7 +19,7 @@
     [:span
      [:h1.section "Benvenuto!" [:div.like_button (like-button "/")]]
      [:div.section div-prop
-      [:p "Benvenuto su PoliConnect, il sito creato per gli studenti del Politecnico di Torino, "
+      [:p "Benvenuto su Puiki, il sito creato per gli studenti del Politecnico di Torino, "
        "dove fare domande e trovare informazioni riguardanti i corsi, condividere appunti e altro ancora."]]
      [:h2.section "Condividi ciò che sai e chiedi cosa vuoi sapere:"]
      [:div.section div-prop
@@ -30,7 +30,7 @@
        ", un dubbio su un argomento della lezione...) nella pagina dedicata alla materia e una notifica arriverà a tutti gli studenti che seguono il tuo stesso corso, i quali potranno rispondere."
        " Le varie risposte vengono poi ordinate in base ai giudizi degli studenti stessi, così che la risposta ritenuta migliore sia visualizzata per prima."]
       [:p "Puoi anche condividere ciò che sai e contribuire a raccogliere informazioni sui corsi, tramite la sezione wiki, dove puoi creare nuove pagine o modificare quelle esistenti, aggiungendo informazioni utili ad altri studenti."
-       " Vedi una " (link-to "http://www.policonnect.it/post/4f0c3627e4b056ec797378a3" "pagina di esempio") "."]
+       " Vedi una " (link-to "http://www.puiki.it/post/4f0c3627e4b056ec797378a3" "pagina di esempio") "."]
       [:p "Il contenuto delle pagine, delle domande e delle risposte viene indicizzato per permettere una "
        (link-to "/search?text=java+public" "rapida ricerca")
        " e per trovare subito le informazioni che cerchi."]]
@@ -43,7 +43,7 @@
        " o utilizza il pulsante Feedback in alto."]]]))
 
 (defpage "/" []
-  (layout "PoliConnect"
+  (layout "Puiki.it"
     (info-section)
     [:h2.lastQuestions [:img.middle {:src "/images/question-big.png"}] " Domande più recenti:"]
     (let [posts (fetch :posts :where {:removed {:$ne true} :type :question}

@@ -1,6 +1,7 @@
 (ns connect.s3
   "Basic S3 utils"
   (:refer-clojure :exclude [list])
+  (:use somnium.congomongo)
   (:import
     (org.jets3t.service.security AWSCredentials ProviderCredentials)
     (org.jets3t.service.acl AccessControlList)
@@ -58,6 +59,11 @@
 
 (defn get-object [object bucket]
   (. *s3* getObject (. *s3* getBucket bucket) object))
+
+;(with-s3 auth
+;  (let [obj (new S3Object "cat.jpg")]
+;    (. *s3* copyObject "files.policonnect.it" "cat.jpg"
+;      "files.puiki.it" obj false)))
 
 ;(with-s3 auth
 ;  (let [obj (get-object "cat.jpg" "test.policonnect.it")]

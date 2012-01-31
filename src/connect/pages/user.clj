@@ -7,7 +7,8 @@
         hiccup.page-helpers
         hiccup.form-helpers
         somnium.congomongo)
- (:require [connect.pages.channel :as channel]
+ (:require [connect.email :as mail]
+           [connect.pages.channel :as channel]
            [clojure.contrib.string :as str]
            [noir.server :as server]
            [noir.validation :as vali]
@@ -330,3 +331,158 @@
         [:p "Il tuo suggerimento è stato memorizzato."]
         [:p (link-to "/" "Home")]))
     (render "/permission-denied")))
+
+;(def js-search 
+;  "$('#loader').css('display', 'inline');
+;  $.post('/user/invite-search', {firstname: $('#firstname').val(), lastname: $('#lastname').val()},
+;     function(content) {$('#searchResult').html(content);
+;  $('#loader').css('display', 'none');});")
+
+(defpartial invite-email [user-firstname user-lastname firstname lastname & [msg]]
+  [:img {:src "http://www.policonnect.it/images/logo.png" :style "float: right; padding: 10px"}]
+  (when (not (empty? firstname))
+    [:p "Ciao " firstname ","])
+  [:p user-firstname " " user-lastname " ti invita a far parte del progetto "
+   [:a {:href "http://www.puiki.it"} "Puiki"] "!"]
+  [:p "Puiki è un sito web dedicato agli studenti del Politecnico di Torino, dove puoi condividere files, "
+   "fare domande, scrivere e cercare informazioni sui tuoi corsi di studio e altro ancora."]
+  [:p "L'iscrizione è rapidissima! E' sufficiente cliccare " [:a {:href "http://www.puiki.it/register"} "qui"]
+   " e in pochi minuti potrai accedere a tutti i contenuti di Puiki."]
+  (when (and msg (not (str/blank? msg)))
+    (html
+      [:h2.section user-firstname " scrive:"]
+      [:p msg])))
+
+(defn format-names [s]
+  (apply str
+    (interpose " "
+      (map #(str (first (.toUpperCase %))
+                 (subs (.toLowerCase %) 1))
+           (re-seq #"[^ ]+" s)))))
+
+(def sorted-map-names
+  (into (sorted-map-by (fn [key1 key2] (compare (str key2) (str key1))))
+      {:lastname 1 :firstname 1}))
+
+(defpage "/user/invite" {:keys [firstname lastname id msg email] :as data}
+  (layout "Invita un amico"
+    [:h1.section "Invita un amico"]
+    [:h2.section "Cerca un amico del Politecnico e invitalo ad iscriversi"]
+    [:p "Puiki ha bisogno del tuo contributo per farsi conoscere e permettere così di "
+     "arricchirsi del contributo di più persone."]
+    [:p "Cerca i tuoi amici del Politecnico e Puiki gli invierà un email di invito a tuo nome."]
+    [:div.section
+     (form-to {:accept-charset "utf-8"} [:get "/user/invite"]
+       [:table
+         [:tr [:td.head "Nome:"]    [:td (text-field {:placeholder "Nome"} :firstname firstname)]]
+         [:tr [:td.head "Cognome:"] [:td (text-field {:placeholder "Congnome"} :lastname lastname)]
+          [:td (submit-button "Cerca")]]])]
+    [:div.section
+     [:p "Oppure inserisci la sua email:"]
+     (form-to {:accept-charset "utf-8"} [:get "/user/invite"]
+        [:table
+         [:tr [:td.head "Email:"] [:td (text-field :email email)] [:td (submit-button "Avanti")]]])]
+    (when (or (not (str/blank? firstname))
+              (not (str/blank? lastname)))
+      (if (or (> (count firstname) 3)
+              (> (count lastname) 3))
+        (let [q1 (str "^" firstname ".*")
+              q2 (str "^" lastname ".*")
+              res (fetch :students :where {:firstname {:$regex q1 :$options "i"}
+                                           :lastname {:$regex q2 :$options "i"}}
+                         :sort sorted-map-names)
+              res2 (take 20 res)]
+          (html
+            [:h2.section "Risultati ricerca: " (count res2) " di " (count res)]
+            [:div.section
+             (for [s res2]
+               [:p [:a {:href (str (encode-url "/user/invite" {:firstname firstname :lastname lastname
+                                                          :id (:_id s)})
+                                   "#preview")}
+                    (format-names (:lastname s)) " " (format-names (:firstname s))]])]))
+        (html
+          [:h2.section "Risultati ricerca: 0"]
+          [:div.section
+           [:p "Ricerca non valida, inserisci parametri più specifici."]])))
+    (when (or (not (str/blank? id)) (not (str/blank? email)))
+      (let [st (if (str/blank? id)
+                 {:firstname "" :lastname ""}
+                 (fetch-one :students :where {:_id (obj-id id)}))
+            user (fetch-one :people :where {:_id (current-id)})]
+        (html
+          [:h2.section {:id "preview"}
+           "Anteprima invito a "
+           (if (str/blank? id)
+             email
+             (str (format-names (:firstname st)) " " (format-names (:lastname st))))]
+          [:div.section
+           (invite-email (:firstname user) (:lastname user)
+                         (format-names (:firstname st)) (format-names (:lastname st)))
+           [:h3.section (:firstname user) " scrive (opzionale):"]
+           (form-to {:accept-charset "utf-8"} [:get "/user/invite-send"]
+             (text-area {:class :postComment :rows 4 :maxlength 1000 :style "width: 500px"}
+                :msg (or msg "Io mi sono già iscritto!"))
+             (html (for [[k v] data]
+                     [:input {:type :hidden :name k :value v}]))
+             [:div 
+              [:img.edit {:src "/images/send_mail.png"}]
+              (submit-button "Invia!")])])))))
+
+;(dorun
+;  (for [[m d] (read-string (slurp "/home/federico/studenti"))]
+;    (insert! :students (merge d {:code (str "s" (:code d))}))))
+
+(defn valid-mail [mail]
+  (when mail 
+    (re-matches #"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$" mail)))
+
+(defpage "/user/invite-send" {:keys [id msg email] :as data}
+  (let [st (when (not (str/blank? id))
+             (fetch-one :students :where {:_id (obj-id id)}))
+        user (fetch-one :people :where {:_id (current-id)})
+        final-email (valid-mail (if st
+                                  (str (:code st) "@studenti.polito.it")
+                                  email))]
+    (if (and st (fetch-one :people :where {:_id (:code st)}))
+      (layout "Utente già registrato"
+        [:h1.section "L'utente scelto è già registrato!"]
+        [:h2.section "Invita altri amici"]
+        [:p "Cerca altri amici da invitare, più siamo e più possiamo contribuire. "
+           [:a {:href "/user/invite"} "Continua!"]])
+      (if final-email
+        (if (or (> (count (:invites user)) 30)
+               (some #(= % final-email) (:invites user)))
+          (if (> (count (:invites user)) 30)
+            (layout "Limite inviti raggiunto"
+              [:h1.section "Limite inviti raggiunto"]
+              [:p "Hai raggiunto il limite di inviti che puoi inviare. Grazie!"])
+            (layout "Già invitato"
+              [:h1.section "Persona già invitata"]
+              [:p "Hai già invitato questa persona."]))
+          (do
+            (update! :people {:_id (current-id)}
+               {:$push {:invites final-email}})
+            (future
+              (try
+                (mail/send-mail final-email ;"giraud.federico@gmail.com"
+                   (str (:firstname user) " " (:lastname user) " ti invita ad iscriverti a Puiki.it")
+                   (html [:h1 "Benvenuto"]
+                     (invite-email (:firstname user) (:lastname user)
+                       (format-names (or (:firstname st) "")) (format-names (or (:lastname st) ""))
+                       msg)))
+                (catch Exception e
+                  (println "Email error." (str e)))))
+            (layout "Email inviata"
+              [:h1.section "Grazie!"]
+              (if (str/blank? id)
+                [:p "L'invito è stato inviato all'indirizzo " final-email "."]
+                [:p "L'invito è stato inviato all'indirizzo di " (format-names (or (:firstname st) "")) "."])
+              [:h2.section "Invita altri amici"]
+              [:p "Cerca altri amici da invitare, più siamo e più possiamo contribuire. "
+               [:a {:href "/user/invite"} "Continua!"]])))
+         (layout "Errore invio"
+          [:h1.section "Errore invio email"]
+          (if (str/blank? id)
+            [:p "L'email specificata non è valida."]
+            [:p "L'utente cercato non è nel database di Puiki.it"]))))))
+  

@@ -30,7 +30,7 @@
         (let [[out exec-time] (exec-time (handler req))]
           (insert! :logs
             {:date (java.util.Date.) :resp-time exec-time
-             :method (:request-method req) :uri (:uri req)
+             :method (:request-method req) :uri (:uri req) :headers (:headers req)
              :referer (get-in req [:headers "referer"])
              :user-agent user-agent :bot *bot*
              :session (:value (get-in req [:cookies "ring-session"]))

@@ -25,10 +25,19 @@
 
 ;(def pagina (client/get "https://didattica.polito.it/pls/portal30/sviluppo.public_iscritti.espandi?p_a_acc=2012&p_cod_ins=23ACIOA%2023ACINZ%2023ACIPC&p_id_inc=56386&p_id_ins=87347&p_id_comm_esa=&p_alfa=GI-ZZ&p_header=&p_periodo=1"))
 
+;(def pagina (client/get "https://didattica.polito.it/pls/portal30/sviluppo.public_iscritti.espandi?p_a_acc=2012&p_cod_ins=23ACIOA%2023ACINZ%2023ACIPC&p_id_inc=56386&p_id_ins=87347&p_id_comm_esa=&p_alfa=GI-ZZ&p_header=&p_periodo=1"))
+
 (defn get-link-names [link]
-  (map (fn [[_ matr cogn nome]] {:code matr :firstname nome :lastname cogn})
-       (re-seq #"<tr>
+  (map (fn [[_ matr cogn nome codinscred cds pd pi freq]]
+       {:code matr :firstname nome :lastname cogn
+        :codinscred codinscred :cds cds :pd pd :pi pi :freq freq})
+     (re-seq #"<tr>
 <td valign=\"top\"><font class=\"policorpo\">([0-9][0-9][0-9][0-9]+)</font></td>
+<td valign=\"top\"><font class=\"policorpo\">(.*)</font></td>
+<td valign=\"top\"><font class=\"policorpo\">(.*)</font></td>
+<td valign=\"top\"><font class=\"policorpo\">(.*)</font></td>
+<td valign=\"top\"><font class=\"policorpo\">(.*)</font></td>
+<td valign=\"top\"><font class=\"policorpo\">(.*)</font></td>
 <td valign=\"top\"><font class=\"policorpo\">(.*)</font></td>
 <td valign=\"top\"><font class=\"policorpo\">(.*)</font></td>"
                (:body (client/get (str "https://didattica.polito.it/pls/portal30/" link))))))
@@ -114,7 +123,7 @@
 ;    (dorun (for [[m d] group]
 ;             (println (format "%s   %-20s   %s" m (:nome d) (:cogn d)))))))
 
-;(write-data-file "/home/federico/studenti" (reduce merge @vet))
+(write-data-file "/home/federico/studenti2" (reduce merge @vet))
 
 ;(def matr-min (apply min (map #(Integer/parseInt (first %)) tmp)))
 ;(def matr-max (apply max (map #(Integer/parseInt (first %)) tmp)))
@@ -128,16 +137,18 @@
 
 ;(count (filter #(= (:nome (second %)) "ALBERTO") tmp))
 
-;(count (reduce merge @vet))
+(count (reduce merge @vet))
 
 ;(def db-seq (map first (reverse (sort-by second seqs))))
 
-;(binding [*out* (new java.io.FileWriter "/home/federico/log2")]
+;(take 1 (reverse db-seq))
+
+;(binding [*out* (new java.io.FileWriter "/home/federico/log3")]
 ;  (def data
 ;    (reduce merge (map #(let [d (get-student-data 2012 %)]
 ;                          (swap! vet conj d)
 ;                          (Thread/sleep 1000) d)
-;                       db-seq))))
+;                       (drop 13 db-seq)))))
 
 
 ;(map #(println (pr-str %)) (re-seq #"<a([^>]+)>(.+?)</a>" body))

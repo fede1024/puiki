@@ -25,12 +25,12 @@
 (defn wrap-logging [handler]
   (fn [req]
     (let [user-agent (get-in req [:headers "user-agent"])]
-      (binding [*ip* (:remote-addr req)
+      (binding [*ip* (or (get-in req [:headers "x-forwarded-for"]) (:remote-addr req))
                 *bot* (bot? user-agent)]
         (let [[out exec-time] (exec-time (handler req))]
           (insert! :logs
             {:date (java.util.Date.) :resp-time exec-time
-             :method (:request-method req) :uri (:uri req) :headers (:headers req)
+             :method (:request-method req) :uri (:uri req); :headers (:headers req)
              :referer (get-in req [:headers "referer"])
              :user-agent user-agent :bot *bot*
              :session (:value (get-in req [:cookies "ring-session"]))

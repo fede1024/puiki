@@ -405,7 +405,7 @@
     (resp/redirect "/not-found")))
 
 (defpage "/channel/:id/files" {:keys [id filename action]}
-  (let [dec-filename (URLDecoder/decode filename)
+  (let [dec-filename (URLDecoder/decode (or filename ""))
         file (fetch-one :files :where {:channel id :filename dec-filename})]
     (if file
       (if (or (= (:privacy file) "Pubblico")

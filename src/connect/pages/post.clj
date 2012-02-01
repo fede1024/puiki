@@ -191,7 +191,7 @@
          (html
            [:tr [:td [:br] [:h2.section "Commenti"]]]
            [:tr [:td {:id (str "comments" (:_id post))}
-                 (post-comments post :sort :new-first)]]))
+                 (post-comments post)]]))
        (when (not preview)
          (post-bottom post))])))
 

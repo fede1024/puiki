@@ -28,6 +28,7 @@
       (binding [*ip* (or (get-in req [:headers "x-forwarded-for"]) (:remote-addr req))
                 *bot* (bot? user-agent)]
         (let [[out exec-time] (exec-time (handler req))]
+          ;(println ">>" (:form-params req))
           (insert! :logs
             {:date (java.util.Date.) :resp-time exec-time
              :method (:request-method req) :uri (:uri req); :headers (:headers req)
@@ -35,7 +36,8 @@
              :user-agent user-agent :bot *bot*
              :session (:value (get-in req [:cookies "ring-session"]))
              :status (:status out) :out-type (get-in out [:headers "Content-Type"])
-             :username (session/get :username) :ip (:remote-addr req)})
+             :username (session/get :username) :ip *ip*
+             :query-params (:query-params req)})
           out)))))
 
 (defn format-log-date [date]

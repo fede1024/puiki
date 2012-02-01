@@ -161,7 +161,7 @@
         [:td.logsB (:resp-time log)]
         [:td.logsB (:method log)]
         [:td.logsB {:title (pr-str (:query-params log))}
-           (link-to (URLEncoder/encode (:uri log))
+           (link-to (clojure.string/replace (:uri log) #" " "%20") 
              (if (> (count (:uri log)) 70)
                (str (subs (:uri log) 0 67) "...")
                (:uri log)))]
@@ -185,7 +185,7 @@
         [:td.logsB (:resp-time log)]
         [:td.logsB (:method log)]
         [:td.logsB {:title (pr-str (:query-params log))}
-           (link-to (URLEncoder/encode (:uri log))
+           (link-to (clojure.string/replace (:uri log) #" " "%20") 
              (if (> (count (:uri log)) 70)
                (str (subs (:uri log) 0 67) "...")
                (:uri log)))]

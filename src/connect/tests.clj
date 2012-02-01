@@ -123,7 +123,7 @@
 ;    (dorun (for [[m d] group]
 ;             (println (format "%s   %-20s   %s" m (:nome d) (:cogn d)))))))
 
-(write-data-file "/home/federico/studenti2" (reduce merge @vet))
+;(write-data-file "/home/federico/studenti2" (reduce merge @vet))
 
 ;(def matr-min (apply min (map #(Integer/parseInt (first %)) tmp)))
 ;(def matr-max (apply max (map #(Integer/parseInt (first %)) tmp)))
@@ -137,7 +137,7 @@
 
 ;(count (filter #(= (:nome (second %)) "ALBERTO") tmp))
 
-(count (reduce merge @vet))
+;(count (reduce merge @vet))
 
 ;(def db-seq (map first (reverse (sort-by second seqs))))
 
@@ -150,6 +150,31 @@
 ;                          (Thread/sleep 1000) d)
 ;                       (drop 13 db-seq)))))
 
+;(def data
+;  (reduce merge
+;    (for [[m d] (read-string (slurp "/home/federico/studenti2"))]
+;      (let [cdsd (:cds d)
+;            cds (if (some #(= \( %) cdsd)
+;                  (second (re-find #"\((.*)\)" cdsd))
+;                  cdsd)]
+;        {m {:code (:code d) :firstname (:firstname d) :lastname (:lastname d) :cds cds}}))))
+
+;(def data2 (read-string (slurp "/home/federico/Archivio/db-studenti")))
+
+;(write-data-file "/home/federico/test2" (merge data2 data))
+
+;(def data3 (merge data2 data))
+
+;(take 2 data3)
+
+;(dorun
+;  (map #(println (:lastname (second %)) (:firstname (second %)))
+;  (filter #(= (:cds (second %)) "FIS1T3")
+;    data3)))
+
+;(count
+;  (filter #(= (:cds (second %)) nil)
+;    data3))
 
 ;(map #(println (pr-str %)) (re-seq #"<a([^>]+)>(.+?)</a>" body))
 

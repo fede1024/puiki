@@ -371,6 +371,8 @@
     [:p "Puiki ha bisogno del tuo contributo per farsi conoscere e permettere così di "
      "arricchirsi del contributo di più persone."]
     [:p "Cerca i tuoi amici del Politecnico e Puiki gli invierà un email di invito a tuo nome."]
+    [:p "ATTENZIONE: dal momento che Puiki è ancora in fase beta, "
+     "attualmente gli inviti sono aperti soltanto per gli studenti della terza facoltà."]
     [:div.section
      (form-to {:accept-charset "utf-8"} [:get "/user/invite"]
        [:table
@@ -389,9 +391,11 @@
         (let [q1 (str "^" firstname ".*")
               q2 (str "^" lastname ".*")
               res (fetch :students :where {:firstname {:$regex q1 :$options "i"}
-                                           :lastname {:$regex q2 :$options "i"}}
+                                           :lastname {:$regex q2 :$options "i"}
+                                           :cds {:$regex ".*1T3" :$options "i"}}
                          :sort sorted-map-names)
-              res2 (take 20 res)]
+              res2 (take 20 res)
+              admin? (admin? (current-id))]
           (html
             [:h2.section "Risultati ricerca: " (count res2) " di " (count res)]
             [:div.section
@@ -399,7 +403,8 @@
                [:p [:a {:href (str (encode-url "/user/invite" {:firstname firstname :lastname lastname
                                                           :id (:_id s)})
                                    "#preview")}
-                    (format-names (:lastname s)) " " (format-names (:firstname s))]])]))
+                    (format-names (:lastname s)) " " (format-names (:firstname s))]
+                (when admin? (str " " (:code s) " " (:cds s)))])]))
         (html
           [:h2.section "Risultati ricerca: 0"]
           [:div.section
@@ -429,7 +434,7 @@
               (submit-button "Invia!")])])))))
 
 ;(dorun
-;  (for [[m d] (read-string (slurp "/home/federico/studenti"))]
+;  (for [[m d] (read-string (slurp "/home/federico/Archivio/db-studenti-2"))]
 ;    (insert! :students (merge d {:code (str "s" (:code d))}))))
 
 (defn valid-mail [mail]

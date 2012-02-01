@@ -33,7 +33,10 @@
      [:p (link-to "/user/following" "Notifiche")]]
     [:h2.section "Utenti:"]
     [:div.section
-     [:p (link-to "/user/list" "Elenco utenti")]]))
+     [:p (link-to "/user/list" "Elenco utenti")]
+     [:p [:a {:href "/user/invite"}
+          "Invita i tuoi amici!"] " "
+      [:img.edit {:src "/images/add.png"}]]]))
 
 (defn get-person-study-year [person]
   (when (:year person)
@@ -83,9 +86,17 @@
                  (sort-by #(.toLowerCase (or (:firstname %) ""))
                    (fetch :people)))]
     (layout "Elenco utenti"
-      [:h2.section "Utenti registrati: (" (count users)")"]
+      [:h1.section "Utenti registrati: (" (count users)")"]
+      [:p [:a {:href "/user/invite"}
+                     [:img.edit {:src "/images/add.png"}]
+                     "Invita i tuoi amici!"]]
+      [:br]
       (people-table users :lastname true :field true :img true
-                    :link (not (nil? (current-id)))))))
+                    :link (not (nil? (current-id))))
+      [:br]
+      [:p [:a {:href "/user/invite"}
+                     [:img.edit {:src "/images/add.png"}]
+                     "Invita i tuoi amici!"]])))
 
 (defpartial account-edit-form [person & [data]] ;; TODO: fix data
   [:h2.section "Account:"]

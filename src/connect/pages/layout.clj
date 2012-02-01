@@ -56,7 +56,8 @@
           [:tr
            [:td.statusInfo "Matricola " id " " (link-to "/logout" "logout")]]
           [:tr
-           [:td.statusOnline "Utenti online " (if (zero? recents) 1 recents)]]]])
+           [:td.statusOnline "Utenti online " (if (zero? recents) 1 recents)
+            " - " [:a {:href "/user/invite"} "Invita amici"]]]]])
       [:div.status
        [:p.login "Effettua il " 
         [:a {:href "/login" :id :loginLink} "login"]
@@ -97,8 +98,12 @@
 (defpartial last-registrations []
   [:h2.section "Ultimi utenti registrati:"]
   (people-table (fetch :people :limit 5 :sort {:created-at -1})
-     :field true :img true :link (not (nil? (current-id)))) [:br]
-  "Totale " (link-to "/user/list" (fetch-count :people) " utenti") ".")
+     :field true :img true :link (not (nil? (current-id))))
+  [:p "Totale " (link-to "/user/list" (fetch-count :people) " utenti") "."]
+  (when (current-id)
+    [:p [:a {:href "/user/invite"}
+         [:img.edit {:src "/images/add.png"}]
+         "Invita i tuoi amici!"]]))
 
 (defpartial user-sidebar []
   ;(last-posts)

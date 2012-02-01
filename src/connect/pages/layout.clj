@@ -185,7 +185,11 @@
    "Powered by: "
    (link-to "http://www.clojure.org" [:img.footer {:height 25 :src "/images/Clojure.png"}])
    (link-to "http://www.mongodb.org" [:img.footer {:height 25 :src "/images/mongodb.png"}])
-   (link-to "http://aws.amazon.com/" [:img.footer {:height 25 :src "/images/aws.png"}])])
+   (link-to "http://aws.amazon.com/" [:img.footer {:height 25 :src "/images/aws.png"}])
+   [:p {:style "font-size: 7pt"}
+    [:a {:href "mailto:giraud.federico@gmail.com"} "Federico Giraud 2012"] " - "
+    [:a {:id "segn" :href "/user/feedback"} "Segnala un problema in questa pagina"]
+    [:script "$('#segn').attr('href', '/user/feedback?text=Pagina:%20' + document.URL + '%0D%0AVorrei+che...');"]]])
 
 (defpartial layout [title & content]
   (html5

@@ -321,7 +321,7 @@
       (render "/user/new-course" data))
     (render "/permission-denied")))
 
-(defpage "/user/feedback" []
+(defpage "/user/feedback" {:keys [text]}
   (layout "Feedbacks"
     [:h1.section "Feedback"]
     [:p "Se vuoi riportare un errore, un malfunzionamento, un suggerimento qualsiasi "
@@ -329,7 +329,7 @@
      (link-to "mailto:giraud.federico@gmail.com" "email") "."]
     [:p "Grazie per il tuo aiuto!"]
     (form-to {:accept-charset "utf-8"} [:post "/user/feedback"]
-      (text-area {:class :postComment :rows 10 :placeholder "Vorrei che..."} :text)
+      (text-area {:class :postComment :rows 10 :placeholder "Vorrei che..."} :text text)
       (submit-button "Invia!"))))
 
 (defpage [:post "/user/feedback"] {:keys [text]}

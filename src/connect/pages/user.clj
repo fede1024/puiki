@@ -38,10 +38,6 @@
           "Invita i tuoi amici!"] " "
       [:img.edit {:src "/images/add.png"}]]]))
 
-(defn get-person-study-year [person]
-  (when (:year person)
-    (min 5 (- 2012 (:year person)))))
-
 (defpartial student-info [person]
   [:h2.section "Account:"]
   [:table

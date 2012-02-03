@@ -201,11 +201,6 @@
      (page-table post :preview preview)
      (question-table post :preview preview))])
 
-(defpartial post-summary [post]
-  [:p "Commenti: " (count (:comments post))] ;; TODO: fix?
-  (when (= "question" (:type post))
-    [:p "Risposte: " (fetch-count :posts :where {:answers-to (:_id post)})]))
-
 (defpartial channel-link [post]
   (let [ch (fetch-one :channels :where {:_id (:channel post)})]
     [:p "Canale: " (link-to (channel-path ch) (:name ch))]))
@@ -249,10 +244,19 @@
 
 (defpartial question-sidebar [question]
   [:div.sideBarSection
-   [:h2.section "Informazioni post:"] ;; TODO: fare come page-sidebar? (senza sotto funzioni)
-   (post-summary question)
-   [:p "Visite: " (+ 1 (or (:views question) 0))]
-   (channel-link question)])
+   [:h2.section "Informazioni post:"]
+   (let [ch (fetch-one :channels :where {:_id (:channel question)})]
+     [:p [:a {:href (channel-path ch)}
+          [:img.edit {:src "/images/channels-small.png" :alt "Canale" :title "Canale"}]
+          (:name ch)]])
+   [:p [:a {:href (post-path question)}
+        [:img.edit {:src "/images/link.png" :alt "Link" :title "Link permanente"}]
+        "Link permanente"]]
+   [:p [:a {:href (encode-url (post-path question) {:printable true})}
+        [:img.edit {:src "/images/print.png" :alt "Stampa" :title "Versione stampabile"}]
+        "Stampa"]]
+   [:p [:img.edit {:src "/images/users-small.png" :alt "Vis" :title "Visualizzazzioni"}]
+    "Visite: " (+ 1 (or (:views question) 0))]])
 
 (defpartial page-sidebar [page cron]
   [:div.sideBarSection
@@ -264,6 +268,9 @@
    [:p [:a {:href (post-path page)}
         [:img.edit {:src "/images/link.png" :alt "Link" :title "Link permanente"}]
         "Link permanente"]]
+   [:p [:a {:href (encode-url (post-path page) {:printable true})}
+        [:img.edit {:src "/images/print.png" :alt "Stampa" :title "Versione stampabile"}]
+        "Stampa"]]
    [:p [:img.edit {:src "/images/users-small.png" :alt "Vis" :title "Visualizzazzioni"}]
     "Visite: " (+ 1 (or (:views page) 0))]]
   [:div.sideBarSection
@@ -285,7 +292,7 @@
      [:span {:id (str "votes" (:_id page))}
       (vote-section page)]]])
 
-(defpage "/post/:id" {:keys [id cron]}
+(defpage "/post/:id" {:keys [id cron printable]}
   (let [id (obj-id id)
         post (fetch-one :posts :where {:_id id})]
     (if post
@@ -305,29 +312,32 @@
         (when (not logs/*bot*)
           (update! :posts {:_id id}
                    {:$inc {:views 1}}))
-        (layout (:title post)
-          (let [ch (fetch-one :channels :where {:_id (:channel post)})]
-            [:h1.section [:a.nodecor {:href (channel-path ch)} (:name ch)]])
-          (when (= cron "true")
-            [:div.sideBarSection (page-history post)])
-          (post-div post)
-          (when (= "question" (:type post))
-            (post-answers post))))
-      (render "/not-found"))))
-
+        (let [ch (fetch-one :channels :where {:_id (:channel post)})]
+          (if (= printable "true")
+            (layout-print (str (:title post) " (" (:name ch) ")")
+               [:h1.section [:a.nodecor {:href (channel-path ch)} (:name ch)]]
+               [:h2.postTitle (:title post)] [:br]
+               (:content post)
+               (when (= "question" (:type post))
+                 (post-answers post)))
+            (layout (:title post)
+               [:h1.section [:a.nodecor {:href (channel-path ch)} (:name ch)]]
+               (when (= cron "true")
+                 [:div.sideBarSection (page-history post)])
+               (post-div post)
+               (when (= "question" (:type post))
+                 (post-answers post))))))
+        (render "/not-found"))))
+  
 (defpage "/old-pages/:id" {:keys [id]}
   (let [id (obj-id id)
         page (fetch-one :old-pages :where {:_id id})]
     (if page
-      (binding [*sidebar* (html [:div.sideBarSection
-                                 [:h2.section "Informazioni"]
-                                   (post-summary page)
-                                   (channel-link page)])]
-        (layout (:title page)
-          (let [ch (fetch-one :channels :where {:_id (:channel page)})]
-            [:h1.section [:a.nodecor {:href (channel-path ch)} (:name ch)]])
-          [:div.sideBarSection (page-history page)]
-          (post-div page)))
+      (layout (:title page)
+        (let [ch (fetch-one :channels :where {:_id (:channel page)})]
+          [:h1.section [:a.nodecor {:href (channel-path ch)} (:name ch)]])
+        [:div.sideBarSection (page-history page)]
+        (post-div page))
       (render "/not-found"))))
 
 (defn update-vote [current dir]

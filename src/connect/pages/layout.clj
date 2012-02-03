@@ -221,6 +221,30 @@
      (layout-header)
      (layout-body content)
      (layout-footer)]))
+
+(defpartial layout-print [title & content]
+  (html5
+    [:head
+     [:meta {:charset "utf-8"}]
+     "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"/> "
+     [:meta {:http-equiv "X-UA-Compatible" :content "IE=edge,chrome=1"}]
+     [:meta {:name "viewport" :content "width=device-width, initial-scale=1, maximum-scale=1"}]
+     [:meta {:property "og:image" :content "/images/logo-small.png"}]
+     [:link {:rel "shortcut icon" :href "/images/favicon.ico"}]
+     [:script {:type "text/javascript" :src "/jquery-1.7.1.min.js"}]
+     (include-css "/css/reset.css")
+     [:link {:href "http://fonts.googleapis.com/css?family=Ubuntu:400,500" :rel "stylesheet" :type "text/css"}]
+     (include-css "/css/screen.css")
+     (include-css "/css/search.css")
+     (include-css "/css/people.css")
+     (include-css "/css/channel.css")
+     (include-css "/css/admin.css")
+     (include-css "/css/post.css")
+     sh-header
+     [:title title]
+     google-analytics]
+    [:body [:div.printContainer content sh-highlight]
+     [:div.footer "Puiki.it - " title]]))
     
 (defpartial error-text [errors]
   (map #(html [:p.errorMsg [:img.errorMsg {:src "/images/error.png"}] " " %]) errors))

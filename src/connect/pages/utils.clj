@@ -118,6 +118,10 @@
         (catch Exception e (or alt 0))))
     (or alt 0)))
 
+(defn get-person-study-year [person]
+  (when (:year person)
+    (min 5 (- 2012 (:year person)))))
+
 ;(dorun
 ;  (map (fn [date] (println (format-timestamp date) " - " (format-timestamp-relative date)))
 ;    (sort dates)))

@@ -384,10 +384,16 @@
           ch (fetch-one :channels :where {:_id (obj-id channel)})]
       (.delete (:tempfile file))
       (if ret
-        (layout "File caricato"
+        (do
+          (update! :people {:follows (:_id ch) :_id {:$ne (current-id)}} ;; Update a tutti i followers
+            {:$push {:news {:action :new-file :filename (:filename file)
+                            :channel (:_id ch) :time (java.util.Date.)}}}
+            :multiple true :upsert false)
+          (layout "File caricato"
            [:h1.section "File caricato"]
            [:h2.section "Grazie per aver condiviso un file!"]
-           [:p "Torna alla pagina di " (link-to (channel-path ch) (:name ch)) "."])
+           [:p "I followers di questo canale riceveranno una notifica per il nuovo file."]
+           [:p "Torna alla pagina di " (link-to (channel-path ch) (:name ch)) "."]))
         (layout "Errore"
           [:h1.section "Errore"]
           [:h2.section "Si è verificato un errore"]
@@ -424,6 +430,10 @@
              [:h1.section dec-filename]
              (link-to (file-path id filename :action 'open) "Apri"))
           (do
+            (when (current-id)
+              (update! :people {:_id (current-id)} ;; Toglie il post dalle notifiche
+                {:$pull {:news {:filename (:filename file) :channel (obj-id (:channel file))}}}
+                :multiple true))
             (when (not logs/*bot*)
               (update! :files {:channel id :filename dec-filename}
                        {:$inc {:views 1}}))

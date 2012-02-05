@@ -184,7 +184,8 @@
         news (reverse (sort-by :created-at (:news user)))
         new-posts (filter #(= (:action %) "new-post") news)
         new-answers (filter #(= (:action %) "new-answer") news)
-        new-comments (filter #(= (:action %) "new-comment") news)]
+        new-comments (filter #(= (:action %) "new-comment") news)
+        new-files (filter #(= (:action %) "new-file") news)]
     (layout "Canali seguiti"
       [:h1.section "Notifiche:"]
       [:div.section
@@ -206,7 +207,12 @@
        (when (not (empty? new-comments))
          (html [:h2.section "Nuovi commenti ai tuoi post:"]
            (channel/post-links
-             (map #(fetch-one :posts :where {:_id (:post %)}) new-comments) :show-removed)))]
+             (map #(fetch-one :posts :where {:_id (:post %)}) new-comments) :show-removed)))
+       (when (not (empty? new-files))
+         (html [:h2.section "Nuovi files caricati:"]
+           (for [file new-files]
+             [:a {:href (file-path (:channel file) (:filename file))}
+               [:img.edit {:src "/images/box.png"}] [:b (:filename file)]])))]
       [:h1.section "Canali seguiti:"]
       [:div.section
        [:h2.section "Indirizzi di studio: " (count fields)]

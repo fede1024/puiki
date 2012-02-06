@@ -595,7 +595,14 @@
       (when (not (= (:author post) (current-id)))
         (update! :people {:_id (:author post)} ;; Update dell'autore
           {:$push {:news {:action :new-comment :post (:_id post)
-                          :title (:title post) :time (java.util.Date.)}}}))))
+                          :title (:title post) :time (java.util.Date.)}}}))
+      (dorun  ;; Update a tutti quelli che hanno commentato
+        (for [id (distinct (map :author (:comments post)))]
+          (when (not (= id (current-id)))
+            (update! :people {:_id id}
+              {:$push {:news {:action :new-comment :post (:_id post)
+                              :title (:title post) :time (java.util.Date.)}}}
+                     :multiple false :upsert false))))))
   (post-comments (fetch-one :posts :where {:_id (obj-id pid)})))
 
 (defpartial post-reply-table [question & [reply]]

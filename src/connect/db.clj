@@ -2,7 +2,8 @@
   (:use connect.email
     somnium.congomongo
     [ring.middleware.session.store :as ringstore])
-  (:import [java.util UUID]))
+  (:import [java.util UUID])
+  (:require [noir.util.crypt :as crypt]))
 
 ;(mongo! :db "connect")
 
@@ -40,7 +41,7 @@
 ;     :follows [(:_id (fetch-one :channels :where {:name "Puiki"}))]
 ;     :created-at (java.util.Date.)})
   (insert! :people
-    {:_id "admin"   :pwd "admin"
+    {:_id "admin"   :pwd (crypt/encrypt "admin")
      :firstname "Admin" :lastname "Puiki"
      :roles ["admin" "user"]
      :job "student"

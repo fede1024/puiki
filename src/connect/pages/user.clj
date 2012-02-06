@@ -205,7 +205,7 @@
            (channel/post-links
              (map #(fetch-one :posts :where {:_id (:post %)}) new-answers) :show-removed)))
        (when (not (empty? new-comments))
-         (html [:h2.section "Nuovi commenti ai tuoi post:"]
+         (html [:h2.section "Nuovi commenti ai post:"]
            (channel/post-links
              (map #(fetch-one :posts :where {:_id (:post %)}) new-comments) :show-removed)))
        (when (not (empty? new-files))

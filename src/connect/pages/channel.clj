@@ -239,11 +239,11 @@
     (let [dirs-files (group-by :dir (filter :dir files))
           root-files (filter #(not (:dir %)) files)]
       (html
-        (for [[dir files] dirs-files]
+        (for [[n [dir files]] (map vector (iterate inc 0) dirs-files)]
           (html
-            [:a.link {:onClick (js-toggle-anim "#dir" dir)}
+            [:a.link {:onClick (js-toggle-anim "#dir" n)}
              [:img.edit {:src "/images/directory.png"}] [:b dir]] [:br]
-            [:div {:id (str "dir" dir) :style "margin-left: 10px; margin-bottom: 10px; display:none"}
+            [:div {:id (str "dir" n) :style "margin-left: 10px; margin-bottom: 10px; display:none"}
              (for [file files]
                (file-link file))]))
         (for [file root-files]
@@ -374,9 +374,11 @@
 ;         (submit-button "Carica")))
 ;    (render "/edit/upload" data)))
 
-(defn valid-file? [file channel]
+(defn valid-file? [file channel dir]
   (let [size (to-integer (:size file))]
-    (vali/rule (not (fetch-one :files :where {:channel channel :filename (:filename file)}))
+    (vali/rule (not (fetch-one :files :where {:channel channel :filename (:filename file)
+                                              :dir (if (or (not dir) (str/blank? dir))
+                                                     nil dir)}))
       [:file "File già esistente"])
     (vali/rule (> size 0)
       [:file "Errore caricamento file."])
@@ -408,39 +410,39 @@
          :created-at (java.util.Date.) :author (current-id)}))))
 
 (defpage [:post "/edit/upload"] {:keys [file description channel category privacy dir new-dir] :as data}
-  (if (and (valid-file-descripion? data) (valid-file? file channel))
-    (let [ret (upload-channel-file! file description channel category privacy
-                 (if (or (not new-dir)
-                         (str/blank? new-dir))
-                   dir
-                   new-dir))
-          ch (fetch-one :channels :where {:_id (obj-id channel)})]
-      (.delete (:tempfile file))
-      (if ret
-        (do
-          (update! :people {:follows (:_id ch) :_id {:$ne (current-id)}} ;; Update a tutti i followers
-            {:$push {:news {:action :new-file :filename (:filename file)
-                            :channel (:_id ch) :time (java.util.Date.)}}}
-            :multiple true :upsert false)
-          (layout "File caricato"
-           [:h1.section "File caricato"]
-           [:h2.section "Grazie per aver condiviso un file!"]
-           [:p "I followers di questo canale riceveranno una notifica per il nuovo file."]
-           [:p "Torna alla pagina di " (link-to (channel-path ch) (:name ch)) "."]))
+  (let [dir (if (or (not new-dir)
+                    (str/blank? new-dir))
+              dir
+              new-dir)]
+    (if (and (valid-file-descripion? data) (valid-file? file channel dir))
+      (let [ret (upload-channel-file! file description channel category privacy dir)
+            ch (fetch-one :channels :where {:_id (obj-id channel)})]
+        (.delete (:tempfile file))
+        (if ret
+          (do
+            (update! :people {:follows (:_id ch) :_id {:$ne (current-id)}} ;; Update a tutti i followers
+               {:$push {:news {:action :new-file :filename (:filename file)
+                               :channel (:_id ch) :time (java.util.Date.)}}}
+              :multiple true :upsert false)
+            (layout "File caricato"
+              [:h1.section "File caricato"]
+              [:h2.section "Grazie per aver condiviso un file!"]
+              [:p "I followers di questo canale riceveranno una notifica per il nuovo file."]
+              [:p "Torna alla pagina di " (link-to (channel-path ch) (:name ch)) "."]))
+          (layout "Errore"
+              [:h1.section "Errore"]
+              [:h2.section "Si è verificato un errore"]
+              (for [[field errors] @vali/*errors*]
+                (for [error errors]
+                  [:p error]))))) ;; TODO: controllo errore
+      (do
+        (.delete (:tempfile file))
         (layout "Errore"
           [:h1.section "Errore"]
-          [:h2.section "Si è verificato un errore"]
+          [:h2.section "Si è verificato un errore"] ;; TODO: controllo errore
           (for [[field errors] @vali/*errors*]
             (for [error errors]
-              [:p error]))))) ;; TODO: controllo errore
-    (do
-      (.delete (:tempfile file))
-      (layout "Errore"
-        [:h1.section "Errore"]
-        [:h2.section "Si è verificato un errore"] ;; TODO: controllo errore
-        (for [[field errors] @vali/*errors*]
-          (for [error errors]
-            [:p error]))))))
+              [:p error])))))))
 
 (defn channel-file-redirect [file]
   (if file

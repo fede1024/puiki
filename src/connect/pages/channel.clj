@@ -219,6 +219,34 @@
         (update! :people {:_id person-id}
            {:$push {:last-channels ch-id}})))))
 
+(defpartial file-link [file]
+  (when (not (nil? file))
+    (if (and (= (:privacy file) "Privato")
+             (not (current-id)))
+      [:span [:img.edit {:src "/images/box.png"}] 
+       "File privato, esegui il login per accedere." [:br]]
+      (html
+        [:a {:href (file-path (:channel file) (:filename file))}
+         [:img.edit {:src "/images/box.png"}] [:b (:filename file)]]
+        " - " (:category file) 
+        (when (current-id) (str " (" (:privacy file) ")")) [:br]))))
+
+(defpartial files-list [files]
+  (if (empty? files)
+    [:p "Non ci sono ancora files condivisi in questo canale."]
+    (let [dirs-files (group-by :dir (filter :dir files))
+          root-files (filter #(not (:dir %)) files)]
+      (html
+        (for [[dir files] dirs-files]
+          (html
+            [:a.link {:onClick (js-toggle-anim "#dir" dir)}
+             [:img.edit {:src "/images/directory.png"}] [:b dir]] [:br]
+            [:div {:id (str "dir" dir) :style "margin-left: 10px; margin-bottom: 10px; display:none"}
+             (for [file files]
+               (file-link file))]))
+        (for [file root-files]
+          (file-link file))))))
+
 (defpage "/channel/:id" {:keys [id show]}
   (let [id (obj-id id)
         ch (fetch-one :channels :where {:_id id})
@@ -277,19 +305,7 @@
                    [:p [:a {:href (post-path page)}
                         [:img.edit {:src "/images/page.png"}] [:b (:title page)]]]))]
               [:h2.lastPages [:img.middle {:src "/images/files.png"}] " Files (beta)"]
-              [:div.section
-               (if (empty? files)
-                 [:p "Non ci sono ancora files condivisi in questo canale."]
-                 (for [file files]
-                   (if (and (= (:privacy file) "Privato")
-                            (not (current-id)))
-                     [:span [:img.edit {:src "/images/box.png"}] 
-                      "File privato, esegui il login per accedere." [:br]]
-                     (html
-                       [:a {:href (file-path id (:filename file))}
-                        [:img.edit {:src "/images/box.png"}] [:b (:filename file)]]
-                       " - " (:category file) 
-                       (when (current-id) (str " (" (:privacy file) ")")) [:br]))))]))
+              [:div.section (files-list files)]))
           [:p [:img.edit {:src "/images/users.png" :alt "Vis" :title "Visualizzazzioni"}]
               "Canale visualizzato " (+ 1 (or (:views ch) 0)) " volte."])))))
 
@@ -306,7 +322,10 @@
 (def size-limit-mb 30) ;; Limite dimensione file in megabyte
 
 (defpage "/edit/upload" {:keys [channel]}
-  (let [ch (fetch-one :channels :where {:_id (obj-id channel)})]
+  (let [ch (fetch-one :channels :where {:_id (obj-id channel)})
+        dirs (map first
+               (group-by :dir
+                  (fetch :files :where {:channel channel})))]
     (if ch
       (layout "Condividi un file"
         [:h1.section "Carica un file (beta)"]
@@ -314,6 +333,8 @@
         (form-to {:enctype "multipart/form-data"} [:post "/edit/upload"]
           [:input {:type :hidden :name :channel :value channel}]
           [:p (file-upload :file) " La dimensione massima è di " size-limit-mb "Mb."]
+          [:p "Metti nella cartella " (drop-down :dir dirs)
+           " o creane una nuova " (text-field {:placeholder "Nome nuova cartella"} :new-dir)]
           [:p "Descrizione file: "
            (text-area {:class :postComment :rows 3} :description)]
           [:p "Categoria:" (drop-down :category file-categories "Vario")
@@ -325,14 +346,16 @@
           [:p "Il caricamento potrebbe richiedere molto tempo per file di grandi dimensioni, attendi."]))
       (layout "Errore" "Canale non valido."))))
 
-(defn valid-file-descripion? [{:keys [description channel category privacy]}]
+(defn valid-file-descripion? [{:keys [description channel category privacy dir new-dir]}]
   (vali/rule (fetch-one :channels :where {:_id (obj-id channel)})
     [:channel "Canale non valido"])
   (vali/rule (some #(= category %) file-categories)
     [:category "Categoria non valida"])
   (vali/rule (some #(= privacy %) '["Pubblico" "Privato"])
     [:privacy "Visibilità non valida"])
-  (not (vali/errors? :name :channel :category :privacy)))
+  ;(vali/rule (re-matches #"[a-zA-Z0-9 ]+" code)
+  ;  [:new-dir "Nome cartella non valido, inserisci caratteri alfanumerici"])
+  (not (vali/errors? :name :channel :category :privacy :dir :new-dir)))
 
 ;(defpage [:post "/edit/upload-select-file"] {:keys [name description channel category] :as data}
 ;  (if (valid-file-descripion? data)
@@ -359,8 +382,12 @@
       [:file "File troppo grande."]))
   (not (vali/errors? :file)))
 
-(defn upload-channel-file! [file description channel category privacy]
-  (let [obj-name (str channel "/" (:filename file))
+(defn upload-channel-file! [file description channel category privacy dir]
+  (let [file-dir (if (or (not dir) (str/blank? dir))
+                   nil dir)
+        obj-name (if file-dir
+                   (str channel "/" dir "/" (:filename file))
+                   (str channel "/" (:filename file)))
         bucket (get-bucket-name)
         ret (try
               (s3/with-s3 auth
@@ -374,13 +401,17 @@
     (when ret
       (insert! :files
         {:channel channel :filename (:filename file) :description description
-         :category category :obj-name obj-name :size (to-integer (:size file))
+         :category category :obj-name obj-name :size (to-integer (:size file)) :dir file-dir
          :privacy privacy :content-type (:content-type file) :bucket bucket
          :created-at (java.util.Date.) :author (current-id)}))))
 
-(defpage [:post "/edit/upload"] {:keys [file description channel category privacy] :as data}
+(defpage [:post "/edit/upload"] {:keys [file description channel category privacy dir new-dir] :as data}
   (if (and (valid-file-descripion? data) (valid-file? file channel))
-    (let [ret (upload-channel-file! file description channel category privacy)
+    (let [ret (upload-channel-file! file description channel category privacy
+                 (if (or (not new-dir)
+                         (str/blank? new-dir))
+                   dir
+                   new-dir))
           ch (fetch-one :channels :where {:_id (obj-id channel)})]
       (.delete (:tempfile file))
       (if ret

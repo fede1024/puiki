@@ -210,9 +210,14 @@
              (map #(fetch-one :posts :where {:_id (:post %)}) new-comments) :show-removed)))
        (when (not (empty? new-files))
          (html [:h2.section "Nuovi files caricati:"]
-           (for [file new-files]
-             [:a {:href (file-path (:channel file) (:filename file))}
-               [:img.edit {:src "/images/box.png"}] [:b (:filename file)]])))]
+           (let [groups (group-by :channel new-files)]
+             (for [[channel files] groups]
+               [:div.section
+                [:h3.section (:name (fetch-one :channels :where {:_id channel}))]
+                [:div.section
+                 (channel/files-list (map #(fetch-one :files :where {:channel (str (:channel %))
+                                                                     :filename (:filename %)})
+                                          files))]]))))]
       [:h1.section "Canali seguiti:"]
       [:div.section
        [:h2.section "Indirizzi di studio: " (count fields)]
@@ -234,6 +239,7 @@
            [:p.channelInfo (channel/channel-info c)]
            [:p.channelDescription (:description c)]])]])))
 
+      
 (defpage "/user/new-course" {:keys [field name code year] :as data}
   (layout "Nuovo corso di studi"
     [:h1.section "Nuovo corso di studi"]

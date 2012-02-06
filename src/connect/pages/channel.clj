@@ -79,7 +79,9 @@
               [:a.channel {:href (channel-path field-channel)}
                 [:img.channel {:src "/images/users.png"}] (:name field-channel)]]])
           [:ul.channels
-           (for [c (sort-by :name (map #(fetch-one :channels :where {:_id %}) last-channels))]
+           (for [c (sort-by :name (map #(fetch-one :channels :where {:_id %})
+                                       (take preferred-channels-number
+                                             (filter #(not (= % (:_id field-channel))) last-channels))))]
              [:li.channel
               [:a.channel {:href (channel-path c)}
                 [:img.channel {:src "/images/users.png"}] (:name c)]])]
@@ -211,7 +213,7 @@
             last-channels (:last-channels (fetch-one :people :where {:_id person-id}))
             new (not (some #(= % ch-id) last-channels))]
         (if new
-          (when (>= (count last-channels) preferred-channels-number)
+          (when (>= (count last-channels) (+ 1 preferred-channels-number))
             (update! :people {:_id person-id}
                {:$pop {:last-channels -1}}))
           (update! :people {:_id person-id}

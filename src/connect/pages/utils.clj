@@ -20,10 +20,12 @@
     :else "Ruolo non conosciuto"))
 
 (defn user-edit-path [id]
-  (str "/user/" id "/edit"))
+  (let [n (:num (fetch-one :people :where {:_id id}))]
+    (str "/user/" (or n -1) "/edit")))
 
 (defn user-info-path [id]
-  (str "/user/" id "/info"))
+  (let [n (:num (fetch-one :people :where {:_id id}))]
+    (str "/user/" (or n -1) "/info")))
 
 (defn channel-path [channel]
   (str "/channel/" (:_id channel)))

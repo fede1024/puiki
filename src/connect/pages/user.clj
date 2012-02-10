@@ -59,12 +59,13 @@
              (link-to (channel-path channel) (:name channel))
              "Nessuno.")]]]))
 
-(defpage "/user/:id/info" {:keys [id]}
+(defpage "/user/:num/info" {:keys [num]}
   (layout "Informazioni utente"
     (if (= (session/flash-get) "done") 
       [:p "I dati sono stati modificati"])
     [:h1.section "Informazioni utente"]
-    (let [person (fetch-one :people :where {:_id id})]
+    (let [n (to-integer num -1)
+          person (fetch-one :people :where {:num n})]
       (if person
         [:span
          (cond (= (:job person) "student")
@@ -73,8 +74,8 @@
            [:p "TODO info docente"]
            (= (:job person) "admin")
            [:p "TODO info admin"])
-         (when (or (admin? (current-id)) (= (current-id) id)) 
-           [:h2.section (link-to (user-edit-path id) "Modifica")])]
+         (when (or (admin? (current-id)) (= (current-id) (:_id person))) 
+           [:h2.section (link-to (user-edit-path (:_id person)) "Modifica")])]
         "Utente non esistente."))))
 
 (defpage "/user/list" []
@@ -128,27 +129,28 @@
 (defpartial professor-edit-form [id & [data vd]]
   [:p "TODO: da fare"])
 
-(defpage "/user/:id/edit" {:keys [id] :as data}
-  (let [person (fetch-one :people :where {:_id id})]
+(defpage "/user/:num/edit" {:keys [num] :as data}
+  (let [n (to-integer num -1)
+        person (fetch-one :people :where {:num n})]
     (layout "Modifica utente"
       (when (= (session/flash-get) "new-user") 
         (html
           [:h1.section "Benvenuto!"]
           [:p "Grazie per esserti registrato. Ora fai parte di Puiki."]))
       (if person
-        (if (or (admin? (current-id)) (= id (current-id)))
+        (if (or (admin? (current-id)) (= (:_id person) (current-id)))
           (if (= (:job person) "student")
             (student-edit-form person data)
             (professor-edit-form person data))
           "Non hai l'autorizzazione per modificare i dati.")
         "Utente non esistente."))))
 
-(defn valid? [{:keys [id field year firstname lastname]}]
+(defn valid? [{:keys [num field year firstname lastname]}]
   (vali/rule (vali/has-value? field)
      [:name "Il campo non deve essere vuoto."])
   (vali/rule (fetch-one :fields :where {:name field})
      [:name "Indirizzo non esistente."])
-  (vali/rule (fetch-one :people :where {:_id id})
+  (vali/rule (fetch-one :people :where {:num (to-integer num -1)})
      [:id "Matricola non valida."]) ;; Non visualizzato
   (vali/rule (vali/has-value? firstname)
      [:firstname "Il campo non deve essere vuoto."])
@@ -159,16 +161,19 @@
      [:year "Anno di immatricolazione non valido."])
   (not (vali/errors? :field :year :firstname :lastname :id)))
 
-(defpage [:post "/user/:id/edit"] {:keys [id year field firstname lastname] :as person}
+(defpage [:post "/user/:num/edit"] {:keys [num year field firstname lastname] :as person}
   (if (not (valid? person))
-    (render "/user/:id/edit" person)
+    (render "/user/:num/edit" person)
     (let [y (Integer/parseInt year)
+          n (to-integer num -1)
+          p (fetch-one :people :where {:num n})
           channel (fetch-one :channels :where {:field field :year (- 2012 y)})]
-      (update! :people {:_id id}
-        {:$set {:year y :field field :firstname firstname :lastname lastname}})
-      (when channel (follow-channel (:_id channel) id))
-      (session/flash-put! "done")
-      (resp/redirect (user-info-path id)))))
+      (when (or (admin? (current-id)) (= (current-id) (:_id p)))
+        (update! :people {:_id (:_id p)}
+          {:$set {:year y :field field :firstname firstname :lastname lastname}})
+        (when channel (follow-channel (:_id channel) (:_id p)))
+        (session/flash-put! "done")
+        (resp/redirect (user-info-path (:_id p)))))))
 
 (defpage "/user/following" {:keys [remove-news]}
   (when (and (current-id) (= remove-news "true"))

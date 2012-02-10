@@ -178,7 +178,8 @@
     (if data
       (do
         (insert! :people (merge (dissoc data :code)
-                           {:created-at (java.util.Date.)}))
+                           {:created-at (java.util.Date.)
+                            :num (fetch-count :people)}))
         (destroy! :people-pending {:code code})
         (follow-channel (:_id (fetch-one :channels :where {:name "Puiki"}))
           (:_id data))

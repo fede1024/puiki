@@ -325,9 +325,10 @@
 
 (defpage "/edit/upload" {:keys [channel]}
   (let [ch (fetch-one :channels :where {:_id (obj-id channel)})
-        dirs (map first
-               (group-by :dir
-                  (fetch :files :where {:channel channel})))]
+        dirs (filter #(not (or (nil? %) (str/blank? %)))
+               (map first
+                  (group-by :dir
+                     (fetch :files :where {:channel channel}))))]
     (if ch
       (layout "Condividi un file"
         [:h1.section "Carica un file (beta)"]
@@ -335,7 +336,7 @@
         (form-to {:enctype "multipart/form-data"} [:post "/edit/upload"]
           [:input {:type :hidden :name :channel :value channel}]
           [:p (file-upload :file) " La dimensione massima è di " size-limit-mb "Mb."]
-          [:p "Metti nella cartella " (drop-down :dir dirs)
+          [:p "Metti nella cartella " (drop-down :dir (conj dirs ""))
            " o creane una nuova " (text-field {:placeholder "Nome nuova cartella"} :new-dir)]
           [:p "Descrizione file: "
            (text-area {:class :postComment :rows 3} :description)]

@@ -157,13 +157,13 @@
 (defpartial channel-description [ch]
   (if (= (:type ch) "course")
     (html [:h2.section "Il corso si applica agli studenti di:"]
-     [:ul.years
+     [:ul.years {:style "max-height: 130px; overflow: auto;"}
       (for [course (fetch :courses :where {:code (:code ch)})]
         (if-let [channel (fetch-one :channels :where {:type :field :field (:field course) :year (:year course)})]
           [:li.year [:img.year {:src "/images/users.png"}]
-           (link-to (channel-path channel) (:field course) " " (:year course) "°anno")]
+           (link-to (channel-path channel) (:field course))]
           [:li.year [:img.year {:src "/images/users.png"}]
-           (:field course) " " (:year course) "°anno"]))])
+           (:field course)]))])
     [:p (:description ch)]))
 
 (defpartial channel-follow-buttons [c action & {:keys [only-button]}]

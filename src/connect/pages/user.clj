@@ -395,8 +395,6 @@
     [:p "Puiki ha bisogno del tuo contributo per farsi conoscere e permettere così di "
      "arricchirsi del contributo di più persone."]
     [:p "Cerca i tuoi amici del Politecnico e Puiki gli invierà un email di invito a tuo nome."]
-    [:p "ATTENZIONE: dal momento che Puiki è ancora in fase beta, "
-     "attualmente gli inviti sono aperti soltanto per gli studenti della terza facoltà."]
     [:div.section
      (form-to {:accept-charset "utf-8"} [:get "/user/invite"]
        [:table
@@ -416,7 +414,8 @@
               q2 (str "^" lastname ".*")
               res (fetch :students :where {:firstname {:$regex q1 :$options "i"}
                                            :lastname {:$regex q2 :$options "i"}
-                                           :cds {:$regex ".*1T3" :$options "i"}}
+                                           ;:cds {:$regex ".*1T3" :$options "i"}
+                                           }
                          :sort sorted-map-names)
               res2 (take 20 res)
               admin? (admin? (current-id))]
@@ -428,7 +427,8 @@
                                                           :id (:_id s)})
                                    "#preview")}
                     (format-names (:lastname s)) " " (format-names (:firstname s))]
-                (when admin? (str " " (:code s) " " (:cds s)))])]))
+                 " " (:cds s)
+                (when admin? (str " " (:code s)))])]))
         (html
           [:h2.section "Risultati ricerca: 0"]
           [:div.section

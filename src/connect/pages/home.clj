@@ -17,13 +17,18 @@
  (defpartial info-section []
   (let [div-prop {:style "text-align: justify; margin-right: 20px;"}]
     [:span
-     [:h1.section "Benvenuto!" [:div.like_button (like-button "/")]]
+     [:h1.section (if (= (current-id) "s166733")
+                    "Benvenuta stellina =)"
+                    "Benvenuto!")
+      [:div.like_button (like-button "/")]]
      [:div.section div-prop
       [:p "Benvenuto su Puiki, il sito creato per gli studenti del Politecnico di Torino, "
        "dove fare domande e trovare informazioni riguardanti i corsi, condividere appunti e altro ancora."]]
      [:h2.section "Condividi ciò che sai e chiedi cosa vuoi sapere:"]
      [:div.section div-prop
-      [:img.right {:src "/images/logo.png" :style "padding-left: 10px"}]
+      (if (= (current-id) "s166733")
+        [:img.right {:src "/images/gatto.jpg" :style "padding: 20px"}]
+        [:img.right {:src "/images/logo.png" :style "padding-left: 10px"}])
       [:p "Il sito ha una pagina dedicata ad ogni " (link-to "/channel/list" "materia")
        ", in cui puoi porre le tue domande e condividere ciò che sai."
        " Ogni studente iscritto può aggiungere le sue domande (" (link-to "/post/4ea28778e4b0b301111bb242" "un esercizio")

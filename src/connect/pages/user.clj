@@ -111,7 +111,7 @@
   [:h2.section "Indirizzo di studio:"]
   [:table
    [:tr [:td.head "Indirizzo: "]
-    [:td (drop-down :field (map :name (fetch :fields))
+    [:td (drop-down :field (sort-by str/upper-case (map :name (fetch :fields)))
            (or (:field data) (:field person)))]
     (error-cell :field)]
    [:tr [:td.head "Anno immatr.: "]

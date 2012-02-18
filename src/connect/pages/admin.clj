@@ -161,12 +161,16 @@
         [:td.logsB (:resp-time log)]
         [:td.logsB (:method log)]
         [:td.logsB {:title (pr-str (:query-params log))}
-           (link-to (clojure.string/replace (:uri log) #" " "%20") 
+           [:a.nodecor {:href (clojure.string/replace (:uri log) #" " "%20")}
              (if (> (count (:uri log)) 70)
                (str (subs (:uri log) 0 67) "...")
-               (:uri log)))]
+               (:uri log))]]
         [:td.logsB (:status log)]
-        [:td.logsB (link-to (user-info-path (:username log)) (:username log))]])]))
+        [:td.logsB
+         (when (:username log)
+           (let [user (fetch-one :people :where {:_id (:username log)})]
+             [:a.nodecor {:href (user-info-path (:username log))}
+              (str (subs (:firstname user) 0 1) " " (:lastname user))]))]])]))
 
 (defpartial logs-table [n]
   (let [logs (log-tail n)]
@@ -177,20 +181,24 @@
        [:tr.logs
         [:td.logs {:title (:user-agent log)}
          (if (:session log)
-           (link-to (str "/admin/logs?session=" (:session log) "&n=" n)
-                    (subs (:session log) 0 5))
-           (link-to (str "/admin/logs?session=&n=" n) "NEW"))]
+           [:a.nodecor {:href (str "/admin/logs?session=" (:session log) "&n=" n)}
+                    (subs (:session log) 0 5)]
+           [:a.nodecor {:href (str "/admin/logs?session=&n=" n)} "NEW"])]
         [:td.logsB (:ip log)]
         [:td.logsB (format-log-date (:date log))]
         [:td.logsB (:resp-time log)]
         [:td.logsB (:method log)]
         [:td.logsB {:title (pr-str (:query-params log))}
-           (link-to (clojure.string/replace (:uri log) #" " "%20") 
+           [:a.nodecor {:href (clojure.string/replace (:uri log) #" " "%20")}
              (if (> (count (:uri log)) 70)
                (str (subs (:uri log) 0 67) "...")
-               (:uri log)))]
+               (:uri log))]]
         [:td.logsB (:status log)]
-        [:td.logsB (link-to (user-info-path (:username log)) (:username log))]])]))
+        [:td.logsB
+         (when (:username log)
+           (let [user (fetch-one :people :where {:_id (:username log)})]
+             [:a.nodecor {:href (user-info-path (:username log))}
+              (str (subs (:firstname user) 0 1) " " (:lastname user))]))]])]))
 
 (defpage "/admin/logs" {:keys [session n] :or {n "50"}}
   (let [num (Integer/parseInt n)]

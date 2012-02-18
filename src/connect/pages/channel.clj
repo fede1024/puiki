@@ -70,22 +70,20 @@
                                                      :year (get-person-study-year person)}))]
     (layout "Tutti i canali"
       [:div.like_button (like-button "/channel/list")]
-      (when (not (empty? last-channels))
-        (html
-          [:h1.section "Preferiti:"]
-          (when (and (:field person) field-channel)
-            [:ul.channels
-             [:li.channel
-              [:a.channel {:href (channel-path field-channel)}
-                [:img.channel {:src "/images/users.png"}] (:name field-channel)]]])
-          [:ul.channels
-           (for [c (sort-by :name (map #(fetch-one :channels :where {:_id %})
-                                       (take preferred-channels-number
-                                             (filter #(not (= % (:_id field-channel))) last-channels))))]
-             [:li.channel
-              [:a.channel {:href (channel-path c)}
-                [:img.channel {:src "/images/users.png"}] (:name c)]])]
-          [:br]))
+      [:h1.section "Preferiti:"]
+      (when (and (:field person) field-channel)
+        [:ul.channels
+         [:li.channel
+          [:a.channel {:href (channel-path field-channel)}
+           [:img.channel {:src "/images/users.png"}] (:name field-channel)]]])
+      [:ul.channels
+       (for [c (sort-by :name (map #(fetch-one :channels :where {:_id %})
+                                   (take preferred-channels-number
+                                         (filter #(not (= % (:_id field-channel))) last-channels))))]
+         [:li.channel
+          [:a.channel {:href (channel-path c)}
+           [:img.channel {:src "/images/users.png"}] (:name c)]])]
+      [:br]
       [:h1.section "Indirizzi di studio:"]
       [:ul.fields
        (for [f (fetch :fields :sort {:name 1})]

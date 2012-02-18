@@ -183,3 +183,38 @@
 ;(client/post "http://localhost:1234"
 ;  {:form-params {:from_portlet "N" :a_acc "2012" :doc "scuderi" :cod_ins "" :nome_ins "" :p_header ""}
 ;   :cookies cook})
+
+
+;(def indirizzi '("Ingegneria Aerospaziale" "Ingegneria Biomedica" "Ingegneria Chimica e Alimentare"
+;                 "Ingegneria Civile" "Ingegneria dei Materiali" "Ingegneria dell'Autoveicolo"
+;                 "Ingegneria della Produzione Industriale" "Ingegneria Edile" "Ingegneria Elettrica"
+;                 "Ingegneria Energetica" "Ingegneria Meccanica" "Ingegneria per l'Ambiente e il Territorio"
+;                 "Matematica per l'Ingegneria" "Ingegneria del Cinema"))
+
+;(fetch :courses :where {:field "Ingegneria Informatica" :year 1})
+
+;(destroy! :courses {:field "Ingegneria Aerospaziale"})
+
+;(dorun 
+;  (for [{n :name code :code} (fetch :courses :where {:field "Ingegneria Informatica" :year 1})]
+;    (dorun
+;      (for [field indirizzi]
+;        (do
+;          (println "Creo" field n code)
+;          (insert! :courses
+;            {:name n
+;             :field field
+;             :year 1
+;             :code code
+;             :created-by "s162270"
+;             :created-at (java.util.Date.)
+;             :auto true}))))))
+
+;(dorun 
+;  (for [{n :name code :code} (fetch :courses :where {:field "Ingegneria Informatica" :year 1})]
+;    (dorun
+;      (for [field indirizzi]
+;        (println "Creo" field ":" n code)))))
+
+;(for [{name :name code :code} (fetch :courses :where {:field "Ingegneria Informatica" :year 1})]
+;  [name code])

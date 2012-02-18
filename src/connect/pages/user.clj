@@ -171,6 +171,12 @@
       (when (or (admin? (current-id)) (= (current-id) (:_id p)))
         (update! :people {:_id (:_id p)}
           {:$set {:year y :field field :firstname firstname :lastname lastname}})
+        (let [codes (map :code (fetch :courses :where {:field field :year (- 2012 y)}))
+              channels (map #(:_id (fetch-one :channels :where {:code %})) codes)]
+          (dorun
+            (map #(update! :people {:_id (current-id)}
+                           {:$addToSet {:follows %}})
+                 channels)))
         (when channel (follow-channel (:_id channel) (:_id p)))
         (session/flash-put! "done")
         (resp/redirect (user-info-path (:_id p)))))))
